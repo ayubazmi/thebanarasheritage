@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Order, CartItem, Category, SiteConfig, User, AccessLog } from './types';
+import { Product, Order, CartItem, Category, SiteConfig, User } from './types';
 import { api } from './lib/api';
 
 interface StoreContextType {
@@ -8,8 +8,7 @@ interface StoreContextType {
   categories: Category[];
   orders: Order[];
   config: SiteConfig;
-  users: User[]; 
-  logs: AccessLog[]; // New
+  users: User[]; // Admin only
   isLoading: boolean;
   error: string | null;
   
@@ -30,9 +29,6 @@ interface StoreContextType {
   deleteUser: (id: string) => Promise<void>;
   changeUserPassword: (id: string, pass: string) => Promise<void>;
 
-  // Logs
-  fetchLogs: () => Promise<void>;
-
   // Cart
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
@@ -43,7 +39,7 @@ interface StoreContextType {
   placeOrder: (customerDetails: any) => Promise<void>;
 
   // Wishlist
-  wishlist: string[]; 
+  wishlist: string[]; // List of Product IDs
   toggleWishlist: (productId: string) => void;
 
   // Auth
@@ -61,22 +57,30 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [config, setConfig] = useState<SiteConfig>({} as SiteConfig);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [logs, setLogs] = useState<AccessLog[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   
+  // Initialize user from local storage to persist session on refresh
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('lumiere_user');
-    try { return savedUser ? JSON.parse(savedUser) : null; } catch (e) { return null; }
+    try {
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      return null;
+    }
   });
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Load local wishlist
   useEffect(() => {
     const savedWishlist = localStorage.getItem('lumiere_wishlist');
-    if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
+    if (savedWishlist) {
+      setWishlist(JSON.parse(savedWishlist));
+    }
   }, []);
 
+  // Persist wishlist
   useEffect(() => {
     localStorage.setItem('lumiere_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
@@ -103,6 +107,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  // Fetch users if admin logs in
   useEffect(() => {
     if (user?.role === 'admin') {
       api.users.list().then(setUsers).catch(console.error);
@@ -152,6 +157,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setOrders(prev => prev.map(o => o.id === saved.id ? saved : o));
   };
 
+  // --- Users ---
   const addUser = async (data: any) => {
     const newUser = await api.users.create(data);
     setUsers(prev => [...prev, newUser]);
@@ -166,13 +172,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     await api.users.updatePassword(id, pass);
   };
 
-  const fetchLogs = async () => {
-    // Basic implementation since api wrapper doesn't have logs yet, mocking fetch
-    const res = await fetch('http://localhost:5000/api/logs'); 
-    const data = await res.json();
-    setLogs(data);
-  };
-
+  // --- Cart ---
   const addToCart = (item: CartItem) => {
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id && i.selectedSize === item.selectedSize && i.selectedColor === item.selectedColor);
@@ -211,17 +211,25 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     clearCart();
   };
 
+  // --- Wishlist ---
   const toggleWishlist = async (productId: string) => {
     const isLiked = wishlist.includes(productId);
+    
+    // Update Local Wishlist (Client Side)
     setWishlist(prev => isLiked ? prev.filter(id => id !== productId) : [...prev, productId]);
+
     try {
+        // Update Backend
         const updatedProduct = await api.products.like(productId, !isLiked);
+        
+        // Update Local Product State to reflect new like count immediately
         setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
     } catch (err) {
         console.error("Failed to sync like status", err);
     }
   };
 
+  // --- Auth ---
   const login = async (u: string, p: string) => {
     const userData = await api.auth.login({ username: u, password: p });
     setUser(userData);
@@ -235,12 +243,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <StoreContext.Provider value={{
-      products, categories, orders, config, users, logs, isLoading, error,
+      products, categories, orders, config, users, isLoading, error,
       addProduct, updateProduct, deleteProduct,
       addCategory, updateCategory, deleteCategory,
       updateConfig, updateOrderStatus,
       addUser, deleteUser, changeUserPassword,
-      fetchLogs,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, placeOrder,
       wishlist, toggleWishlist,
       user, login, logout

@@ -11,7 +11,7 @@ export interface Product {
   newArrival: boolean;
   bestSeller: boolean;
   stock: number;
-  likes?: number; 
+  likes?: number; // New field for wishlist count
 }
 
 export interface CartItem extends Product {
@@ -47,53 +47,16 @@ export interface User {
   id: string;
   username: string;
   role: 'admin' | 'staff';
-  permissions: string[]; 
-}
-
-export interface LayoutSection {
-  id: string;
-  type: 'hero' | 'categories' | 'featured' | 'banner' | 'trust' | 'text_image' | 'video' | 'testimonials' | 'spacer';
-  isVisible: boolean;
-  data: any; // Flexible data for dynamic sections
-}
-
-export interface ThemeColors {
-  background: string; // brand-50
-  surface: string;    // brand-100
-  border: string;     // brand-200
-  secondary: string;  // brand-800
-  primary: string;    // brand-900
-}
-
-export interface AccessLog {
-    id: string;
-    ip: string;
-    path: string;
-    userAgent: string;
-    timestamp: string;
-    method: string;
-    device: string;
-    openPorts: string;
+  permissions: string[]; // e.g., ['products', 'orders', 'settings', 'users']
 }
 
 export interface SiteConfig {
   // Brand
   logo?: string;
 
-  // Developer Settings (New)
-  homeLayout: LayoutSection[];
-  themeColors: ThemeColors;
-  navbarLayout: 'left' | 'center' | 'right';
-  borderRadius: string;
-  footerColors?: {
-      background: string;
-      text: string;
-      border: string;
-  };
-
-  // Hero (Legacy/Fallback)
+  // Hero
   heroImage: string;
-  heroVideo?: string; 
+  heroVideo?: string; // Optional URL or base64 video
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
