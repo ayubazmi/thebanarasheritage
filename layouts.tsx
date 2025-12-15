@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, Terminal } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users } from 'lucide-react';
 import { useStore } from './store';
 
 // --- Public Navbar ---
@@ -19,35 +19,24 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => setIsOpen(false), [location]);
 
-  // Dynamic Styles based on config
-  const navAlignClass = config.navbarLayout === 'left' ? 'justify-start gap-12' : config.navbarLayout === 'right' ? 'justify-end gap-12' : 'justify-between';
-
   return (
     <>
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
-        <div className={`container mx-auto px-4 md:px-8 flex items-center ${config.navbarLayout === 'center' ? 'justify-between' : ''}`}>
-          
-          {/* Logo (Order depends on layout) */}
-          <div className={`${config.navbarLayout === 'center' ? '' : 'mr-8'}`}>
-            <Link to="/" className="z-50 block">
-                {config.logo ? (
-                <img src={config.logo} alt="LUMIÈRE" className="h-10 object-contain" />
-                ) : (
-                <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">LUMIÈRE</span>
-                )}
-            </Link>
-          </div>
-
-          {/* Links (Centered or Left/Right) */}
-          <div className={`hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900 ${config.navbarLayout === 'center' ? 'absolute left-1/2 -translate-x-1/2' : 'flex-1'}`}>
+        <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
+          <Link to="/" className="z-50">
+            {config.logo ? (
+              <img src={config.logo} alt="LUMIÈRE" className="h-10 object-contain" />
+            ) : (
+              <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">LUMIÈRE</span>
+            )}
+          </Link>
+          <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
             <Link to="/" className="hover:text-brand-800/70 transition">HOME</Link>
             <Link to="/shop" className="hover:text-brand-800/70 transition">SHOP</Link>
             <Link to="/about" className="hover:text-brand-800/70 transition">ABOUT</Link>
             <Link to="/contact" className="hover:text-brand-800/70 transition">CONTACT</Link>
           </div>
-
-          {/* Actions */}
-          <div className={`flex items-center space-x-5 text-brand-900 z-50 ${config.navbarLayout === 'right' ? 'ml-auto' : ''}`}>
+          <div className="flex items-center space-x-5 text-brand-900 z-50">
             <Link to="/shop" className="hidden md:block hover:text-brand-800/70"><Search size={20} /></Link>
             <Link to="/admin" className="hover:text-brand-800/70"><User size={20} /></Link>
             <div className="relative cursor-pointer hover:text-brand-800/70" onClick={() => navigate('/cart')}>
@@ -71,36 +60,28 @@ export const Navbar: React.FC = () => {
 // --- Footer ---
 export const Footer: React.FC = () => {
   const { config } = useStore();
-  const colors = config.footerColors || {};
-  
-  const style = {
-      backgroundColor: colors.background || 'var(--color-brand-900)',
-      color: colors.text || '#F2EFE9', // brand-100 default
-      borderColor: colors.border || 'rgba(255,255,255,0.1)'
-  };
-
   return (
-    <footer style={style} className="pt-16 pb-8 transition-colors duration-300">
+    <footer className="bg-brand-900 text-brand-100 pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div>
             <h3 className="text-2xl font-serif font-bold mb-6">LUMIÈRE</h3>
-            <p className="opacity-80 leading-relaxed text-sm">
-              {config.footerDescription || (config.aboutContent ? config.aboutContent.substring(0, 150) + '...' : 'Redefining contemporary fashion with timeless elegance.')}
+            <p className="text-brand-300/80 leading-relaxed text-sm">
+              {config.aboutContent ? config.aboutContent.substring(0, 150) + '...' : 'Redefining contemporary fashion with timeless elegance.'}
             </p>
           </div>
           <div>
             <h4 className="font-semibold mb-6 tracking-wide">SHOP</h4>
-            <ul className="space-y-3 text-sm opacity-80">
-              <li><Link to="/shop?cat=new" className="hover:opacity-100 transition">New Arrivals</Link></li>
-              <li><Link to="/shop?cat=kurtis" className="hover:opacity-100 transition">Kurtis</Link></li>
-              <li><Link to="/shop?cat=dresses" className="hover:opacity-100 transition">Dresses</Link></li>
-              <li><Link to="/shop?cat=sale" className="hover:opacity-100 transition">Sale</Link></li>
+            <ul className="space-y-3 text-sm text-brand-300/80">
+              <li><Link to="/shop?cat=new" className="hover:text-white transition">New Arrivals</Link></li>
+              <li><Link to="/shop?cat=kurtis" className="hover:text-white transition">Kurtis</Link></li>
+              <li><Link to="/shop?cat=dresses" className="hover:text-white transition">Dresses</Link></li>
+              <li><Link to="/shop?cat=sale" className="hover:text-white transition">Sale</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-6 tracking-wide">CONTACT</h4>
-            <ul className="space-y-3 text-sm opacity-80">
+            <ul className="space-y-3 text-sm text-brand-300/80">
               <li>{config.contactAddress || '123 Fashion Ave, NY'}</li>
               <li>{config.contactPhone || '+1 (555) 123-4567'}</li>
               <li>{config.contactEmail || 'support@lumiere.com'}</li>
@@ -109,16 +90,16 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="font-semibold mb-6 tracking-wide">STAY IN TOUCH</h4>
             <div className="flex space-x-2 mb-4">
-              <input type="email" placeholder="Your email" className="bg-transparent border px-4 py-2 text-sm w-full focus:outline-none opacity-80 focus:opacity-100" style={{ borderColor: style.borderColor, color: style.color }} />
-              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-gray-100 transition">JOIN</button>
+              <input type="email" placeholder="Your email" className="bg-brand-800/50 border border-brand-800 px-4 py-2 text-sm w-full focus:outline-none focus:border-brand-300 text-white" />
+              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-brand-200 transition">JOIN</button>
             </div>
           </div>
         </div>
-        <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center text-xs opacity-60" style={{ borderColor: style.borderColor }}>
-          <p>{config.footerCopyright || '© 2024 Lumière Fashion. All rights reserved.'}</p>
+        <div className="border-t border-brand-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-brand-300/60">
+          <p>© 2024 Lumière Fashion. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/privacy" className="hover:opacity-100">Privacy Policy</Link>
-            <Link to="/terms" className="hover:opacity-100">Terms of Service</Link>
+            <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white">Terms of Service</Link>
           </div>
         </div>
       </div>
@@ -176,9 +157,6 @@ export const AdminLayout: React.FC = () => {
           <NavItem to="/admin/categories" icon={List} label="Categories" perm="categories" />
           <NavItem to="/admin/settings" icon={Settings} label="Content & Settings" perm="settings" />
           <NavItem to="/admin/users" icon={Users} label="User Management" perm="users" />
-          {user.role === 'admin' && (
-              <NavItem to="/admin/developer" icon={Terminal} label="Developer Setting" />
-          )}
         </nav>
         <div className="p-4 border-t border-gray-100">
           <button onClick={() => { logout(); navigate('/'); }} className="flex items-center space-x-3 px-4 py-3 w-full text-rose-600 hover:bg-rose-50 rounded-lg transition">

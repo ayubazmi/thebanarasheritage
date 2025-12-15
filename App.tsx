@@ -1,36 +1,17 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { StoreProvider, useStore } from './store';
 import { PublicLayout, AdminLayout } from './layouts';
 import { 
   HomePage, ShopPage, ProductDetailPage, CartPage, CheckoutPage, AboutPage, ContactPage 
 } from './pages/public';
-import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers, AdminDeveloperSettings } from './pages/admin';
+import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers } from './pages/admin';
 import { Button } from './components/ui';
 import { AlertTriangle } from 'lucide-react';
 
 // Wrapper to handle global loading state and layout
 const MainContent: React.FC = () => {
-  const { isLoading, error, config } = useStore();
-
-  // Apply Theme Side Effects
-  useEffect(() => {
-    if (config.themeColors) {
-        const root = document.documentElement;
-        root.style.setProperty('--color-brand-50', config.themeColors.background || '#F9F8F6');
-        root.style.setProperty('--color-brand-100', config.themeColors.surface || '#F2EFE9');
-        root.style.setProperty('--color-brand-200', config.themeColors.border || '#E6E0D6');
-        root.style.setProperty('--color-brand-800', config.themeColors.secondary || '#4A4036');
-        root.style.setProperty('--color-brand-900', config.themeColors.primary || '#2C251F');
-    }
-    if (config.borderRadius) {
-        document.documentElement.style.setProperty('--radius', config.borderRadius);
-        // Map to tailwind sizes approx
-        document.documentElement.style.setProperty('--radius-default', config.borderRadius);
-        document.documentElement.style.setProperty('--radius-sm', `max(0px, calc(${config.borderRadius} - 2px))`);
-        document.documentElement.style.setProperty('--radius-lg', `calc(${config.borderRadius} + 4px)`);
-    }
-  }, [config]);
+  const { isLoading, error } = useStore();
 
   if (isLoading) {
     return (
@@ -86,7 +67,6 @@ const MainContent: React.FC = () => {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="developer" element={<AdminDeveloperSettings />} />
         </Route>
       </Routes>
     </HashRouter>
