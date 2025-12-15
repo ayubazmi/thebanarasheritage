@@ -1,7 +1,8 @@
 import { Product, Category, Order, SiteConfig, User } from '../types';
 
-const PROXY_URL = '/api';
-const DIRECT_URL = 'http://localhost:5000/api';
+// In production/Vite proxy, relative path is handled correctly.
+// No need for DIRECT_URL which causes issues in deployment.
+const API_BASE = '/api';
 
 const fetchJson = async (endpoint: string, options: RequestInit = {}) => {
   const headers = {
@@ -10,31 +11,28 @@ const fetchJson = async (endpoint: string, options: RequestInit = {}) => {
   };
 
   try {
-    const res = await fetch(`${PROXY_URL}${endpoint}`, { ...options, headers });
+    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    
+    // Check Content-Type to avoid JSON.parse syntax errors on HTML responses (404/500)
     const contentType = res.headers.get("content-type");
-    if (res.status === 404 && contentType && contentType.includes("text/html")) throw new Error("Proxy failed");
-    if (res.status === 403) throw new Error("Access Denied: Your IP is blocked.");
+    const isJson = contentType && contentType.includes("application/json");
+
     if (!res.ok) {
-      const errorText = await res.text();
-      // Try to parse JSON error first
-      try {
-        const jsonError = JSON.parse(errorText);
-        throw new Error(jsonError.error || res.statusText);
-      } catch (e) {
-        throw new Error(errorText || res.statusText);
+      if (isJson) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `API Error: ${res.statusText}`);
       }
+      const textError = await res.text();
+      throw new Error(`Server Error (${res.status}): ${textError.substring(0, 50)}...`);
     }
-    return res.json();
+
+    if (isJson) {
+      return res.json();
+    }
+    
+    throw new Error("Invalid response format: Expected JSON");
   } catch (error: any) {
-    if (error.message === "Proxy failed" || error.message.includes("404")) {
-      console.warn("Proxy failed, attempting direct connection...");
-      const directRes = await fetch(`${DIRECT_URL}${endpoint}`, { ...options, headers });
-      if (!directRes.ok) {
-        const errText = await directRes.text();
-        throw new Error(errText);
-      }
-      return directRes.json();
-    }
+    console.error(`API Call Failed [${endpoint}]:`, error);
     throw error;
   }
 };

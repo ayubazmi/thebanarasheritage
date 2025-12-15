@@ -5,75 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LUMIÈRE | Modern Fashion</title>
     <link rel="icon" href="https://files.catbox.moe/kfvz5y.jpg" />
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              serif: ['Cormorant Garamond', 'serif'],
-            },
-            colors: {
-              brand: {
-                50: 'var(--color-brand-50)',
-                100: 'var(--color-brand-100)',
-                200: 'var(--color-brand-200)',
-                300: 'var(--color-brand-300)',
-                800: 'var(--color-brand-800)',
-                900: 'var(--color-brand-900)',
-              }
-            },
-            borderRadius: {
-              DEFAULT: 'var(--radius)',
-              sm: 'calc(var(--radius) - 2px)',
-              md: 'var(--radius)',
-              lg: 'calc(var(--radius) + 2px)',
-              xl: 'calc(var(--radius) + 4px)',
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-in-out',
-            },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              }
-            }
-          }
-        }
-      }
-    </script>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
-    "vite": "https://esm.sh/vite@^7.2.7",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
-  }
-}
-</script>
-<style>
-  :root {
-    /* Default Lumiere Theme */
-    --color-brand-50: #F9F8F6;
-    --color-brand-100: #F2EFE9;
-    --color-brand-200: #E6E0D6;
-    --color-brand-300: #D5CDC0;
-    --color-brand-800: #4A4036;
-    --color-brand-900: #2C251F;
-    --radius: 2px;
-  }
-</style>
-</head>
-  <body class="bg-brand-50 text-brand-900 antialiased selection:bg-brand-200 selection:text-brand-900">
+  </head>
+  <body class="antialiased">
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>

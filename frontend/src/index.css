@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Lumiere Theme */
+  --color-brand-50: #F9F8F6;
+  --color-brand-100: #F2EFE9;
+  --color-brand-200: #E6E0D6;
+  --color-brand-300: #D5CDC0;
+  --color-brand-800: #4A4036;
+  --color-brand-900: #2C251F;
+  --radius: 2px;
+}
+
+body {
+  background-color: var(--color-brand-50);
+  color: var(--color-brand-900);
+}
+
+.selection\:bg-brand-200::selection {
+  background-color: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
