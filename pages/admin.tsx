@@ -39,45 +39,72 @@ const ConnectionModal: React.FC<{
     onClose: () => void; 
 }> = ({ ip, onClose }) => {
     const [copied, setCopied] = useState(false);
+    const [mode, setMode] = useState<'http' | 'ssh'>('http');
     
-    // Simulate a secure port mapping for the connection string
+    // HTTP Monitor Command (Functional if server is running)
+    const apiUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
+    // Using a loop to simulate a live monitor in the terminal
+    const httpCommand = `while true; do curl -s "${apiUrl}/api/logs" | grep "${ip}" && echo "--- [$(date)] ---"; sleep 3; done`;
+
+    // SSH Command (Simulated - Requires Agent)
     const port = 2200 + Math.floor(Math.random() * 99); 
-    const connectionString = `ssh root@${ip} -p ${port}`;
+    const sshCommand = `ssh root@${ip} -p ${port}`;
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(connectionString);
+        navigator.clipboard.writeText(mode === 'http' ? httpCommand : sshCommand);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 font-mono">
-            <div className="bg-black border border-green-500 w-full max-w-lg rounded-sm flex flex-col shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden p-6">
+            <div className="bg-black border border-green-500 w-full max-w-2xl rounded-sm flex flex-col shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden p-6">
                 {/* CRT Scanline Effect */}
                 <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%] opacity-20"></div>
                 
                 <button onClick={onClose} className="absolute top-4 right-4 text-green-700 hover:text-green-400 z-20"><X size={20}/></button>
 
                 <h3 className="text-green-500 font-bold text-lg mb-4 flex items-center gap-2 relative z-20">
-                    <Terminal size={18} /> Secure Tunnel Established
+                    <Terminal size={18} /> Remote Uplink Established
                 </h3>
 
-                <p className="text-green-800 text-xs mb-6 relative z-20">
-                    A secure reverse tunnel has been opened for IP <span className="text-green-500">{ip}</span>. Use the command below to connect to the remote machine.
+                <p className="text-green-800 text-xs mb-4 relative z-20">
+                    Target Identity: <span className="text-green-500">{ip}</span>
                 </p>
 
-                <div className="bg-green-900/10 border border-green-900/30 p-4 rounded mb-6 flex items-center justify-between group relative z-20">
-                    <code className="text-green-400 text-sm select-all font-mono">{connectionString}</code>
+                <div className="flex space-x-4 mb-4 relative z-20 text-xs">
+                    <button 
+                        onClick={() => setMode('http')} 
+                        className={`px-3 py-1 border transition-colors ${mode === 'http' ? 'border-green-500 text-green-400 bg-green-900/30' : 'border-green-900 text-green-800 hover:text-green-600'}`}
+                    >
+                        HTTP Monitor (Live)
+                    </button>
+                    <button 
+                        onClick={() => setMode('ssh')} 
+                        className={`px-3 py-1 border transition-colors ${mode === 'ssh' ? 'border-green-500 text-green-400 bg-green-900/30' : 'border-green-900 text-green-800 hover:text-green-600'}`}
+                    >
+                        SSH Tunnel (Direct)
+                    </button>
+                </div>
+
+                <div className="bg-green-900/10 border border-green-900/30 p-4 rounded mb-2 flex items-center justify-between group relative z-20">
+                    <code className="text-green-400 text-sm select-all font-mono break-all pr-4">
+                        {mode === 'http' ? httpCommand : sshCommand}
+                    </code>
                     <button 
                         onClick={handleCopy} 
-                        className="text-green-700 hover:text-green-400 transition-colors flex items-center gap-2 text-xs uppercase font-bold"
+                        className="text-green-700 hover:text-green-400 transition-colors flex items-center gap-2 text-xs uppercase font-bold shrink-0"
                     >
                         {copied ? <span className="text-green-500 flex items-center gap-1"><CheckCircle size={14} /> Copied</span> : <span className="flex items-center gap-1"><Copy size={14}/> Copy</span>}
                     </button>
                 </div>
 
-                <div className="text-[10px] text-green-900 border-t border-green-900/30 pt-4 relative z-20">
-                    <p>WARNING: This connection is monitored. Unauthorized access is a federal offense. Session key expires in 15 minutes.</p>
+                <div className="text-[10px] text-green-900/80 border-t border-green-900/30 pt-4 relative z-20 italic">
+                    {mode === 'http' ? (
+                        <p>> HTTP Monitor uses the backend API to stream visitor activity logs to your terminal. Requires curl.</p>
+                    ) : (
+                        <p>> SSH Connection requires the client to have the 'Lumiere Agent' installed and listening on port {port}. Connection refused indicates no agent.</p>
+                    )}
                 </div>
             </div>
         </div>
