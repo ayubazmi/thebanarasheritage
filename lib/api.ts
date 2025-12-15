@@ -69,8 +69,5 @@ export const api = {
     create: (data: Partial<User> & { password: string }) => fetchJson('/users', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id: string) => fetchJson(`/users/${id}`, { method: 'DELETE' }),
     updatePassword: (id: string, password: string) => fetchJson(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
-  },
-  logs: {
-    list: () => fetchJson('/logs').catch(() => []), // Fallback default
   }
 };
