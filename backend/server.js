@@ -1,9 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -189,7 +190,7 @@ app.use(async (req, res, next) => {
 });
 
 // --- Routes ---
-app.get('/', (req, res) => res.send('API is running'));
+app.get('/health', (req, res) => res.send('API is running'));
 
 // Products
 app.get('/api/products', async (req, res) => {
@@ -441,6 +442,21 @@ app.put('/api/users/:id/password', async (req, res) => {
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// Serve Static Frontend (Production)
+// This expects the frontend build to be in a sibling 'dist' directory relative to where the server runs,
+// or we can adjust paths. In a container, typically /app/dist
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+  
+  app.get('*', (req, res) => {
+    // Exclude API routes
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+}
 
 // Seed Default Admin
 (async () => {
