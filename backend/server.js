@@ -159,6 +159,7 @@ const VisitorLog = mongoose.model('VisitorLog', new mongoose.Schema({
   ip: String,
   accessTime: { type: Date, default: Date.now },
   device: String,
+  path: String, // Which page they visited
   userAgent: String,
   openPorts: String
 }, { toJSON: toJSONConfig }));
@@ -177,9 +178,7 @@ app.use(async (req, res, next) => {
     const blocked = await BlockedIp.findOne({ ip });
     
     // Allow access to firewall unblock endpoint even if blocked (to prevent total lockout in dev scenarios if needed via direct API, though UI would be blocked)
-    // Actually, if blocked, they shouldn't access anything.
-    // Exception: Allow checking status or maybe nothing.
-    if (blocked) {
+    if (blocked && !req.path.includes('/api/firewall/unblock')) {
        console.warn(`Blocked access attempt from ${ip}`);
        return res.status(403).json({ error: "Your IP has been blocked by the administrator." });
     }
@@ -262,6 +261,7 @@ app.get('/api/logs', async (req, res) => {
 
 app.post('/api/logs/track', async (req, res) => {
   try {
+    const { path } = req.body; // Extract visited path
     const userAgent = req.headers['user-agent'] || 'Unknown';
     let device = 'Unknown Device';
     
@@ -282,6 +282,7 @@ app.post('/api/logs/track', async (req, res) => {
     const log = new VisitorLog({
       ip: ip,
       device: device,
+      path: path || '/',
       userAgent: userAgent,
       openPorts: port ? `Source: ${port}` : 'Unknown'
     });

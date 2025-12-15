@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, Play, Quote } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
 import { Product, LayoutSection } from '../types';
+import { api } from '../lib/api';
 
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (

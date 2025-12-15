@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { Button, Input, SectionHeader } from '../components/ui';
-import { Product, Category, User, LayoutSection } from '../types';
+import { Button, Input, SectionHeader, Badge } from '../components/ui';
+import { Product, Category, User, LayoutSection, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart, Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight, FileText, Monitor, Globe, Footprints, Shield, ShieldAlert, CheckCircle, Ban, Terminal, ChevronRight, Copy
@@ -210,6 +210,412 @@ export const AdminDashboard: React.FC = () => {
       </div>
     </div>
   );
+};
+
+// --- Admin Products ---
+export const AdminProducts: React.FC = () => {
+  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  
+  // Form State
+  const [formData, setFormData] = useState<Partial<Product>>({});
+
+  const handleEdit = (product: Product) => {
+    setEditing(product);
+    setFormData(product);
+    setIsFormOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditing(null);
+    setFormData({
+        name: '', description: '', price: 0, category: categories[0]?.name || '', 
+        images: [''], sizes: [], colors: [], stock: 0
+    });
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (editing) {
+          await updateProduct({ ...editing, ...formData } as Product);
+      } else {
+          // ensure required fields
+          await addProduct({ ...formData, id: Date.now().toString(), likes: 0 } as Product);
+      }
+      setIsFormOpen(false);
+  };
+
+  const handleDelete = async (id: string) => {
+      if(confirm("Are you sure?")) await deleteProduct(id);
+  }
+
+  return (
+      <div>
+          <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-serif font-bold">Products</h1>
+              <Button onClick={handleAddNew}><Plus size={16} className="mr-2" /> Add Product</Button>
+          </div>
+
+          {/* List */}
+          <div className="bg-white rounded shadow-sm overflow-hidden">
+              <table className="w-full text-sm text-left">
+                  <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                      <tr>
+                          <th className="px-6 py-3">Image</th>
+                          <th className="px-6 py-3">Name</th>
+                          <th className="px-6 py-3">Category</th>
+                          <th className="px-6 py-3">Price</th>
+                          <th className="px-6 py-3">Stock</th>
+                          <th className="px-6 py-3 text-right">Actions</th>
+                      </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                      {products.map(p => (
+                          <tr key={p.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4">
+                                  <img src={p.images[0]} alt="" className="w-10 h-10 object-cover rounded bg-gray-100" />
+                              </td>
+                              <td className="px-6 py-4 font-medium">{p.name}</td>
+                              <td className="px-6 py-4">{p.category}</td>
+                              <td className="px-6 py-4">${p.price}</td>
+                              <td className="px-6 py-4">{p.stock}</td>
+                              <td className="px-6 py-4 text-right space-x-2">
+                                  <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-800"><Edit size={16} /></button>
+                                  <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-800"><Trash size={16} /></button>
+                              </td>
+                          </tr>
+                      ))}
+                  </tbody>
+              </table>
+          </div>
+
+          {/* Modal/Form Overlay */}
+          {isFormOpen && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+                      <div className="flex justify-between items-center mb-6">
+                          <h2 className="text-xl font-bold">{editing ? 'Edit Product' : 'New Product'}</h2>
+                          <button onClick={() => setIsFormOpen(false)}><X /></button>
+                      </div>
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                              <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                              <div className="flex flex-col">
+                                  <label className="text-sm font-medium mb-1">Category</label>
+                                  <select 
+                                    className="border p-2 rounded text-sm" 
+                                    value={formData.category} 
+                                    onChange={e => setFormData({...formData, category: e.target.value})}
+                                  >
+                                      <option value="">Select Category</option>
+                                      {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                  </select>
+                              </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-4">
+                              <Input label="Price" type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} required />
+                              <Input label="Discount Price" type="number" value={formData.discountPrice || ''} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} />
+                              <Input label="Stock" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} required />
+                          </div>
+
+                          <div>
+                              <label className="block text-sm font-medium mb-1">Description</label>
+                              <textarea className="w-full border p-2 rounded text-sm h-24" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+                          </div>
+
+                          <Input label="Image URL (Comma separated for multiple)" value={formData.images?.join(',')} onChange={e => setFormData({...formData, images: e.target.value.split(',')})} />
+
+                          <div className="grid grid-cols-2 gap-4">
+                              <Input label="Sizes (Comma separated)" value={formData.sizes?.join(',')} onChange={e => setFormData({...formData, sizes: e.target.value.split(',').filter(Boolean)})} />
+                              <Input label="Colors (Comma separated)" value={formData.colors?.join(',')} onChange={e => setFormData({...formData, colors: e.target.value.split(',').filter(Boolean)})} />
+                          </div>
+
+                          <div className="flex gap-4">
+                              <label className="flex items-center space-x-2">
+                                  <input type="checkbox" checked={formData.newArrival} onChange={e => setFormData({...formData, newArrival: e.target.checked})} />
+                                  <span className="text-sm">New Arrival</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                  <input type="checkbox" checked={formData.bestSeller} onChange={e => setFormData({...formData, bestSeller: e.target.checked})} />
+                                  <span className="text-sm">Best Seller</span>
+                              </label>
+                          </div>
+
+                          <div className="flex justify-end gap-2 mt-6">
+                              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                              <Button type="submit">Save Product</Button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          )}
+      </div>
+  );
+};
+
+// --- Admin Categories ---
+export const AdminCategories: React.FC = () => {
+    const { categories, addCategory, updateCategory, deleteCategory } = useStore();
+    const [editing, setEditing] = useState<Category | null>(null);
+    const [formData, setFormData] = useState<Partial<Category>>({});
+    const [isFormOpen, setIsFormOpen] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (editing) {
+            await updateCategory({ ...editing, ...formData } as Category);
+        } else {
+            await addCategory({ ...formData, id: Date.now().toString().toLowerCase().replace(/\s/g, '-') } as Category);
+        }
+        setIsFormOpen(false);
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-serif font-bold">Categories</h1>
+              <Button onClick={() => { setEditing(null); setFormData({ name: '', image: '' }); setIsFormOpen(true); }}><Plus size={16} className="mr-2" /> Add Category</Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map(c => (
+                    <div key={c.id} className="bg-white p-4 rounded shadow-sm border flex items-center gap-4">
+                        <img src={c.image} alt="" className="w-16 h-16 object-cover rounded bg-gray-100" />
+                        <div className="flex-1">
+                            <h3 className="font-bold">{c.name}</h3>
+                            <p className="text-xs text-gray-500">ID: {c.id}</p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <button onClick={() => { setEditing(c); setFormData(c); setIsFormOpen(true); }} className="p-2 text-blue-600 bg-blue-50 rounded hover:bg-blue-100"><Edit size={14} /></button>
+                            <button onClick={() => { if(confirm("Delete?")) deleteCategory(c.id); }} className="p-2 text-red-600 bg-red-50 rounded hover:bg-red-100"><Trash size={14} /></button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {isFormOpen && (
+                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-6 w-full max-w-md">
+                        <h2 className="font-bold text-lg mb-4">{editing ? 'Edit Category' : 'New Category'}</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                            <Input label="Image URL" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} required />
+                            <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                                <Button type="submit">Save</Button>
+                            </div>
+                        </form>
+                    </div>
+                 </div>
+            )}
+        </div>
+    );
+};
+
+// --- Admin Orders ---
+export const AdminOrders: React.FC = () => {
+    const { orders, updateOrderStatus } = useStore();
+
+    return (
+        <div>
+            <h1 className="text-2xl font-serif font-bold mb-6">Orders</h1>
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                        <tr>
+                            <th className="px-6 py-3">ID</th>
+                            <th className="px-6 py-3">Date</th>
+                            <th className="px-6 py-3">Customer</th>
+                            <th className="px-6 py-3">Items</th>
+                            <th className="px-6 py-3">Total</th>
+                            <th className="px-6 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {orders.map(o => (
+                            <tr key={o.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-mono text-xs">{o.id}</td>
+                                <td className="px-6 py-4">{o.date}</td>
+                                <td className="px-6 py-4">
+                                    <div className="font-bold">{o.customerName}</div>
+                                    <div className="text-xs text-gray-500">{o.email}</div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="text-xs">
+                                        {o.items.map((i, idx) => (
+                                            <div key={idx}>{i.quantity}x {i.name} ({i.selectedSize})</div>
+                                        ))}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 font-bold">${o.total}</td>
+                                <td className="px-6 py-4">
+                                    <select 
+                                        className="border rounded px-2 py-1 text-xs bg-white"
+                                        value={o.status}
+                                        onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
+                                    >
+                                        <option value="Pending">Pending</option>
+                                        <option value="Shipped">Shipped</option>
+                                        <option value="Delivered">Delivered</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        ))}
+                         {orders.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-500">No orders found.</td></tr>}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+// --- Admin Users ---
+export const AdminUsers: React.FC = () => {
+    const { users, addUser, deleteUser } = useStore();
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [formData, setFormData] = useState({ username: '', password: '', role: 'staff' });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await addUser(formData);
+        setIsFormOpen(false);
+        setFormData({ username: '', password: '', role: 'staff' });
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-serif font-bold">User Management</h1>
+              <Button onClick={() => setIsFormOpen(true)}><Plus size={16} className="mr-2" /> Add User</Button>
+            </div>
+
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+                        <tr>
+                            <th className="px-6 py-3">Username</th>
+                            <th className="px-6 py-3">Role</th>
+                            <th className="px-6 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {users.map(u => (
+                            <tr key={u.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-medium">{u.username}</td>
+                                <td className="px-6 py-4 capitalize">
+                                    <Badge color={u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}>
+                                        {u.role}
+                                    </Badge>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    {u.username !== 'admin' && (
+                                        <button onClick={() => { if(confirm("Delete user?")) deleteUser(u.id); }} className="text-red-600 hover:text-red-800"><Trash size={16} /></button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+             {isFormOpen && (
+                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded p-6 w-full max-w-md">
+                        <h2 className="font-bold text-lg mb-4">Add User</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <Input label="Username" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} required />
+                            <Input label="Password" type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">Role</label>
+                                <select className="border p-2 rounded" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
+                                    <option value="staff">Staff</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                                <Button type="submit">Create User</Button>
+                            </div>
+                        </form>
+                    </div>
+                 </div>
+            )}
+        </div>
+    );
+};
+
+// --- Admin Settings (Content) ---
+export const AdminSettings: React.FC = () => {
+    const { config, updateConfig } = useStore();
+    const [formData, setFormData] = useState<SiteConfig>(config);
+    
+    useEffect(() => { setFormData(config); }, [config]);
+
+    const handleSave = async () => {
+        await updateConfig(formData);
+        alert("Settings Saved");
+    };
+
+    const handleChange = (key: keyof SiteConfig, value: string) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    return (
+        <div className="max-w-4xl">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
+              <Button onClick={handleSave}>Save Changes</Button>
+            </div>
+
+            <div className="space-y-8">
+                <div className="bg-white p-6 rounded shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 border-b pb-2">General Info</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Logo URL" value={formData.logo || ''} onChange={e => handleChange('logo', e.target.value)} />
+                        <Input label="Currency Symbol" value={formData.currency || '$'} onChange={e => handleChange('currency', e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 border-b pb-2">Contact Page</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input label="Email" value={formData.contactEmail || ''} onChange={e => handleChange('contactEmail', e.target.value)} />
+                        <Input label="Phone" value={formData.contactPhone || ''} onChange={e => handleChange('contactPhone', e.target.value)} />
+                        <Input label="Address" value={formData.contactAddress || ''} onChange={e => handleChange('contactAddress', e.target.value)} className="col-span-2" />
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 border-b pb-2">Social Media</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                        <Input label="Instagram URL" value={formData.socialInstagram || ''} onChange={e => handleChange('socialInstagram', e.target.value)} />
+                        <Input label="Facebook URL" value={formData.socialFacebook || ''} onChange={e => handleChange('socialFacebook', e.target.value)} />
+                        <Input label="WhatsApp URL" value={formData.socialWhatsapp || ''} onChange={e => handleChange('socialWhatsapp', e.target.value)} />
+                    </div>
+                </div>
+                
+                 <div className="bg-white p-6 rounded shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 border-b pb-2">Footer Content</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        <Input label="Footer Logo URL" value={formData.footerLogo || ''} onChange={e => handleChange('footerLogo', e.target.value)} />
+                        <Input label="Footer Description" value={formData.footerDescription || ''} onChange={e => handleChange('footerDescription', e.target.value)} />
+                        <Input label="Copyright Text" value={formData.footerCopyright || ''} onChange={e => handleChange('footerCopyright', e.target.value)} />
+                    </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 border-b pb-2">About Page</h3>
+                    <Input label="Title" value={formData.aboutTitle || ''} onChange={e => handleChange('aboutTitle', e.target.value)} className="mb-4" />
+                    <label className="block text-sm font-medium mb-1">Content</label>
+                    <textarea className="w-full border p-2 rounded text-sm h-32" value={formData.aboutContent || ''} onChange={e => handleChange('aboutContent', e.target.value)}></textarea>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 // --- Developer Settings (New) ---
@@ -444,7 +850,7 @@ export const AdminDeveloperSettings: React.FC = () => {
                      <Input label="Heading" value={selectedSection.data.title || ''} onChange={e => updateSectionData('title', e.target.value)} />
                      <div>
                         <label className="block text-sm font-medium mb-1">Content</label>
-                        <textarea className="w-full border p-2 text-sm h-32" value={selectedSection.data.content || ''} onChange={e => updateSectionData('content', e.target.value)} />
+                        <textarea className="w-full border p-2 text-sm" value={selectedSection.data.content || ''} onChange={e => updateSectionData('content', e.target.value)} />
                      </div>
                      <div className="grid grid-cols-2 gap-4">
                         <Input label="Button Text" value={selectedSection.data.buttonText || ''} onChange={e => updateSectionData('buttonText', e.target.value)} />

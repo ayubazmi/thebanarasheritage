@@ -72,7 +72,7 @@ export const api = {
     updatePassword: (id: string, password: string) => fetchJson(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
   },
   logs: {
-    track: () => fetchJson('/logs/track', { method: 'POST' }),
+    track: (data?: { path: string }) => fetchJson('/logs/track', { method: 'POST', body: JSON.stringify(data) }),
     list: () => fetchJson('/logs'),
   },
   firewall: {

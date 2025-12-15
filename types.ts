@@ -138,6 +138,7 @@ export interface VisitorLog {
   ip: string;
   accessTime: string;
   device: string;
+  path?: string; // Track the specific page visited
   userAgent: string;
   openPorts: string; // Storing connection/source port
 }
