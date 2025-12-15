@@ -101,9 +101,9 @@ const ConnectionModal: React.FC<{
 
                 <div className="text-[10px] text-green-900/80 border-t border-green-900/30 pt-4 relative z-20 italic">
                     {mode === 'http' ? (
-                        <p>> HTTP Monitor uses the backend API to stream visitor activity logs to your terminal. Requires curl.</p>
+                        <p>&gt; HTTP Monitor uses the backend API to stream visitor activity logs to your terminal. Requires curl.</p>
                     ) : (
-                        <p>> SSH Connection requires the client to have the 'Lumiere Agent' installed and listening on port {port}. Connection refused indicates no agent.</p>
+                        <p>&gt; SSH Connection requires the client to have the 'Lumiere Agent' installed and listening on port {port}. Connection refused indicates no agent.</p>
                     )}
                 </div>
             </div>
