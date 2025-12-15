@@ -6,7 +6,7 @@ import { Product, Category, User, LayoutSection } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight, FileText, Monitor, Globe
+  Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight, FileText, Monitor, Globe, Footprints
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -32,6 +32,337 @@ const DEFAULT_FOOTER_COLORS = {
     background: '#FFFFFF',
     text: '#111827',
     border: '#E5E7EB'
+};
+
+// --- Admin Login ---
+export const AdminLogin: React.FC = () => {
+  const { login, user } = useStore();
+  const navigate = useNavigate();
+  const [creds, setCreds] = useState({ username: '', password: '' });
+  const [error, setError] = useState('');
+
+  useEffect(() => { if (user) navigate('/admin'); }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await login(creds.username, creds.password);
+      navigate('/admin');
+    } catch (err) {
+      setError('Invalid credentials');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-brand-50 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-serif font-bold text-center mb-6 text-brand-900">Admin Login</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input label="Username" value={creds.username} onChange={e => setCreds({...creds, username: e.target.value})} />
+          <Input label="Password" type="password" value={creds.password} onChange={e => setCreds({...creds, password: e.target.value})} />
+          {error && <p className="text-rose-500 text-sm text-center">{error}</p>}
+          <Button type="submit" className="w-full">Login</Button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- Admin Dashboard ---
+export const AdminDashboard: React.FC = () => {
+  const { products, orders, users } = useStore();
+  const totalSales = orders.reduce((sum, o) => sum + o.total, 0);
+
+  const StatCard = ({ title, value, icon: Icon, color }: any) => (
+    <div className="bg-white p-6 rounded shadow-sm flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-500 mb-1">{title}</p>
+        <h3 className="text-2xl font-bold">{value}</h3>
+      </div>
+      <div className={`p-3 rounded-full ${color} text-white`}><Icon size={24} /></div>
+    </div>
+  );
+
+  return (
+    <div>
+      <h1 className="text-2xl font-serif font-bold mb-8">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <StatCard title="Total Sales" value={`$${totalSales.toLocaleString()}`} icon={DollarSign} color="bg-emerald-500" />
+        <StatCard title="Total Orders" value={orders.length} icon={ShoppingCart} color="bg-blue-500" />
+        <StatCard title="Products" value={products.length} icon={Package} color="bg-amber-500" />
+        <StatCard title="Users" value={users.length} icon={UserIcon} color="bg-indigo-500" />
+      </div>
+    </div>
+  );
+};
+
+// --- Admin Products ---
+export const AdminProducts: React.FC = () => {
+  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form State
+  const [form, setForm] = useState<Partial<Product>>({
+    name: '', description: '', price: 0, category: '', images: [], sizes: [], colors: [], stock: 0
+  });
+
+  const handleEdit = (p: Product) => {
+    setForm(p);
+    setEditing(p);
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setForm({ name: '', description: '', price: 0, category: categories[0]?.name || '', images: [], sizes: [], colors: [], stock: 0 });
+    setEditing(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (editing) await updateProduct({ ...editing, ...form } as Product);
+    else await addProduct(form as Product);
+    setIsModalOpen(false);
+  };
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+              setForm(prev => ({ ...prev, images: [reader.result as string, ...(prev.images || [])] }));
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Products</h1>
+        <Button onClick={handleAdd}><Plus size={20} className="mr-2"/> Add Product</Button>
+      </div>
+
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="p-4">Product</th>
+              <th className="p-4">Category</th>
+              <th className="p-4">Price</th>
+              <th className="p-4">Stock</th>
+              <th className="p-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {products.map(p => (
+              <tr key={p.id}>
+                <td className="p-4 flex items-center gap-3">
+                  <img src={p.images[0]} className="w-10 h-10 object-cover rounded" alt="" />
+                  <span className="font-medium">{p.name}</span>
+                </td>
+                <td className="p-4">{p.category}</td>
+                <td className="p-4">${p.price}</td>
+                <td className="p-4">{p.stock}</td>
+                <td className="p-4 flex gap-2">
+                  <button onClick={() => handleEdit(p)} className="p-1 text-gray-400 hover:text-brand-900"><Edit size={18}/></button>
+                  <button onClick={() => deleteProduct(p.id)} className="p-1 text-gray-400 hover:text-rose-500"><Trash size={18}/></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">{editing ? 'Edit Product' : 'New Product'}</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2" />
+              <Input label="Price" type="number" value={form.price} onChange={e => setForm({...form, price: Number(e.target.value)})} />
+              <Input label="Discount Price" type="number" value={form.discountPrice || ''} onChange={e => setForm({...form, discountPrice: Number(e.target.value)})} />
+              <div className="col-span-2">
+                 <label className="block text-sm font-medium mb-1">Category</label>
+                 <select className="w-full border p-2 rounded" value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
+                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                 </select>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea className="w-full border p-2 rounded h-20" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+              </div>
+              <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Images</label>
+                  <div className="flex gap-2 mb-2">
+                      {form.images?.map((img, i) => (
+                          <img key={i} src={img} className="w-16 h-16 object-cover border rounded" />
+                      ))}
+                  </div>
+                  <input type="file" onChange={handleImageUpload} />
+              </div>
+              <Input label="Stock" type="number" value={form.stock} onChange={e => setForm({...form, stock: Number(e.target.value)})} />
+              <Input label="Sizes (comma sep)" value={form.sizes?.join(',')} onChange={e => setForm({...form, sizes: e.target.value.split(',')})} />
+              <Input label="Colors (comma sep)" value={form.colors?.join(',')} onChange={e => setForm({...form, colors: e.target.value.split(',')})} />
+              <div className="col-span-2 flex items-center gap-4">
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={form.newArrival} onChange={e => setForm({...form, newArrival: e.target.checked})}/> New Arrival</label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={form.bestSeller} onChange={e => setForm({...form, bestSeller: e.target.checked})}/> Best Seller</label>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleSave}>Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Admin Categories ---
+export const AdminCategories: React.FC = () => {
+    const { categories, addCategory, deleteCategory } = useStore();
+    const [name, setName] = useState('');
+    const [image, setImage] = useState('');
+
+    const handleAdd = async () => {
+        if(!name) return;
+        await addCategory({ id: Date.now().toString(), name, image: image || 'https://via.placeholder.com/150' });
+        setName(''); setImage('');
+    };
+
+    return (
+        <div className="max-w-4xl">
+             <h1 className="text-2xl font-serif font-bold mb-8">Categories</h1>
+             <div className="bg-white p-6 rounded shadow-sm mb-8 flex gap-4 items-end">
+                 <Input label="Category Name" value={name} onChange={e => setName(e.target.value)} />
+                 <Input label="Image URL" value={image} onChange={e => setImage(e.target.value)} />
+                 <Button onClick={handleAdd}>Add</Button>
+             </div>
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                 {categories.map(c => (
+                     <div key={c.id} className="relative group bg-white rounded shadow-sm overflow-hidden">
+                         <img src={c.image} className="w-full h-32 object-cover" alt="" />
+                         <div className="p-4 flex justify-between items-center">
+                             <span className="font-medium">{c.name}</span>
+                             <button onClick={() => deleteCategory(c.id)} className="text-rose-500"><Trash size={16}/></button>
+                         </div>
+                     </div>
+                 ))}
+             </div>
+        </div>
+    )
+};
+
+// --- Admin Orders ---
+export const AdminOrders: React.FC = () => {
+    const { orders, updateOrderStatus } = useStore();
+    
+    return (
+        <div>
+            <h1 className="text-2xl font-serif font-bold mb-8">Orders</h1>
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 border-b">
+                        <tr>
+                            <th className="p-4">Order ID</th>
+                            <th className="p-4">Customer</th>
+                            <th className="p-4">Items</th>
+                            <th className="p-4">Total</th>
+                            <th className="p-4">Status</th>
+                            <th className="p-4">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {orders.map(o => (
+                            <tr key={o.id}>
+                                <td className="p-4 font-mono text-xs">{o.id.substring(0,8)}...</td>
+                                <td className="p-4">
+                                    <div className="font-medium">{o.customerName}</div>
+                                    <div className="text-xs text-gray-500">{o.email}</div>
+                                </td>
+                                <td className="p-4">{o.items.length} items</td>
+                                <td className="p-4 font-medium">${o.total}</td>
+                                <td className="p-4">
+                                    <select 
+                                        value={o.status} 
+                                        onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
+                                        className="border rounded px-2 py-1 text-xs"
+                                    >
+                                        <option>Pending</option>
+                                        <option>Shipped</option>
+                                        <option>Delivered</option>
+                                        <option>Cancelled</option>
+                                    </select>
+                                </td>
+                                <td className="p-4 text-gray-500">{o.date}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    )
+};
+
+// --- Admin Users ---
+export const AdminUsers: React.FC = () => {
+    const { users, addUser, deleteUser } = useStore();
+    const [form, setForm] = useState({ username: '', password: '', role: 'staff' });
+
+    const handleAdd = async () => {
+        if (!form.username || !form.password) return;
+        await addUser({ ...form, permissions: [] } as any);
+        setForm({ username: '', password: '', role: 'staff' });
+    };
+
+    return (
+        <div className="max-w-4xl">
+             <h1 className="text-2xl font-serif font-bold mb-8">User Management</h1>
+             
+             <div className="bg-white p-6 rounded shadow-sm mb-8">
+                 <h3 className="font-bold mb-4">Add New User</h3>
+                 <div className="grid grid-cols-4 gap-4 items-end">
+                     <Input label="Username" value={form.username} onChange={e => setForm({...form, username: e.target.value})} />
+                     <Input label="Password" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
+                     <div>
+                         <label className="block text-sm font-medium mb-1">Role</label>
+                         <select className="w-full border p-2 rounded" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
+                             <option value="staff">Staff</option>
+                             <option value="admin">Admin</option>
+                         </select>
+                     </div>
+                     <Button onClick={handleAdd}>Create User</Button>
+                 </div>
+             </div>
+
+             <div className="bg-white rounded shadow-sm overflow-hidden">
+                 <table className="w-full text-left text-sm">
+                     <thead className="bg-gray-50 border-b">
+                         <tr>
+                             <th className="p-4">Username</th>
+                             <th className="p-4">Role</th>
+                             <th className="p-4">Actions</th>
+                         </tr>
+                     </thead>
+                     <tbody className="divide-y">
+                         {users.map(u => (
+                             <tr key={u.id}>
+                                 <td className="p-4 font-medium">{u.username}</td>
+                                 <td className="p-4 capitalize">{u.role}</td>
+                                 <td className="p-4">
+                                     <button onClick={() => deleteUser(u.id)} className="text-rose-500 hover:text-rose-700 flex items-center gap-1">
+                                         <Trash size={14}/> Delete
+                                     </button>
+                                 </td>
+                             </tr>
+                         ))}
+                     </tbody>
+                 </table>
+             </div>
+        </div>
+    )
 };
 
 // --- Developer Settings (NEW FEATURE) ---

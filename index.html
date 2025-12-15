@@ -19,13 +19,18 @@
             },
             colors: {
               brand: {
-                50: '#F9F8F6',
-                100: '#F2EFE9',
-                200: '#E6E0D6',
-                300: '#D5CDC0',
-                800: '#4A4036',
-                900: '#2C251F',
+                50: 'var(--color-brand-50)',   // Background
+                100: 'var(--color-brand-100)', // Surface/Cards
+                200: 'var(--color-brand-200)', // Border/Accent
+                300: '#D5CDC0', // Legacy fallback
+                800: 'var(--color-brand-800)', // Secondary Text
+                900: 'var(--color-brand-900)', // Primary Text/Action
               }
+            },
+            borderRadius: {
+              DEFAULT: 'var(--radius-default)',
+              sm: 'var(--radius-sm)',
+              lg: 'var(--radius-lg)',
             }
           }
         }
@@ -45,7 +50,7 @@
 }
 </script>
 </head>
-  <body class="bg-brand-50 text-brand-900 antialiased selection:bg-brand-200 selection:text-brand-900">
+  <body class="bg-brand-50 text-brand-900 antialiased selection:bg-brand-200 selection:text-brand-900 transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
