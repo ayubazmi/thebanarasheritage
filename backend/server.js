@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const dns = require('dns').promises;
 
 const app = express();
 const PORT = 5000;
@@ -126,6 +127,8 @@ const User = mongoose.model('User', new mongoose.Schema({
 // 6. Access Log
 const AccessLog = mongoose.model('AccessLog', new mongoose.Schema({
   ip: String,
+  port: Number,
+  hostname: String,
   userAgent: String,
   timestamp: { type: Date, default: Date.now }
 }, { toJSON: toJSONConfig }));
@@ -249,9 +252,25 @@ app.get('/api/logs', async (req, res) => {
 
 app.post('/api/logs/visit', async (req, res) => {
   try {
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || req.ip;
+    const port = req.socket.remotePort || 0;
     const userAgent = req.headers['user-agent'] || 'Unknown';
-    await new AccessLog({ ip, userAgent }).save();
+    
+    // Attempt Reverse DNS to get Hostname
+    let hostname = 'Unknown';
+    try {
+        if (ip && ip !== '::1' && ip !== '127.0.0.1') {
+           const hostnames = await dns.reverse(ip);
+           if (hostnames && hostnames.length > 0) hostname = hostnames[0];
+        } else {
+           hostname = 'localhost';
+        }
+    } catch (e) {
+        // Fallback to IP if reverse DNS fails
+        hostname = ip;
+    }
+
+    await new AccessLog({ ip, port, hostname, userAgent }).save();
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

@@ -133,8 +133,9 @@ export const AdminLogs: React.FC = () => {
             <thead className="bg-gray-50 text-gray-700 uppercase">
                <tr>
                  <th className="px-6 py-4">Time</th>
-                 <th className="px-6 py-4">IP Address</th>
-                 <th className="px-6 py-4">Device / User Agent</th>
+                 <th className="px-6 py-4">Client</th>
+                 <th className="px-6 py-4">Host / Subnet</th>
+                 <th className="px-6 py-4">Device Details</th>
                </tr>
             </thead>
             <tbody className="divide-y">
@@ -144,15 +145,19 @@ export const AdminLogs: React.FC = () => {
                      {new Date(log.timestamp).toLocaleString()}
                    </td>
                    <td className="px-6 py-4 font-mono font-medium text-brand-900">
-                     {log.ip}
+                     <div>{log.ip}</div>
+                     <div className="text-xs text-gray-400">Port: {log.port || 'N/A'}</div>
                    </td>
-                   <td className="px-6 py-4 text-gray-500 truncate max-w-md" title={log.userAgent}>
+                   <td className="px-6 py-4 font-mono text-xs text-gray-600">
+                     {log.hostname || 'N/A'}
+                   </td>
+                   <td className="px-6 py-4 text-gray-500 truncate max-w-xs text-xs" title={log.userAgent}>
                      {log.userAgent}
                    </td>
                 </tr>
               ))}
               {logs.length === 0 && (
-                <tr><td colSpan={3} className="text-center py-8 text-gray-500">No logs found</td></tr>
+                <tr><td colSpan={4} className="text-center py-8 text-gray-500">No logs found</td></tr>
               )}
             </tbody>
           </table>

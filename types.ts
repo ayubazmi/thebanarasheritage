@@ -102,6 +102,8 @@ export interface SiteConfig {
 export interface AccessLog {
   id: string;
   ip: string;
+  port?: number;
+  hostname?: string;
   userAgent: string;
   timestamp: string;
 }
