@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader } from '../components/ui';
 import { Product, Category, User, LayoutSection } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
-  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart, Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight
+  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart, Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight, FileText, Monitor, Globe, Footprints, Shield, ShieldAlert, CheckCircle, Ban, Terminal, ChevronRight
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -20,11 +20,172 @@ const DEFAULT_LAYOUT_RESET: LayoutSection[] = [
 ];
 
 const DEFAULT_THEME_RESET = {
-    background: '#F9F8F6',
-    surface: '#F2EFE9',
-    border: '#E6E0D6',
-    primary: '#2C251F',
-    secondary: '#4A4036'
+    background: '#FFFFFF',
+    surface: '#F3F4F6',
+    border: '#E5E7EB',
+    primary: '#111827',
+    secondary: '#4B5563'
+};
+
+const DEFAULT_FOOTER_COLORS = {
+    background: '#FFFFFF',
+    text: '#111827',
+    border: '#E5E7EB'
+};
+
+// --- Shell Terminal Component ---
+const ShellModal: React.FC<{ 
+    ip: string; 
+    onClose: () => void; 
+    isBlocked: boolean; 
+    onBlock: () => void; 
+    onUnblock: () => void; 
+}> = ({ ip, onClose, isBlocked, onBlock, onUnblock }) => {
+    const [lines, setLines] = useState<string[]>([]);
+    const [input, setInput] = useState('');
+    const endRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // Initial Connection Sequence
+        const seq = [
+            `> Initiating handshake with ${ip}...`,
+            `> Verifying SSL certificate... Verified.`,
+            `> Establishing secure channel (Port 443)...`,
+            `> Connection established.`,
+            `> User Agent: Detected`,
+            `> Status: ${isBlocked ? 'ACCESS DENIED (BLOCKED)' : 'ACTIVE (ALLOWED)'}`,
+            `> Type 'help' for available commands.`
+        ];
+        
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < seq.length) {
+                setLines(prev => [...prev, seq[i]]);
+                i++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 300);
+
+        return () => clearInterval(interval);
+    }, [ip]);
+
+    useEffect(() => {
+        endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [lines]);
+
+    const handleCommand = (e: React.FormEvent) => {
+        e.preventDefault();
+        const rawCmd = input.trim();
+        const parts = rawCmd.split(' ');
+        const cmd = parts[0].toLowerCase();
+        
+        const newLines = [`admin@lumiere:~$ ${rawCmd}`];
+
+        switch(cmd) {
+            case 'help':
+                newLines.push(`Available commands:`);
+                newLines.push(`  status   - Check connection status`);
+                newLines.push(`  allow    - Accept incoming connection (Unblock)`);
+                newLines.push(`  deny     - Reject incoming connection (Block)`);
+                newLines.push(`  ls       - List directory contents`);
+                newLines.push(`  pwd      - Print working directory`);
+                newLines.push(`  clear    - Clear terminal`);
+                newLines.push(`  exit     - Close connection`);
+                break;
+            case 'status':
+                newLines.push(`> IP: ${ip}`);
+                newLines.push(`> State: ${isBlocked ? 'BLOCKED' : 'ALLOWED'}`);
+                newLines.push(`> Latency: ${Math.floor(Math.random() * 50) + 10}ms`);
+                break;
+            case 'allow':
+                onUnblock();
+                newLines.push(`> Updating firewall rules...`);
+                newLines.push(`> SUCCESS: Connection accepted from ${ip}`);
+                break;
+            case 'deny':
+                onBlock();
+                newLines.push(`> Updating firewall rules...`);
+                newLines.push(`> SUCCESS: Connection rejected for ${ip}`);
+                break;
+            case 'ls':
+                newLines.push('config.json  firewall.log  users.db  server.js  public/');
+                break;
+            case 'pwd':
+                newLines.push('/var/www/lumiere/admin');
+                break;
+            case 'whoami':
+                newLines.push('root');
+                break;
+            case 'uname':
+            case 'uname -a':
+                newLines.push('Linux lumiere-server 5.15.0-76-generic x86_64');
+                break;
+            case 'date':
+                newLines.push(new Date().toString());
+                break;
+            case 'cat':
+                if (parts[1] === 'config.json') {
+                    newLines.push('{ "server": "lumiere", "port": 5000, "env": "production" }');
+                } else if (parts[1]) {
+                    newLines.push(`cat: ${parts[1]}: Permission denied`);
+                } else {
+                    newLines.push('usage: cat <file>');
+                }
+                break;
+            case 'clear':
+                setLines([]);
+                setInput('');
+                return;
+            case 'exit':
+                onClose();
+                return;
+            case '':
+                break;
+            default:
+                newLines.push(`> Command not found: ${cmd}`);
+        }
+
+        setLines(prev => [...prev, ...newLines]);
+        setInput('');
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 font-mono">
+            <div className="bg-black border border-green-500 w-full max-w-3xl h-[600px] rounded-sm flex flex-col shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden">
+                {/* CRT Scanline Effect */}
+                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%] opacity-20"></div>
+                
+                {/* Header */}
+                <div className="flex justify-between items-center border-b border-green-900/50 bg-green-900/10 p-2 px-4 select-none">
+                    <span className="text-green-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                        <Terminal size={14} /> Secure Shell / {ip}
+                    </span>
+                    <button onClick={onClose} className="text-green-700 hover:text-green-400 transition-colors"><X size={16}/></button>
+                </div>
+
+                {/* Terminal Body */}
+                <div className="flex-1 overflow-y-auto p-4 text-sm text-green-400 font-medium space-y-1 scrollbar-thin scrollbar-thumb-green-900 scrollbar-track-transparent">
+                    {lines.map((line, idx) => (
+                        <div key={idx} className="break-all">{line}</div>
+                    ))}
+                    <div ref={endRef} />
+                </div>
+
+                {/* Input Area */}
+                <form onSubmit={handleCommand} className="p-3 bg-green-900/10 border-t border-green-900/30 flex items-center gap-2">
+                    <span className="text-green-500 font-bold shrink-0">admin@lumiere:~$</span>
+                    <input 
+                        autoFocus
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 text-green-400 w-full font-mono outline-none placeholder-green-800"
+                        placeholder="Type command..."
+                    />
+                </form>
+            </div>
+        </div>
+    );
 };
 
 // --- Login ---
@@ -130,8 +291,9 @@ export const AdminDashboard: React.FC = () => {
 
 // --- Developer Settings (New) ---
 export const AdminDeveloperSettings: React.FC = () => {
-  const { config, updateConfig } = useStore();
-  const [activeTab, setActiveTab] = useState<'layout' | 'theme'>('layout');
+  const { config, updateConfig, logs, fetchLogs, blockedIps, blockIp, unblockIp } = useStore();
+  const [activeTab, setActiveTab] = useState<'layout' | 'theme' | 'logs'>('layout');
+  const [shellIp, setShellIp] = useState<string | null>(null);
   
   // Layout Builder State - Init from config
   const [layout, setLayout] = useState<LayoutSection[]>(config.homeLayout || DEFAULT_LAYOUT_RESET);
@@ -141,6 +303,9 @@ export const AdminDeveloperSettings: React.FC = () => {
   const [theme, setTheme] = useState(config.themeColors || DEFAULT_THEME_RESET);
   const [navbarLayout, setNavbarLayout] = useState<'left'|'center'|'right'>(config.navbarLayout || 'center');
   const [borderRadius, setBorderRadius] = useState<string>(config.borderRadius || '2px');
+  
+  // Footer Colors
+  const [footerColors, setFooterColors] = useState(config.footerColors || DEFAULT_FOOTER_COLORS);
 
   // Ensure state is synced if config loads late (though usually handled by parent loader)
   useEffect(() => {
@@ -148,13 +313,22 @@ export const AdminDeveloperSettings: React.FC = () => {
     if (config.themeColors) setTheme(config.themeColors);
     if (config.navbarLayout) setNavbarLayout(config.navbarLayout);
     if (config.borderRadius) setBorderRadius(config.borderRadius);
+    if (config.footerColors) setFooterColors(config.footerColors);
   }, [config]);
+
+  // Refresh logs when tab is active
+  useEffect(() => {
+    if (activeTab === 'logs') {
+        fetchLogs();
+    }
+  }, [activeTab]);
 
   const handleSave = async () => {
     await updateConfig({
       ...config,
       homeLayout: layout,
       themeColors: theme,
+      footerColors: footerColors,
       navbarLayout: navbarLayout,
       borderRadius: borderRadius
     });
@@ -165,8 +339,9 @@ export const AdminDeveloperSettings: React.FC = () => {
     if (confirm("Reset layout and theme to defaults?")) {
         setLayout(DEFAULT_LAYOUT_RESET);
         setTheme(DEFAULT_THEME_RESET);
+        setFooterColors(DEFAULT_FOOTER_COLORS);
         setNavbarLayout('center');
-        setBorderRadius('2px');
+        setBorderRadius('0px');
         alert("Defaults restored. Click 'Save' to apply.");
     }
   };
@@ -231,8 +406,22 @@ export const AdminDeveloperSettings: React.FC = () => {
     setLayout(layout.map(s => s.id === updated.id ? updated : s));
   };
 
+  const isIpBlocked = (ip: string) => {
+      return blockedIps.some(blocked => blocked.ip === ip);
+  };
+
   return (
     <div className="pb-20">
+      {shellIp && (
+          <ShellModal 
+            ip={shellIp} 
+            onClose={() => setShellIp(null)} 
+            isBlocked={isIpBlocked(shellIp)} 
+            onBlock={() => blockIp(shellIp)}
+            onUnblock={() => unblockIp(shellIp)}
+          />
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
         <div className="flex gap-2">
@@ -246,8 +435,10 @@ export const AdminDeveloperSettings: React.FC = () => {
       <div className="flex space-x-4 border-b mb-8">
         <button onClick={() => setActiveTab('layout')} className={`pb-2 px-4 ${activeTab === 'layout' ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>Layout Builder</button>
         <button onClick={() => setActiveTab('theme')} className={`pb-2 px-4 ${activeTab === 'theme' ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>Theme & Interface</button>
+        <button onClick={() => setActiveTab('logs')} className={`pb-2 px-4 ${activeTab === 'logs' ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>Visitor Logs</button>
       </div>
 
+      {/* ... Layout Tab Content ... */}
       {activeTab === 'layout' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Section List */}
@@ -421,6 +612,7 @@ export const AdminDeveloperSettings: React.FC = () => {
         </div>
       )}
 
+      {/* ... Theme Tab Content ... */}
       {activeTab === 'theme' && (
         <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white p-8 rounded shadow-sm">
@@ -475,6 +667,7 @@ export const AdminDeveloperSettings: React.FC = () => {
             <div className="bg-white p-8 rounded shadow-sm">
                 <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2"/> Color Palette</h3>
                 <div className="space-y-6">
+                    {/* Main Theme Colors */}
                     <div className="grid grid-cols-2 gap-4 items-center">
                         <label className="text-sm font-medium">Background (Lightest)</label>
                         <div className="flex gap-2">
@@ -512,29 +705,437 @@ export const AdminDeveloperSettings: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="mt-8 p-4 bg-gray-50 rounded border">
-                    <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Live Preview</h4>
-                    <div className="p-4 border" style={{ backgroundColor: theme.background, borderColor: theme.border, borderRadius: borderRadius }}>
-                        <h1 className="text-2xl font-serif font-bold mb-2" style={{ color: theme.primary }}>Heading Text</h1>
-                        <p className="mb-4" style={{ color: theme.secondary }}>This is how your body text will look on the new background color with {borderRadius} radius.</p>
-                        <button className="px-4 py-2 text-white font-medium" style={{ backgroundColor: theme.primary, borderRadius: borderRadius }}>Primary Button</button>
+                <div className="mt-8 pt-6 border-t">
+                    <h3 className="font-bold text-lg mb-4 flex items-center"><Footprints className="mr-2"/> Footer Styling</h3>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 items-center">
+                            <label className="text-sm font-medium">Footer Background</label>
+                            <div className="flex gap-2">
+                            <input type="color" value={footerColors.background} onChange={e => setFooterColors({...footerColors, background: e.target.value})} className="h-8 w-12 p-0 border-0" />
+                            <Input value={footerColors.background} onChange={e => setFooterColors({...footerColors, background: e.target.value})} className="flex-1" />
+                            </div>
+                        </div>
+                         <div className="grid grid-cols-2 gap-4 items-center">
+                            <label className="text-sm font-medium">Footer Text</label>
+                            <div className="flex gap-2">
+                            <input type="color" value={footerColors.text} onChange={e => setFooterColors({...footerColors, text: e.target.value})} className="h-8 w-12 p-0 border-0" />
+                            <Input value={footerColors.text} onChange={e => setFooterColors({...footerColors, text: e.target.value})} className="flex-1" />
+                            </div>
+                        </div>
+                         <div className="grid grid-cols-2 gap-4 items-center">
+                            <label className="text-sm font-medium">Footer Border</label>
+                            <div className="flex gap-2">
+                            <input type="color" value={footerColors.border} onChange={e => setFooterColors({...footerColors, border: e.target.value})} className="h-8 w-12 p-0 border-0" />
+                            <Input value={footerColors.border} onChange={e => setFooterColors({...footerColors, border: e.target.value})} className="flex-1" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+      )}
+
+      {/* ... Logs Tab Content ... */}
+      {activeTab === 'logs' && (
+        <div className="bg-white rounded shadow-sm overflow-hidden">
+             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                 <div>
+                     <h3 className="font-bold text-lg flex items-center gap-2"><FileText size={20}/> Access Logs</h3>
+                     <p className="text-xs text-gray-500">Recent visitor activity and connection details</p>
+                 </div>
+                 <Button onClick={fetchLogs} variant="outline" size="sm">Refresh Logs</Button>
+             </div>
+             <div className="overflow-x-auto">
+                 <table className="w-full text-sm text-left">
+                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                         <tr>
+                             <th className="px-6 py-3">Time</th>
+                             <th className="px-6 py-3">IP Address</th>
+                             <th className="px-6 py-3">Device / OS</th>
+                             <th className="px-6 py-3">Port / Connection</th>
+                             <th className="px-6 py-3">User Agent Detail</th>
+                             <th className="px-6 py-3">Incoming Connection</th>
+                         </tr>
+                     </thead>
+                     <tbody className="divide-y">
+                         {logs.map((log) => {
+                             const blocked = isIpBlocked(log.ip);
+                             return (
+                             <tr key={log.id} className={`hover:bg-gray-50 ${blocked ? 'bg-red-50' : ''}`}>
+                                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                     {new Date(log.accessTime).toLocaleString()}
+                                 </td>
+                                 <td className="px-6 py-4 font-mono text-xs">
+                                     <div className="flex items-center gap-2">
+                                        <Globe size={14} className="text-brand-900"/>
+                                        {log.ip}
+                                     </div>
+                                 </td>
+                                 <td className="px-6 py-4 font-medium">
+                                     <div className="flex items-center gap-2">
+                                        <Monitor size={14} className="text-gray-400"/>
+                                        {log.device}
+                                     </div>
+                                 </td>
+                                 <td className="px-6 py-4 font-mono text-xs text-brand-800 bg-brand-50">
+                                     {log.openPorts}
+                                 </td>
+                                 <td className="px-6 py-4 text-xs text-gray-400 max-w-xs truncate" title={log.userAgent}>
+                                     {log.userAgent}
+                                 </td>
+                                 <td className="px-6 py-4">
+                                     <div className="flex gap-2">
+                                         {blocked ? (
+                                             <button 
+                                                onClick={() => unblockIp(log.ip)}
+                                                className="flex items-center gap-1 text-xs font-bold text-red-600 border border-red-200 bg-red-100 px-3 py-1.5 rounded hover:bg-red-200 transition"
+                                                title="Reject Connection (Block)"
+                                             >
+                                                <Ban size={14} /> Reject
+                                             </button>
+                                         ) : (
+                                             <button 
+                                                onClick={() => blockIp(log.ip)}
+                                                className="flex items-center gap-1 text-xs font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded hover:bg-emerald-100 transition"
+                                                title="Accept Connection (Unblock)"
+                                             >
+                                                <CheckCircle size={14} /> Accept
+                                             </button>
+                                         )}
+                                         
+                                         <div className="w-px bg-gray-200 mx-1"></div>
+
+                                         <button 
+                                            onClick={() => setShellIp(log.ip)}
+                                            className="flex items-center gap-2 text-xs font-bold text-brand-900 border border-brand-900 bg-brand-50 px-3 py-1.5 rounded hover:bg-brand-900 hover:text-white transition"
+                                            title="Open Remote Shell"
+                                         >
+                                            <Terminal size={14} /> Shell
+                                         </button>
+                                     </div>
+                                 </td>
+                             </tr>
+                         )})}
+                         {logs.length === 0 && (
+                             <tr>
+                                 <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No logs found yet.</td>
+                             </tr>
+                         )}
+                     </tbody>
+                 </table>
+             </div>
         </div>
       )}
     </div>
   );
 };
 
-// --- Settings Manager (Existing - PRESERVED EXACTLY AS IS) ---
+export const AdminProducts: React.FC = () => {
+  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Form State
+  const [formData, setFormData] = useState<Partial<Product>>({
+    name: '', description: '', price: 0, category: '', stock: 0, images: [''], newArrival: false
+  });
+
+  const openModal = (product?: Product) => {
+    if (product) {
+      setEditingProduct(product);
+      setFormData(product);
+    } else {
+      setEditingProduct(null);
+      setFormData({ name: '', description: '', price: 0, category: categories[0]?.name || '', stock: 0, images: [''], newArrival: false });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingProduct) {
+        await updateProduct({ ...editingProduct, ...formData } as Product);
+      } else {
+        await addProduct(formData as Product);
+      }
+      setIsModalOpen(false);
+    } catch (e) { alert("Error saving product"); }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-serif font-bold">Products</h1>
+        <Button onClick={() => openModal()}><Plus size={18} className="mr-2"/> Add Product</Button>
+      </div>
+
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 uppercase text-xs text-gray-700">
+            <tr>
+              <th className="px-6 py-3">Image</th>
+              <th className="px-6 py-3">Name</th>
+              <th className="px-6 py-3">Category</th>
+              <th className="px-6 py-3">Price</th>
+              <th className="px-6 py-3">Stock</th>
+              <th className="px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {products.map(p => (
+              <tr key={p.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <img src={p.images[0]} className="w-10 h-10 object-cover rounded" alt="" />
+                </td>
+                <td className="px-6 py-4 font-medium">{p.name}</td>
+                <td className="px-6 py-4">{p.category}</td>
+                <td className="px-6 py-4">${p.price}</td>
+                <td className="px-6 py-4">{p.stock}</td>
+                <td className="px-6 py-4 flex gap-2">
+                  <button onClick={() => openModal(p)} className="text-blue-600 hover:text-blue-800"><Edit size={16}/></button>
+                  <button onClick={() => deleteProduct(p.id)} className="text-rose-600 hover:text-rose-800"><Trash size={16}/></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+            <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+              <div>
+                <label className="block text-sm font-medium mb-1">Category</label>
+                <select 
+                  className="w-full border p-2 rounded" 
+                  value={formData.category} 
+                  onChange={e => setFormData({...formData, category: e.target.value})}
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input label="Price" type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} />
+                <Input label="Stock" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} />
+              </div>
+              <Input label="Image URL" value={formData.images?.[0] || ''} onChange={e => setFormData({...formData, images: [e.target.value]})} />
+              <div>
+                 <label className="block text-sm font-medium mb-1">Description</label>
+                 <textarea className="w-full border p-2 rounded text-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit">Save Product</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const AdminOrders: React.FC = () => {
+  const { orders, updateOrderStatus } = useStore();
+
+  return (
+    <div>
+      <h1 className="text-2xl font-serif font-bold mb-6">Orders</h1>
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 uppercase text-xs text-gray-700">
+            <tr>
+              <th className="px-6 py-3">ID</th>
+              <th className="px-6 py-3">Customer</th>
+              <th className="px-6 py-3">Date</th>
+              <th className="px-6 py-3">Total</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {orders.map(o => (
+              <tr key={o.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 font-mono text-xs">{o.id}</td>
+                <td className="px-6 py-4">
+                  <div className="font-medium">{o.customerName}</div>
+                  <div className="text-xs text-gray-500">{o.email}</div>
+                </td>
+                <td className="px-6 py-4">{o.date}</td>
+                <td className="px-6 py-4 font-bold">${o.total}</td>
+                <td className="px-6 py-4">
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    o.status === 'Delivered' ? 'bg-green-100 text-green-800' : 
+                    o.status === 'Cancelled' ? 'bg-red-100 text-red-800' : 
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {o.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                   <select 
+                    className="border p-1 rounded text-xs" 
+                    value={o.status}
+                    onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
+                   >
+                     <option value="Pending">Pending</option>
+                     <option value="Shipped">Shipped</option>
+                     <option value="Delivered">Delivered</option>
+                     <option value="Cancelled">Cancelled</option>
+                   </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export const AdminCategories: React.FC = () => {
+  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
+  const [editing, setEditing] = useState<Category | null>(null);
+  const [name, setName] = useState('');
+  const [image, setImage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editing) {
+      await updateCategory({ ...editing, name, image });
+      setEditing(null);
+    } else {
+      await addCategory({ id: '', name, image });
+    }
+    setName(''); setImage('');
+  };
+
+  const startEdit = (c: Category) => {
+    setEditing(c);
+    setName(c.name);
+    setImage(c.image);
+  };
+
+  return (
+    <div className="grid md:grid-cols-3 gap-8">
+      <div className="md:col-span-2">
+        <h1 className="text-2xl font-serif font-bold mb-6">Categories</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {categories.map(c => (
+            <div key={c.id} className="bg-white p-4 rounded shadow-sm flex items-center gap-4">
+              <img src={c.image} alt="" className="w-16 h-16 object-cover rounded" />
+              <div className="flex-1">
+                <h3 className="font-bold">{c.name}</h3>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => startEdit(c)} className="p-2 text-gray-500 hover:text-blue-600"><Edit size={16}/></button>
+                <button onClick={() => deleteCategory(c.id)} className="p-2 text-gray-500 hover:text-rose-600"><Trash size={16}/></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div className="bg-white p-6 rounded shadow-sm sticky top-6">
+          <h2 className="font-bold mb-4">{editing ? 'Edit Category' : 'Add Category'}</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input label="Name" value={name} onChange={e => setName(e.target.value)} required />
+            <Input label="Image URL" value={image} onChange={e => setImage(e.target.value)} required />
+            <div className="flex gap-2">
+               {editing && <Button type="button" variant="secondary" onClick={() => { setEditing(null); setName(''); setImage(''); }}>Cancel</Button>}
+               <Button type="submit" className="w-full">{editing ? 'Update' : 'Add'}</Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const AdminUsers: React.FC = () => {
+    const { users, addUser, deleteUser } = useStore();
+    const [isOpen, setIsOpen] = useState(false);
+    const [form, setForm] = useState<{ username: string; password: string; role: 'admin' | 'staff' }>({ username: '', password: '', role: 'staff' });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await addUser(form);
+        setIsOpen(false);
+        setForm({ username: '', password: '', role: 'staff' });
+    };
+
+    return (
+        <div>
+             <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-serif font-bold">User Management</h1>
+                <Button onClick={() => setIsOpen(true)}><Plus size={18} className="mr-2"/> Add User</Button>
+            </div>
+            
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 uppercase text-xs">
+                        <tr>
+                            <th className="px-6 py-3">Username</th>
+                            <th className="px-6 py-3">Role</th>
+                            <th className="px-6 py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {users.map(u => (
+                            <tr key={u.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-bold">{u.username}</td>
+                                <td className="px-6 py-4"><span className="uppercase text-xs font-bold bg-gray-100 px-2 py-1 rounded">{u.role}</span></td>
+                                <td className="px-6 py-4">
+                                    {u.role !== 'admin' && (
+                                        <button onClick={() => deleteUser(u.id)} className="text-rose-500 hover:text-rose-700 text-xs font-bold">REMOVE</button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {isOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-sm">
+                        <h3 className="font-bold text-lg mb-4">Add User</h3>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                             <Input label="Username" value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
+                             <Input label="Password" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
+                             <div>
+                                 <label className="text-sm font-medium mb-1 block">Role</label>
+                                 <select className="w-full border p-2 rounded" value={form.role} onChange={e => setForm({...form, role: e.target.value as 'admin' | 'staff'})}>
+                                     <option value="staff">Staff</option>
+                                     <option value="admin">Admin</option>
+                                 </select>
+                             </div>
+                             <div className="flex justify-end gap-2 pt-2">
+                                 <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Cancel</Button>
+                                 <Button type="submit">Create</Button>
+                             </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const AdminSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
   const [localConfig, setLocalConfig] = useState(config);
-  
-  const handleSave = () => {
-    updateConfig(localConfig);
-    alert('Settings saved successfully!');
+
+  useEffect(() => setLocalConfig(config), [config]);
+
+  const handleSave = async () => {
+     await updateConfig(localConfig);
+     alert("Content updated!");
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -553,7 +1154,7 @@ export const AdminSettings: React.FC = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); // Clear video if image set
+        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); 
       };
       reader.readAsDataURL(file);
     }
@@ -562,10 +1163,6 @@ export const AdminSettings: React.FC = () => {
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert("Video too large! Max 10MB for direct upload. Use a URL for larger videos.");
-        return;
-      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setLocalConfig(prev => ({ ...prev, heroVideo: reader.result as string }));
@@ -588,13 +1185,12 @@ export const AdminSettings: React.FC = () => {
   return (
     <div className="max-w-4xl pb-20">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
-        <Button onClick={handleSave} size="lg">Save All Changes</Button>
+         <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
+         <Button onClick={handleSave}>Save Changes</Button>
       </div>
-      
+
       <div className="space-y-8">
-        
-        {/* Brand Identity */}
+         {/* Brand Identity */}
         <div className="bg-white p-8 rounded shadow-sm">
           <h3 className="font-bold text-lg mb-4 flex items-center"><Hexagon className="mr-2" size={20}/> Brand Identity</h3>
           <div className="flex items-center gap-8">
@@ -630,8 +1226,8 @@ export const AdminSettings: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <Input label="Hero Tagline (Top Text)" value={localConfig.heroTagline || ''} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} placeholder="e.g. New Collection" />
-              <Input label="Hero Title (Main)" value={localConfig.heroTitle} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
-              <Input label="Hero Subtitle" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
+              <Input label="Hero Title (Main)" value={localConfig.heroTitle || ''} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
+              <Input label="Hero Subtitle" value={localConfig.heroSubtitle || ''} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
               
               <div className="border-t pt-4 mt-4">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-2">Background Media</p>
@@ -778,27 +1374,53 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Content Section */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4">Website Content (About Us)</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Input label="About Us Title" value={localConfig.aboutTitle || ''} onChange={e => setLocalConfig({...localConfig, aboutTitle: e.target.value})} />
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">About Us Content</label>
-              <textarea className="w-full border p-2 h-32" value={localConfig.aboutContent || ''} onChange={e => setLocalConfig({...localConfig, aboutContent: e.target.value})}></textarea>
-            </div>
-          </div>
-        </div>
+         <div className="bg-white p-6 rounded shadow-sm">
+             <h3 className="font-bold mb-4 flex items-center gap-2"><Megaphone size={18}/> Contact Information</h3>
+             <div className="grid md:grid-cols-2 gap-4">
+                <Input label="Contact Email" value={localConfig.contactEmail || ''} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} />
+                <Input label="Contact Phone" value={localConfig.contactPhone || ''} onChange={e => setLocalConfig({...localConfig, contactPhone: e.target.value})} />
+                <Input label="Address" value={localConfig.contactAddress || ''} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} className="md:col-span-2" />
+             </div>
+         </div>
 
-        {/* Contact Section */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4">Contact Information & Socials</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Input label="Contact Email" value={localConfig.contactEmail || ''} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} />
-            <Input label="Contact Phone" value={localConfig.contactPhone || ''} onChange={e => setLocalConfig({...localConfig, contactPhone: e.target.value})} />
-            <Input label="Address" className="md:col-span-2" value={localConfig.contactAddress || ''} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} />
-            
-            <div className="md:col-span-2 grid md:grid-cols-3 gap-4 pt-4 border-t mt-4">
-               <div className="flex items-center gap-2 font-bold text-sm text-gray-500 mb-2 col-span-3"><Share2 size={16}/> Social Media Links</div>
-               <Input label="Instagram URL" value={localConfig.socialInstagram || ''} placeholder="https://instagram.com/..." onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} />
-               <Input label="Facebook URL" value={local
+         <div className="bg-white p-6 rounded shadow-sm">
+             <h3 className="font-bold mb-4 flex items-center gap-2"><Share2 size={18}/> Social Media</h3>
+             <div className="grid md:grid-cols-3 gap-4">
+                <Input label="Instagram URL" value={localConfig.socialInstagram || ''} onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} />
+                <Input label="Facebook URL" value={localConfig.socialFacebook || ''} onChange={e => setLocalConfig({...localConfig, socialFacebook: e.target.value})} />
+                <Input label="WhatsApp URL" value={localConfig.socialWhatsapp || ''} onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} />
+             </div>
+         </div>
+
+         <div className="bg-white p-6 rounded shadow-sm">
+             <h3 className="font-bold mb-4 flex items-center gap-2"><FileText size={18}/> About Page Content</h3>
+             <Input label="Page Title" value={localConfig.aboutTitle || ''} onChange={e => setLocalConfig({...localConfig, aboutTitle: e.target.value})} className="mb-4" />
+             <div>
+                <label className="text-sm font-medium mb-1 block">Main Content</label>
+                <textarea 
+                  className="w-full border p-3 text-sm h-40 rounded focus:outline-none focus:ring-1 focus:ring-brand-900" 
+                  value={localConfig.aboutContent || ''} 
+                  onChange={e => setLocalConfig({...localConfig, aboutContent: e.target.value})} 
+                />
+             </div>
+         </div>
+         
+         <div className="bg-white p-6 rounded shadow-sm">
+             <h3 className="font-bold mb-4 flex items-center gap-2"><Layout size={18}/> Footer Content</h3>
+             <div className="grid md:grid-cols-2 gap-4">
+                 <Input label="Footer Logo URL" value={localConfig.footerLogo || ''} onChange={e => setLocalConfig({...localConfig, footerLogo: e.target.value})} />
+                 <Input label="Copyright Text" value={localConfig.footerCopyright || ''} onChange={e => setLocalConfig({...localConfig, footerCopyright: e.target.value})} />
+                 <div className="md:col-span-2">
+                    <label className="text-sm font-medium mb-1 block">Short Description</label>
+                    <textarea 
+                      className="w-full border p-2 text-sm rounded" 
+                      value={localConfig.footerDescription || ''} 
+                      onChange={e => setLocalConfig({...localConfig, footerDescription: e.target.value})} 
+                    />
+                 </div>
+             </div>
+         </div>
+      </div>
+    </div>
+  );
+};
