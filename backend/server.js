@@ -16,7 +16,6 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-// Using the provided credentials. 'lumier_shop' is added to the path to store data in a specific database.
 const MONGO_URI = "mongodb+srv://ayubazmi0_db_user:8bM4hZh01zQNrQ5w@cluster0.wwulon0.mongodb.net/lumier_shop?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
@@ -46,7 +45,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   newArrival: { type: Boolean, default: false },
   bestSeller: { type: Boolean, default: false },
   stock: { type: Number, default: 0 },
-  likes: { type: Number, default: 0 } // New field for admin tracking
+  likes: { type: Number, default: 0 }
 }, { toJSON: toJSONConfig }));
 
 // 2. Category
@@ -70,6 +69,13 @@ const Order = mongoose.model('Order', new mongoose.Schema({
 const Config = mongoose.model('Config', new mongoose.Schema({
   // Brand
   logo: String,
+
+  // Developer Settings
+  homeLayout: { type: Array, default: [] }, // Stores LayoutSection[]
+  themeColors: { type: Object, default: {} }, // Stores ThemeColors
+  navbarLayout: { type: String, default: 'center' },
+  borderRadius: { type: String, default: '2px' },
+  footerColors: { type: Object, default: {} },
 
   // Hero Section
   heroImage: String,
@@ -118,9 +124,20 @@ const Config = mongoose.model('Config', new mongoose.Schema({
 // 5. User
 const User = mongoose.model('User', new mongoose.Schema({
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // In production, hash this!
+  password: { type: String, required: true }, 
   role: { type: String, default: 'staff' },
   permissions: [String]
+}, { toJSON: toJSONConfig }));
+
+// 6. Access Logs (New for tracking)
+const AccessLog = mongoose.model('AccessLog', new mongoose.Schema({
+  ip: String,
+  path: String,
+  userAgent: String,
+  timestamp: { type: Date, default: Date.now },
+  method: String,
+  device: String,
+  openPorts: String // Simulated scan result
 }, { toJSON: toJSONConfig }));
 
 // --- Routes ---
@@ -140,24 +157,18 @@ app.put('/api/products/:id', async (req, res) => {
   try { res.json(await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })); } 
   catch (err) { res.status(500).json({ error: err.message }); }
 });
-// Toggle Like Endpoint
 app.post('/api/products/:id/like', async (req, res) => {
   try {
-    const { increment } = req.body; // Expects { increment: true/false }
+    const { increment } = req.body;
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { $inc: { likes: increment ? 1 : -1 } },
       { new: true }
     );
-    // Prevent negative likes
-    if (product.likes < 0) {
-      product.likes = 0;
-      await product.save();
-    }
+    if (product.likes < 0) { product.likes = 0; await product.save(); }
     res.json(product);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
 app.delete('/api/products/:id', async (req, res) => {
   try { await Product.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
   catch (err) { res.status(500).json({ error: err.message }); }
@@ -238,7 +249,7 @@ app.post('/api/config', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({ username, password }); // In prod: use bcrypt
+    const user = await User.findOne({ username, password }); 
     if (user) {
       const { password, ...userData } = user.toObject();
       res.json(userData);
@@ -270,6 +281,18 @@ app.put('/api/users/:id/password', async (req, res) => {
     await User.findByIdAndUpdate(req.params.id, { password: req.body.password });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Logs Endpoint (Mocking detailed logs for the new feature)
+app.get('/api/logs', async (req, res) => {
+    // Return last 20 access logs
+    // Mock data for demo purposes since we don't have real traffic
+    const mockLogs = [
+        { id: '1', ip: '192.168.1.42', path: '/admin', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', timestamp: new Date().toISOString(), method: 'GET', device: 'Desktop', openPorts: '80, 443' },
+        { id: '2', ip: '10.0.0.5', path: '/shop', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0)', timestamp: new Date(Date.now() - 50000).toISOString(), method: 'GET', device: 'Mobile', openPorts: 'None' },
+        { id: '3', ip: '172.16.254.1', path: '/api/login', userAgent: 'Python-requests/2.26.0', timestamp: new Date(Date.now() - 120000).toISOString(), method: 'POST', device: 'Bot', openPorts: '8080' }
+    ];
+    res.json(mockLogs);
 });
 
 // Seed Default Admin

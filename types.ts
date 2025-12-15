@@ -11,7 +11,7 @@ export interface Product {
   newArrival: boolean;
   bestSeller: boolean;
   stock: number;
-  likes?: number; // New field for wishlist count
+  likes?: number;
 }
 
 export interface CartItem extends Product {
@@ -47,16 +47,42 @@ export interface User {
   id: string;
   username: string;
   role: 'admin' | 'staff';
-  permissions: string[]; // e.g., ['products', 'orders', 'settings', 'users']
+  permissions: string[];
+}
+
+export interface LayoutSection {
+  id: string;
+  type: 'hero' | 'categories' | 'featured' | 'banner' | 'trust' | 'text_image' | 'video' | 'testimonials' | 'spacer';
+  isVisible: boolean;
+  data: any; // Flexible data for dynamic sections
+}
+
+export interface ThemeColors {
+  background: string; // brand-50
+  surface: string;    // brand-100
+  border: string;     // brand-200
+  secondary: string;  // brand-800
+  primary: string;    // brand-900
 }
 
 export interface SiteConfig {
   // Brand
   logo?: string;
 
-  // Hero
+  // Developer Settings (New)
+  homeLayout: LayoutSection[];
+  themeColors: ThemeColors;
+  navbarLayout: 'left' | 'center' | 'right';
+  borderRadius: string;
+  footerColors?: {
+      background: string;
+      text: string;
+      border: string;
+  };
+
+  // Hero (Legacy - kept for backward compatibility or simple edits)
   heroImage: string;
-  heroVideo?: string; // Optional URL or base64 video
+  heroVideo?: string;
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
@@ -106,4 +132,13 @@ export interface FilterState {
   minPrice: number;
   maxPrice: number;
   sort: SortOption;
+}
+
+export interface AccessLog {
+    id: string;
+    ip: string;
+    path: string;
+    userAgent: string;
+    timestamp: string;
+    method: string;
 }
