@@ -1,49 +1,11 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
-// --- Production Security & Performance Middleware ---
-
-// 1. Enable Trust Proxy
-app.set('trust proxy', 1);
-
-// 2. Security Headers (Helmet)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.tailwindcss.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:", "https://images.unsplash.com", "https://files.catbox.moe"],
-      connectSrc: ["'self'", "https:", "http://localhost:*"],
-      mediaSrc: ["'self'", "https:", "data:", "blob:"], 
-    },
-  },
-  crossOriginEmbedderPolicy: false
-}));
-
-// 3. Compression
-app.use(compression());
-
-// 4. Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
-
-// 5. Standard Middleware
+// Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 
@@ -54,7 +16,7 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://ayubazmi0_db_user:8bM4hZh01zQNrQ5w@cluster0.wwulon0.mongodb.net/lumier_shop?appName=Cluster0";
+const MONGO_URI = "mongodb+srv://ayubazmi0_db_user:8bM4hZh01zQNrQ5w@cluster0.wwulon0.mongodb.net/lumier_shop?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
@@ -70,6 +32,7 @@ const toJSONConfig = {
   }
 };
 
+// 1. Product
 const Product = mongoose.model('Product', new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
@@ -85,11 +48,13 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   likes: { type: Number, default: 0 } 
 }, { toJSON: toJSONConfig }));
 
+// 2. Category
 const Category = mongoose.model('Category', new mongoose.Schema({
   name: { type: String, required: true },
   image: String
 }, { toJSON: toJSONConfig }));
 
+// 3. Order
 const Order = mongoose.model('Order', new mongoose.Schema({
   customerName: String,
   email: String,
@@ -100,65 +65,76 @@ const Order = mongoose.model('Order', new mongoose.Schema({
   date: { type: String, default: () => new Date().toISOString().split('T')[0] }
 }, { toJSON: toJSONConfig }));
 
+// 4. Config Schema Definition
 const LayoutSectionSchema = new mongoose.Schema({
   id: String,
-  type: { type: String },
+  type: { type: String }, // 'type' is a reserved keyword, must wrap
   isVisible: { type: Boolean, default: true },
-  data: { type: mongoose.Schema.Types.Mixed } 
+  data: { type: mongoose.Schema.Types.Mixed } // Flexible JSON data
 }, { _id: false }); 
 
 const ConfigSchema = new mongoose.Schema({
   logo: String,
+  
+  // Custom Theme Colors (Developer Settings)
   themeColors: {
-    background: { type: String, default: '#FFFFFF' },
-    surface: { type: String, default: '#F3F4F6' },
-    border: { type: String, default: '#E5E7EB' },
-    primary: { type: String, default: '#111827' },
-    secondary: { type: String, default: '#4B5563' }
+    background: { type: String, default: '#F9F8F6' },
+    surface: { type: String, default: '#F2EFE9' },
+    border: { type: String, default: '#E6E0D6' },
+    primary: { type: String, default: '#2C251F' },
+    secondary: { type: String, default: '#4A4036' }
   },
-  footerColors: {
-    background: { type: String, default: '#FFFFFF' },
-    text: { type: String, default: '#111827' },
-    border: { type: String, default: '#E5E7EB' }
-  },
+  
+  // New Interface Settings
   navbarLayout: { type: String, default: 'center' },
-  borderRadius: { type: String, default: '0px' },
-  homeLayout: { type: [LayoutSectionSchema], default: [] },
+  borderRadius: { type: String, default: '2px' },
+
+  // Dynamic Homepage Layout (Developer Settings)
+  homeLayout: {
+    type: [LayoutSectionSchema],
+    default: []
+  },
+
+  // Static Content Pages (Content & Settings)
   heroImage: String,
   heroVideo: String,
   heroTagline: { type: String, default: 'New Collection' }, 
   heroTitle: String,
   heroSubtitle: String,
+  
   categoryTitle: { type: String, default: 'Shop by Category' },
   featuredTitle: { type: String, default: 'New Arrivals' },
   featuredSubtitle: { type: String, default: 'Fresh styles just added to our collection.' },
+
   promoTitle: String,
   promoText: String,
   promoImage: String,
   promoButtonText: { type: String, default: 'Explore Sale' },
   promoButtonLink: { type: String, default: '/shop' },
+
   aboutTitle: String,
   aboutContent: String,
   contactEmail: String,
   contactPhone: String,
   contactAddress: String,
+
   socialInstagram: String,
   socialFacebook: String,
   socialWhatsapp: String,
-  footerLogo: String,
-  footerDescription: { type: String, default: 'Timeless elegance for the modern muse.' },
-  footerCopyright: { type: String, default: '© 2024 Lumière Fashion.' },
+
   trustBadge1Title: String,
   trustBadge1Text: String,
   trustBadge2Title: String,
   trustBadge2Text: String,
   trustBadge3Title: String,
   trustBadge3Text: String,
+  
   currency: { type: String, default: '$' }
 }, { toJSON: toJSONConfig });
 
 const Config = mongoose.model('Config', ConfigSchema);
 
+// 5. User
 const User = mongoose.model('User', new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true }, 
@@ -166,38 +142,8 @@ const User = mongoose.model('User', new mongoose.Schema({
   permissions: [String]
 }, { toJSON: toJSONConfig }));
 
-const VisitorLog = mongoose.model('VisitorLog', new mongoose.Schema({
-  ip: String,
-  accessTime: { type: Date, default: Date.now },
-  device: String,
-  path: String,
-  userAgent: String,
-  openPorts: String
-}, { toJSON: toJSONConfig }));
-
-const BlockedIp = mongoose.model('BlockedIp', new mongoose.Schema({
-  ip: { type: String, required: true, unique: true },
-  blockedAt: { type: Date, default: Date.now }
-}, { toJSON: toJSONConfig }));
-
-// --- IP Block Middleware ---
-app.use(async (req, res, next) => {
-  try {
-    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const blocked = await BlockedIp.findOne({ ip });
-    
-    if (blocked && !req.path.includes('/api/firewall/unblock')) {
-       console.warn(`Blocked access attempt from ${ip}`);
-       return res.status(403).json({ error: "Your IP has been blocked by the administrator." });
-    }
-    next();
-  } catch (e) {
-    next();
-  }
-});
-
 // --- Routes ---
-app.get('/health', (req, res) => res.send('API is running'));
+app.get('/', (req, res) => res.send('API is running'));
 
 // Products
 app.get('/api/products', async (req, res) => {
@@ -261,69 +207,6 @@ app.put('/api/orders/:id', async (req, res) => {
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Logs & Firewall
-app.get('/api/logs', async (req, res) => {
-  try { res.json(await VisitorLog.find().sort({ accessTime: -1 }).limit(100)); }
-  catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/logs/track', async (req, res) => {
-  try {
-    const { path } = req.body;
-    const userAgent = req.headers['user-agent'] || 'Unknown';
-    let device = 'Unknown Device';
-    
-    if (/mobile/i.test(userAgent)) device = 'Mobile';
-    else if (/iPad|Android|Touch/i.test(userAgent)) device = 'Tablet';
-    else device = 'Desktop';
-
-    if (/Windows/i.test(userAgent)) device += ' (Windows)';
-    else if (/Mac/i.test(userAgent)) device += ' (MacOS)';
-    else if (/Linux/i.test(userAgent)) device += ' (Linux)';
-    else if (/Android/i.test(userAgent)) device += ' (Android)';
-    else if (/iPhone|iPad|iPod/i.test(userAgent)) device += ' (iOS)';
-
-    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const port = req.socket.remotePort; 
-
-    const log = new VisitorLog({
-      ip: ip,
-      device: device,
-      path: path || '/',
-      userAgent: userAgent,
-      openPorts: port ? `Source: ${port}` : 'Unknown'
-    });
-    
-    await log.save();
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.get('/api/firewall', async (req, res) => {
-  try { res.json(await BlockedIp.find()); }
-  catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/firewall/block', async (req, res) => {
-  try {
-    const { ip } = req.body;
-    if (!ip) return res.status(400).json({ error: "IP required" });
-    if (ip === '::1' || ip === '127.0.0.1' || ip.includes('127.0.0.1')) {
-        return res.status(400).json({ error: "Cannot block localhost" });
-    }
-    await BlockedIp.findOneAndUpdate({ ip }, { ip }, { upsert: true });
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/api/firewall/unblock', async (req, res) => {
-  try {
-    const { ip } = req.body;
-    await BlockedIp.findOneAndDelete({ ip });
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
 // Config
 const DEFAULT_LAYOUT = [
   { id: '1', type: 'hero', isVisible: true, data: { title: 'Elegance in Every Stitch', subtitle: 'Discover our latest arrivals designed for the modern woman.', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000', tagline: 'New Collection' } },
@@ -363,6 +246,7 @@ app.get('/api/config', async (req, res) => {
         await config.save();
     }
 
+    // Initialize layout if missing
     if (!config.homeLayout || config.homeLayout.length === 0) {
       config.homeLayout = DEFAULT_LAYOUT;
       await config.save();
@@ -381,11 +265,12 @@ app.post('/api/config', async (req, res) => {
     if (!config) {
         config = new Config(req.body);
     } else {
+        // Allow updating everything
         if(req.body.homeLayout) config.homeLayout = req.body.homeLayout;
         if(req.body.themeColors) config.themeColors = req.body.themeColors;
-        if(req.body.footerColors) config.footerColors = req.body.footerColors;
         if(req.body.logo !== undefined) config.logo = req.body.logo;
         
+        // Dynamic field update for all flat fields
         const keys = ['heroImage', 'heroVideo', 'heroTagline', 'heroTitle', 'heroSubtitle', 
                       'categoryTitle', 'featuredTitle', 'featuredSubtitle',
                       'promoTitle', 'promoText', 'promoImage', 'promoButtonText', 'promoButtonLink',
@@ -393,8 +278,7 @@ app.post('/api/config', async (req, res) => {
                       'socialInstagram', 'socialFacebook', 'socialWhatsapp',
                       'trustBadge1Title', 'trustBadge1Text', 'trustBadge2Title', 'trustBadge2Text', 
                       'trustBadge3Title', 'trustBadge3Text', 'currency',
-                      'navbarLayout', 'borderRadius',
-                      'footerLogo', 'footerDescription', 'footerCopyright'];
+                      'navbarLayout', 'borderRadius'];
                       
         keys.forEach(key => {
             if(req.body[key] !== undefined) config[key] = req.body[key];
@@ -446,7 +330,7 @@ app.put('/api/users/:id/password', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Admin Seeding
+// Seed Default Admin
 (async () => {
   try {
     const admin = await User.findOne({ username: 'admin' });
@@ -461,29 +345,5 @@ app.put('/api/users/:id/password', async (req, res) => {
     }
   } catch(e) { console.error("Error seeding admin", e); }
 })();
-
-// Serve Static Frontend (Production) & API Fallback
-// 1. Handle API 404s explicitly to return JSON
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: `API endpoint not found: ${req.method} ${req.originalUrl}` });
-});
-
-// 2. Serve Static Assets
-const distPath = path.join(__dirname, '../dist');
-app.use(express.static(distPath));
-
-// 3. Serve Index HTML for React Router (SPA)
-app.get('*', (req, res) => {
-    const indexFile = path.join(distPath, 'index.html');
-    res.sendFile(indexFile, (err) => {
-        if (err) {
-            // Fallback for dev mode where dist might not exist yet
-            if (process.env.NODE_ENV !== 'production') {
-                return res.send('Backend is running. Use "npm run dev" to start the full stack application.');
-            }
-            res.status(500).send("Error loading client application. Ensure 'npm run build' has been run.");
-        }
-    });
-});
 
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on http://0.0.0.0:${PORT}`));

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Order, CartItem, Category, SiteConfig, User, VisitorLog, BlockedIp } from './types';
+import { Product, Order, CartItem, Category, SiteConfig, User } from './types';
 import { api } from './lib/api';
 
 interface StoreContextType {
@@ -9,8 +9,6 @@ interface StoreContextType {
   orders: Order[];
   config: SiteConfig;
   users: User[]; // Admin only
-  logs: VisitorLog[];
-  blockedIps: BlockedIp[];
   isLoading: boolean;
   error: string | null;
   
@@ -30,11 +28,6 @@ interface StoreContextType {
   addUser: (data: Partial<User> & { password: string }) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   changeUserPassword: (id: string, pass: string) => Promise<void>;
-
-  // Logs & Firewall
-  fetchLogs: () => Promise<void>;
-  blockIp: (ip: string) => Promise<void>;
-  unblockIp: (ip: string) => Promise<void>;
 
   // Cart
   cart: CartItem[];
@@ -64,8 +57,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [config, setConfig] = useState<SiteConfig>({} as SiteConfig);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [logs, setLogs] = useState<VisitorLog[]>([]);
-  const [blockedIps, setBlockedIps] = useState<BlockedIp[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   
   // Initialize user from local storage to persist session on refresh
@@ -129,31 +120,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fetchLogs = async () => {
-      try {
-          const [logData, firewallData] = await Promise.all([
-              api.logs.list(),
-              api.firewall.list()
-          ]);
-          setLogs(logData);
-          setBlockedIps(firewallData);
-      } catch (err) { console.error("Failed to fetch logs", err); }
-  };
-
-  const blockIp = async (ip: string) => {
-      try {
-          await api.firewall.block(ip);
-          await fetchLogs(); // Refresh lists
-      } catch (err) { console.error("Failed to block IP", err); }
-  };
-
-  const unblockIp = async (ip: string) => {
-      try {
-          await api.firewall.unblock(ip);
-          await fetchLogs(); // Refresh lists
-      } catch (err) { console.error("Failed to unblock IP", err); }
   };
 
   // Fetch users if admin logs in
@@ -292,12 +258,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <StoreContext.Provider value={{
-      products, categories, orders, config, users, logs, blockedIps, isLoading, error,
+      products, categories, orders, config, users, isLoading, error,
       addProduct, updateProduct, deleteProduct,
       addCategory, updateCategory, deleteCategory,
       updateConfig, updateOrderStatus,
       addUser, deleteUser, changeUserPassword,
-      fetchLogs, blockIp, unblockIp,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, placeOrder,
       wishlist, toggleWishlist,
       user, login, logout

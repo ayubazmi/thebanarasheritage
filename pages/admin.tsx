@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, Category, User, LayoutSection, SiteConfig } from '../types';
+import { Button, Input, SectionHeader } from '../components/ui';
+import { Product, Category, User, LayoutSection } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
-  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart, Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight, FileText, Monitor, Globe, Footprints, Shield, ShieldAlert, CheckCircle, Ban, Terminal, ChevronRight, Copy
+  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart, Palette, GripVertical, Eye, EyeOff, MoveUp, MoveDown, RotateCcw, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -20,95 +20,11 @@ const DEFAULT_LAYOUT_RESET: LayoutSection[] = [
 ];
 
 const DEFAULT_THEME_RESET = {
-    background: '#FFFFFF',
-    surface: '#F3F4F6',
-    border: '#E5E7EB',
-    primary: '#111827',
-    secondary: '#4B5563'
-};
-
-const DEFAULT_FOOTER_COLORS = {
-    background: '#FFFFFF',
-    text: '#111827',
-    border: '#E5E7EB'
-};
-
-// --- Connection Modal Component ---
-const ConnectionModal: React.FC<{ 
-    ip: string; 
-    onClose: () => void; 
-}> = ({ ip, onClose }) => {
-    const [copied, setCopied] = useState(false);
-    const [mode, setMode] = useState<'http' | 'ssh'>('http');
-    
-    // HTTP Monitor Command (Python pretty-print wrapper for "Real-Time" feel)
-    const apiUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
-    
-    const httpCommand = `export API="${apiUrl}/api/logs"; while true; do curl -s $API | python3 -c "import sys, json; d=json.load(sys.stdin); print(f'\\033[92m[ACTIVE]\\033[0m {d[0]['ip']} | {d[0].get('path', '/')} | {d[0]['device']} | {d[0]['accessTime']}')"; sleep 2; done`;
-
-    // SSH Command (Simulated - Requires Agent)
-    const port = 2200 + Math.floor(Math.random() * 99); 
-    const sshCommand = `ssh root@${ip} -p ${port}`;
-
-    const handleCopy = () => {
-        navigator.clipboard.writeText(mode === 'http' ? httpCommand : sshCommand);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 font-mono">
-            <div className="bg-black border border-green-500 w-full max-w-3xl rounded-sm flex flex-col shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden p-6">
-                {/* CRT Scanline Effect */}
-                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%] opacity-20"></div>
-                
-                <button onClick={onClose} className="absolute top-4 right-4 text-green-700 hover:text-green-400 z-20"><X size={20}/></button>
-
-                <h3 className="text-green-500 font-bold text-lg mb-4 flex items-center gap-2 relative z-20">
-                    <Terminal size={18} /> Remote Uplink Established
-                </h3>
-
-                <p className="text-green-800 text-xs mb-4 relative z-20">
-                    Target Identity: <span className="text-green-500">{ip}</span>
-                </p>
-
-                <div className="flex space-x-4 mb-4 relative z-20 text-xs">
-                    <button 
-                        onClick={() => setMode('http')} 
-                        className={`px-3 py-1 border transition-colors ${mode === 'http' ? 'border-green-500 text-green-400 bg-green-900/30' : 'border-green-900 text-green-800 hover:text-green-600'}`}
-                    >
-                        Live Dashboard (HTTP)
-                    </button>
-                    <button 
-                        onClick={() => setMode('ssh')} 
-                        className={`px-3 py-1 border transition-colors ${mode === 'ssh' ? 'border-green-500 text-green-400 bg-green-900/30' : 'border-green-900 text-green-800 hover:text-green-600'}`}
-                    >
-                        SSH Tunnel (Direct)
-                    </button>
-                </div>
-
-                <div className="bg-green-900/10 border border-green-900/30 p-4 rounded mb-2 flex items-center justify-between group relative z-20">
-                    <code className="text-green-400 text-sm select-all font-mono break-all pr-4">
-                        {mode === 'http' ? httpCommand : sshCommand}
-                    </code>
-                    <button 
-                        onClick={handleCopy} 
-                        className="text-green-700 hover:text-green-400 transition-colors flex items-center gap-2 text-xs uppercase font-bold shrink-0"
-                    >
-                        {copied ? <span className="text-green-500 flex items-center gap-1"><CheckCircle size={14} /> Copied</span> : <span className="flex items-center gap-1"><Copy size={14}/> Copy</span>}
-                    </button>
-                </div>
-
-                <div className="text-[10px] text-green-900/80 border-t border-green-900/30 pt-4 relative z-20 italic">
-                    {mode === 'http' ? (
-                        <p>&gt; Establishes a real-time HTTP link to stream visitor activity (Path, IP, Device) to your terminal. Requires curl & python3.</p>
-                    ) : (
-                        <p>&gt; SSH Connection requires the client to have the 'Lumiere Agent' installed and listening on port {port}. Connection refused indicates no agent.</p>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+    background: '#F9F8F6',
+    surface: '#F2EFE9',
+    border: '#E6E0D6',
+    primary: '#2C251F',
+    secondary: '#4A4036'
 };
 
 // --- Login ---
@@ -212,418 +128,10 @@ export const AdminDashboard: React.FC = () => {
   );
 };
 
-// --- Admin Products ---
-export const AdminProducts: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
-  const [editing, setEditing] = useState<Product | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  
-  // Form State
-  const [formData, setFormData] = useState<Partial<Product>>({});
-
-  const handleEdit = (product: Product) => {
-    setEditing(product);
-    setFormData(product);
-    setIsFormOpen(true);
-  };
-
-  const handleAddNew = () => {
-    setEditing(null);
-    setFormData({
-        name: '', description: '', price: 0, category: categories[0]?.name || '', 
-        images: [''], sizes: [], colors: [], stock: 0
-    });
-    setIsFormOpen(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (editing) {
-          await updateProduct({ ...editing, ...formData } as Product);
-      } else {
-          // ensure required fields
-          await addProduct({ ...formData, id: Date.now().toString(), likes: 0 } as Product);
-      }
-      setIsFormOpen(false);
-  };
-
-  const handleDelete = async (id: string) => {
-      if(confirm("Are you sure?")) await deleteProduct(id);
-  }
-
-  return (
-      <div>
-          <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-serif font-bold">Products</h1>
-              <Button onClick={handleAddNew}><Plus size={16} className="mr-2" /> Add Product</Button>
-          </div>
-
-          {/* List */}
-          <div className="bg-white rounded shadow-sm overflow-hidden">
-              <table className="w-full text-sm text-left">
-                  <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                      <tr>
-                          <th className="px-6 py-3">Image</th>
-                          <th className="px-6 py-3">Name</th>
-                          <th className="px-6 py-3">Category</th>
-                          <th className="px-6 py-3">Price</th>
-                          <th className="px-6 py-3">Stock</th>
-                          <th className="px-6 py-3 text-right">Actions</th>
-                      </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                      {products.map(p => (
-                          <tr key={p.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4">
-                                  <img src={p.images[0]} alt="" className="w-10 h-10 object-cover rounded bg-gray-100" />
-                              </td>
-                              <td className="px-6 py-4 font-medium">{p.name}</td>
-                              <td className="px-6 py-4">{p.category}</td>
-                              <td className="px-6 py-4">${p.price}</td>
-                              <td className="px-6 py-4">{p.stock}</td>
-                              <td className="px-6 py-4 text-right space-x-2">
-                                  <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-800"><Edit size={16} /></button>
-                                  <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-800"><Trash size={16} /></button>
-                              </td>
-                          </tr>
-                      ))}
-                  </tbody>
-              </table>
-          </div>
-
-          {/* Modal/Form Overlay */}
-          {isFormOpen && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
-                      <div className="flex justify-between items-center mb-6">
-                          <h2 className="text-xl font-bold">{editing ? 'Edit Product' : 'New Product'}</h2>
-                          <button onClick={() => setIsFormOpen(false)}><X /></button>
-                      </div>
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                              <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                              <div className="flex flex-col">
-                                  <label className="text-sm font-medium mb-1">Category</label>
-                                  <select 
-                                    className="border p-2 rounded text-sm" 
-                                    value={formData.category} 
-                                    onChange={e => setFormData({...formData, category: e.target.value})}
-                                  >
-                                      <option value="">Select Category</option>
-                                      {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                  </select>
-                              </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-4">
-                              <Input label="Price" type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} required />
-                              <Input label="Discount Price" type="number" value={formData.discountPrice || ''} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} />
-                              <Input label="Stock" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} required />
-                          </div>
-
-                          <div>
-                              <label className="block text-sm font-medium mb-1">Description</label>
-                              <textarea className="w-full border p-2 rounded text-sm h-24" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
-                          </div>
-
-                          <Input label="Image URL (Comma separated for multiple)" value={formData.images?.join(',')} onChange={e => setFormData({...formData, images: e.target.value.split(',')})} />
-
-                          <div className="grid grid-cols-2 gap-4">
-                              <Input label="Sizes (Comma separated)" value={formData.sizes?.join(',')} onChange={e => setFormData({...formData, sizes: e.target.value.split(',').filter(Boolean)})} />
-                              <Input label="Colors (Comma separated)" value={formData.colors?.join(',')} onChange={e => setFormData({...formData, colors: e.target.value.split(',').filter(Boolean)})} />
-                          </div>
-
-                          <div className="flex gap-4">
-                              <label className="flex items-center space-x-2">
-                                  <input type="checkbox" checked={formData.newArrival} onChange={e => setFormData({...formData, newArrival: e.target.checked})} />
-                                  <span className="text-sm">New Arrival</span>
-                              </label>
-                              <label className="flex items-center space-x-2">
-                                  <input type="checkbox" checked={formData.bestSeller} onChange={e => setFormData({...formData, bestSeller: e.target.checked})} />
-                                  <span className="text-sm">Best Seller</span>
-                              </label>
-                          </div>
-
-                          <div className="flex justify-end gap-2 mt-6">
-                              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-                              <Button type="submit">Save Product</Button>
-                          </div>
-                      </form>
-                  </div>
-              </div>
-          )}
-      </div>
-  );
-};
-
-// --- Admin Categories ---
-export const AdminCategories: React.FC = () => {
-    const { categories, addCategory, updateCategory, deleteCategory } = useStore();
-    const [editing, setEditing] = useState<Category | null>(null);
-    const [formData, setFormData] = useState<Partial<Category>>({});
-    const [isFormOpen, setIsFormOpen] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editing) {
-            await updateCategory({ ...editing, ...formData } as Category);
-        } else {
-            await addCategory({ ...formData, id: Date.now().toString().toLowerCase().replace(/\s/g, '-') } as Category);
-        }
-        setIsFormOpen(false);
-    };
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-serif font-bold">Categories</h1>
-              <Button onClick={() => { setEditing(null); setFormData({ name: '', image: '' }); setIsFormOpen(true); }}><Plus size={16} className="mr-2" /> Add Category</Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categories.map(c => (
-                    <div key={c.id} className="bg-white p-4 rounded shadow-sm border flex items-center gap-4">
-                        <img src={c.image} alt="" className="w-16 h-16 object-cover rounded bg-gray-100" />
-                        <div className="flex-1">
-                            <h3 className="font-bold">{c.name}</h3>
-                            <p className="text-xs text-gray-500">ID: {c.id}</p>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <button onClick={() => { setEditing(c); setFormData(c); setIsFormOpen(true); }} className="p-2 text-blue-600 bg-blue-50 rounded hover:bg-blue-100"><Edit size={14} /></button>
-                            <button onClick={() => { if(confirm("Delete?")) deleteCategory(c.id); }} className="p-2 text-red-600 bg-red-50 rounded hover:bg-red-100"><Trash size={14} /></button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {isFormOpen && (
-                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded p-6 w-full max-w-md">
-                        <h2 className="font-bold text-lg mb-4">{editing ? 'Edit Category' : 'New Category'}</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                            <Input label="Image URL" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} required />
-                            <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-                                <Button type="submit">Save</Button>
-                            </div>
-                        </form>
-                    </div>
-                 </div>
-            )}
-        </div>
-    );
-};
-
-// --- Admin Orders ---
-export const AdminOrders: React.FC = () => {
-    const { orders, updateOrderStatus } = useStore();
-
-    return (
-        <div>
-            <h1 className="text-2xl font-serif font-bold mb-6">Orders</h1>
-            <div className="bg-white rounded shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                        <tr>
-                            <th className="px-6 py-3">ID</th>
-                            <th className="px-6 py-3">Date</th>
-                            <th className="px-6 py-3">Customer</th>
-                            <th className="px-6 py-3">Items</th>
-                            <th className="px-6 py-3">Total</th>
-                            <th className="px-6 py-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {orders.map(o => (
-                            <tr key={o.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 font-mono text-xs">{o.id}</td>
-                                <td className="px-6 py-4">{o.date}</td>
-                                <td className="px-6 py-4">
-                                    <div className="font-bold">{o.customerName}</div>
-                                    <div className="text-xs text-gray-500">{o.email}</div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="text-xs">
-                                        {o.items.map((i, idx) => (
-                                            <div key={idx}>{i.quantity}x {i.name} ({i.selectedSize})</div>
-                                        ))}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 font-bold">${o.total}</td>
-                                <td className="px-6 py-4">
-                                    <select 
-                                        className="border rounded px-2 py-1 text-xs bg-white"
-                                        value={o.status}
-                                        onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
-                                    >
-                                        <option value="Pending">Pending</option>
-                                        <option value="Shipped">Shipped</option>
-                                        <option value="Delivered">Delivered</option>
-                                        <option value="Cancelled">Cancelled</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        ))}
-                         {orders.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-500">No orders found.</td></tr>}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-// --- Admin Users ---
-export const AdminUsers: React.FC = () => {
-    const { users, addUser, deleteUser } = useStore();
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [formData, setFormData] = useState({ username: '', password: '', role: 'staff' });
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await addUser(formData);
-        setIsFormOpen(false);
-        setFormData({ username: '', password: '', role: 'staff' });
-    };
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-serif font-bold">User Management</h1>
-              <Button onClick={() => setIsFormOpen(true)}><Plus size={16} className="mr-2" /> Add User</Button>
-            </div>
-
-            <div className="bg-white rounded shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                        <tr>
-                            <th className="px-6 py-3">Username</th>
-                            <th className="px-6 py-3">Role</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {users.map(u => (
-                            <tr key={u.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 font-medium">{u.username}</td>
-                                <td className="px-6 py-4 capitalize">
-                                    <Badge color={u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}>
-                                        {u.role}
-                                    </Badge>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    {u.username !== 'admin' && (
-                                        <button onClick={() => { if(confirm("Delete user?")) deleteUser(u.id); }} className="text-red-600 hover:text-red-800"><Trash size={16} /></button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-             {isFormOpen && (
-                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded p-6 w-full max-w-md">
-                        <h2 className="font-bold text-lg mb-4">Add User</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <Input label="Username" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} required />
-                            <Input label="Password" type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
-                            <div className="flex flex-col">
-                                <label className="text-sm font-medium mb-1">Role</label>
-                                <select className="border p-2 rounded" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                                    <option value="staff">Staff</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-                                <Button type="submit">Create User</Button>
-                            </div>
-                        </form>
-                    </div>
-                 </div>
-            )}
-        </div>
-    );
-};
-
-// --- Admin Settings (Content) ---
-export const AdminSettings: React.FC = () => {
-    const { config, updateConfig } = useStore();
-    const [formData, setFormData] = useState<SiteConfig>(config);
-    
-    useEffect(() => { setFormData(config); }, [config]);
-
-    const handleSave = async () => {
-        await updateConfig(formData);
-        alert("Settings Saved");
-    };
-
-    const handleChange = (key: keyof SiteConfig, value: string) => {
-        setFormData(prev => ({ ...prev, [key]: value }));
-    };
-
-    return (
-        <div className="max-w-4xl">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
-              <Button onClick={handleSave}>Save Changes</Button>
-            </div>
-
-            <div className="space-y-8">
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 border-b pb-2">General Info</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input label="Logo URL" value={formData.logo || ''} onChange={e => handleChange('logo', e.target.value)} />
-                        <Input label="Currency Symbol" value={formData.currency || '$'} onChange={e => handleChange('currency', e.target.value)} />
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 border-b pb-2">Contact Page</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input label="Email" value={formData.contactEmail || ''} onChange={e => handleChange('contactEmail', e.target.value)} />
-                        <Input label="Phone" value={formData.contactPhone || ''} onChange={e => handleChange('contactPhone', e.target.value)} />
-                        <Input label="Address" value={formData.contactAddress || ''} onChange={e => handleChange('contactAddress', e.target.value)} className="col-span-2" />
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 border-b pb-2">Social Media</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        <Input label="Instagram URL" value={formData.socialInstagram || ''} onChange={e => handleChange('socialInstagram', e.target.value)} />
-                        <Input label="Facebook URL" value={formData.socialFacebook || ''} onChange={e => handleChange('socialFacebook', e.target.value)} />
-                        <Input label="WhatsApp URL" value={formData.socialWhatsapp || ''} onChange={e => handleChange('socialWhatsapp', e.target.value)} />
-                    </div>
-                </div>
-                
-                 <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 border-b pb-2">Footer Content</h3>
-                    <div className="grid grid-cols-1 gap-4">
-                        <Input label="Footer Logo URL" value={formData.footerLogo || ''} onChange={e => handleChange('footerLogo', e.target.value)} />
-                        <Input label="Footer Description" value={formData.footerDescription || ''} onChange={e => handleChange('footerDescription', e.target.value)} />
-                        <Input label="Copyright Text" value={formData.footerCopyright || ''} onChange={e => handleChange('footerCopyright', e.target.value)} />
-                    </div>
-                </div>
-                
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 border-b pb-2">About Page</h3>
-                    <Input label="Title" value={formData.aboutTitle || ''} onChange={e => handleChange('aboutTitle', e.target.value)} className="mb-4" />
-                    <label className="block text-sm font-medium mb-1">Content</label>
-                    <textarea className="w-full border p-2 rounded text-sm h-32" value={formData.aboutContent || ''} onChange={e => handleChange('aboutContent', e.target.value)}></textarea>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 // --- Developer Settings (New) ---
 export const AdminDeveloperSettings: React.FC = () => {
-  const { config, updateConfig, logs, fetchLogs, blockedIps, blockIp, unblockIp } = useStore();
-  const [activeTab, setActiveTab] = useState<'layout' | 'theme' | 'logs'>('layout');
-  const [connectIp, setConnectIp] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const { config, updateConfig } = useStore();
+  const [activeTab, setActiveTab] = useState<'layout' | 'theme'>('layout');
   
   // Layout Builder State - Init from config
   const [layout, setLayout] = useState<LayoutSection[]>(config.homeLayout || DEFAULT_LAYOUT_RESET);
@@ -633,9 +141,6 @@ export const AdminDeveloperSettings: React.FC = () => {
   const [theme, setTheme] = useState(config.themeColors || DEFAULT_THEME_RESET);
   const [navbarLayout, setNavbarLayout] = useState<'left'|'center'|'right'>(config.navbarLayout || 'center');
   const [borderRadius, setBorderRadius] = useState<string>(config.borderRadius || '2px');
-  
-  // Footer Colors
-  const [footerColors, setFooterColors] = useState(config.footerColors || DEFAULT_FOOTER_COLORS);
 
   // Ensure state is synced if config loads late (though usually handled by parent loader)
   useEffect(() => {
@@ -643,28 +148,13 @@ export const AdminDeveloperSettings: React.FC = () => {
     if (config.themeColors) setTheme(config.themeColors);
     if (config.navbarLayout) setNavbarLayout(config.navbarLayout);
     if (config.borderRadius) setBorderRadius(config.borderRadius);
-    if (config.footerColors) setFooterColors(config.footerColors);
   }, [config]);
-
-  // Refresh logs when tab is active
-  useEffect(() => {
-    if (activeTab === 'logs') {
-        fetchLogs();
-    }
-  }, [activeTab]);
-
-  const handleRefreshLogs = async () => {
-      setRefreshing(true);
-      await fetchLogs();
-      setRefreshing(false);
-  };
 
   const handleSave = async () => {
     await updateConfig({
       ...config,
       homeLayout: layout,
       themeColors: theme,
-      footerColors: footerColors,
       navbarLayout: navbarLayout,
       borderRadius: borderRadius
     });
@@ -675,9 +165,8 @@ export const AdminDeveloperSettings: React.FC = () => {
     if (confirm("Reset layout and theme to defaults?")) {
         setLayout(DEFAULT_LAYOUT_RESET);
         setTheme(DEFAULT_THEME_RESET);
-        setFooterColors(DEFAULT_FOOTER_COLORS);
         setNavbarLayout('center');
-        setBorderRadius('0px');
+        setBorderRadius('2px');
         alert("Defaults restored. Click 'Save' to apply.");
     }
   };
@@ -742,19 +231,8 @@ export const AdminDeveloperSettings: React.FC = () => {
     setLayout(layout.map(s => s.id === updated.id ? updated : s));
   };
 
-  const isIpBlocked = (ip: string) => {
-      return blockedIps.some(blocked => blocked.ip === ip);
-  };
-
   return (
     <div className="pb-20">
-      {connectIp && (
-          <ConnectionModal 
-            ip={connectIp} 
-            onClose={() => setConnectIp(null)} 
-          />
-      )}
-
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
         <div className="flex gap-2">
@@ -768,10 +246,8 @@ export const AdminDeveloperSettings: React.FC = () => {
       <div className="flex space-x-4 border-b mb-8">
         <button onClick={() => setActiveTab('layout')} className={`pb-2 px-4 ${activeTab === 'layout' ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>Layout Builder</button>
         <button onClick={() => setActiveTab('theme')} className={`pb-2 px-4 ${activeTab === 'theme' ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>Theme & Interface</button>
-        <button onClick={() => setActiveTab('logs')} className={`pb-2 px-4 ${activeTab === 'logs' ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>Visitor Logs</button>
       </div>
 
-      {/* ... Layout Tab Content ... */}
       {activeTab === 'layout' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Section List */}
@@ -945,7 +421,6 @@ export const AdminDeveloperSettings: React.FC = () => {
         </div>
       )}
 
-      {/* ... Theme Tab Content ... */}
       {activeTab === 'theme' && (
         <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white p-8 rounded shadow-sm">
@@ -1000,7 +475,6 @@ export const AdminDeveloperSettings: React.FC = () => {
             <div className="bg-white p-8 rounded shadow-sm">
                 <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2"/> Color Palette</h3>
                 <div className="space-y-6">
-                    {/* Main Theme Colors */}
                     <div className="grid grid-cols-2 gap-4 items-center">
                         <label className="text-sm font-medium">Background (Lightest)</label>
                         <div className="flex gap-2">
@@ -1038,129 +512,293 @@ export const AdminDeveloperSettings: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="mt-8 pt-6 border-t">
-                    <h3 className="font-bold text-lg mb-4 flex items-center"><Footprints className="mr-2"/> Footer Styling</h3>
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 items-center">
-                            <label className="text-sm font-medium">Footer Background</label>
-                            <div className="flex gap-2">
-                            <input type="color" value={footerColors.background} onChange={e => setFooterColors({...footerColors, background: e.target.value})} className="h-8 w-12 p-0 border-0" />
-                            <Input value={footerColors.background} onChange={e => setFooterColors({...footerColors, background: e.target.value})} className="flex-1" />
-                            </div>
-                        </div>
-                         <div className="grid grid-cols-2 gap-4 items-center">
-                            <label className="text-sm font-medium">Footer Text</label>
-                            <div className="flex gap-2">
-                            <input type="color" value={footerColors.text} onChange={e => setFooterColors({...footerColors, text: e.target.value})} className="h-8 w-12 p-0 border-0" />
-                            <Input value={footerColors.text} onChange={e => setFooterColors({...footerColors, text: e.target.value})} className="flex-1" />
-                            </div>
-                        </div>
-                         <div className="grid grid-cols-2 gap-4 items-center">
-                            <label className="text-sm font-medium">Footer Border</label>
-                            <div className="flex gap-2">
-                            <input type="color" value={footerColors.border} onChange={e => setFooterColors({...footerColors, border: e.target.value})} className="h-8 w-12 p-0 border-0" />
-                            <Input value={footerColors.border} onChange={e => setFooterColors({...footerColors, border: e.target.value})} className="flex-1" />
-                            </div>
-                        </div>
+                <div className="mt-8 p-4 bg-gray-50 rounded border">
+                    <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Live Preview</h4>
+                    <div className="p-4 border" style={{ backgroundColor: theme.background, borderColor: theme.border, borderRadius: borderRadius }}>
+                        <h1 className="text-2xl font-serif font-bold mb-2" style={{ color: theme.primary }}>Heading Text</h1>
+                        <p className="mb-4" style={{ color: theme.secondary }}>This is how your body text will look on the new background color with {borderRadius} radius.</p>
+                        <button className="px-4 py-2 text-white font-medium" style={{ backgroundColor: theme.primary, borderRadius: borderRadius }}>Primary Button</button>
                     </div>
                 </div>
             </div>
         </div>
       )}
-
-      {/* ... Logs Tab Content ... */}
-      {activeTab === 'logs' && (
-        <div className="bg-white rounded shadow-sm overflow-hidden">
-             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                 <div>
-                     <h3 className="font-bold text-lg flex items-center gap-2"><FileText size={20}/> Access Logs</h3>
-                     <p className="text-xs text-gray-500">Recent visitor activity and connection details</p>
-                 </div>
-                 <Button onClick={handleRefreshLogs} variant="outline" size="sm" isLoading={refreshing}>
-                    Refresh Logs
-                 </Button>
-             </div>
-             <div className="overflow-x-auto">
-                 <table className="w-full text-sm text-left">
-                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-                         <tr>
-                             <th className="px-6 py-3">Time</th>
-                             <th className="px-6 py-3">IP Address</th>
-                             <th className="px-6 py-3">Path Visited</th>
-                             <th className="px-6 py-3">Device / OS</th>
-                             <th className="px-6 py-3">User Agent Detail</th>
-                             <th className="px-6 py-3">Incoming Connection</th>
-                         </tr>
-                     </thead>
-                     <tbody className="divide-y">
-                         {logs.map((log) => {
-                             const blocked = isIpBlocked(log.ip);
-                             return (
-                             <tr key={log.id} className={`hover:bg-gray-50 ${blocked ? 'bg-red-50' : ''}`}>
-                                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                     {new Date(log.accessTime).toLocaleString()}
-                                 </td>
-                                 <td className="px-6 py-4 font-mono text-xs">
-                                     <div className="flex items-center gap-2">
-                                        <Globe size={14} className="text-brand-900"/>
-                                        {log.ip}
-                                     </div>
-                                 </td>
-                                 <td className="px-6 py-4 font-mono text-xs text-blue-600 bg-blue-50/50">
-                                     {log.path || '/'}
-                                 </td>
-                                 <td className="px-6 py-4 font-medium">
-                                     <div className="flex items-center gap-2">
-                                        <Monitor size={14} className="text-gray-400"/>
-                                        {log.device}
-                                     </div>
-                                 </td>
-                                 <td className="px-6 py-4 text-xs text-gray-400 max-w-xs truncate" title={log.userAgent}>
-                                     {log.userAgent}
-                                 </td>
-                                 <td className="px-6 py-4">
-                                     <div className="flex gap-2">
-                                         {blocked ? (
-                                             <button 
-                                                onClick={() => unblockIp(log.ip)}
-                                                className="flex items-center gap-1 text-xs font-bold text-red-600 border border-red-200 bg-red-100 px-3 py-1.5 rounded hover:bg-red-200 transition"
-                                                title="Reject Connection (Block)"
-                                             >
-                                                <Ban size={14} /> Reject
-                                             </button>
-                                         ) : (
-                                             <button 
-                                                onClick={() => blockIp(log.ip)}
-                                                className="flex items-center gap-1 text-xs font-bold text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded hover:bg-emerald-100 transition"
-                                                title="Accept Connection (Unblock)"
-                                             >
-                                                <CheckCircle size={14} /> Accept
-                                             </button>
-                                         )}
-                                         
-                                         <div className="w-px bg-gray-200 mx-1"></div>
-
-                                         <button 
-                                            onClick={() => setConnectIp(log.ip)}
-                                            className="flex items-center gap-2 text-xs font-bold text-brand-900 border border-brand-900 bg-brand-50 px-3 py-1.5 rounded hover:bg-brand-900 hover:text-white transition"
-                                            title="Get SSH Connection String"
-                                         >
-                                            <Terminal size={14} /> Connect
-                                         </button>
-                                     </div>
-                                 </td>
-                             </tr>
-                         )})}
-                         {logs.length === 0 && (
-                             <tr>
-                                 <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No logs found yet.</td>
-                             </tr>
-                         )}
-                     </tbody>
-                 </table>
-             </div>
-        </div>
-      )}
     </div>
   );
 };
+
+// --- Settings Manager (Existing - PRESERVED EXACTLY AS IS) ---
+export const AdminSettings: React.FC = () => {
+  const { config, updateConfig } = useStore();
+  const [localConfig, setLocalConfig] = useState(config);
+  
+  const handleSave = () => {
+    updateConfig(localConfig);
+    alert('Settings saved successfully!');
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, logo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleHeroUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); // Clear video if image set
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert("Video too large! Max 10MB for direct upload. Use a URL for larger videos.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, heroVideo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePromoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, promoImage: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl pb-20">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
+        <Button onClick={handleSave} size="lg">Save All Changes</Button>
+      </div>
+      
+      <div className="space-y-8">
+        
+        {/* Brand Identity */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Hexagon className="mr-2" size={20}/> Brand Identity</h3>
+          <div className="flex items-center gap-8">
+            <div className="w-24 h-24 bg-gray-100 border rounded flex items-center justify-center overflow-hidden relative group">
+               {localConfig.logo ? (
+                 <>
+                   <img src={localConfig.logo} alt="Logo" className="w-full h-full object-contain p-2" />
+                   <button 
+                     onClick={() => setLocalConfig({...localConfig, logo: ''})}
+                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                     title="Delete Logo"
+                   >
+                     <Trash size={16} />
+                   </button>
+                 </>
+               ) : (
+                 <span className="text-xs text-gray-400">No Logo</span>
+               )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Upload Website Logo</label>
+              <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                <Upload size={16}/> Choose Logo
+                <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Hero Section */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <Input label="Hero Tagline (Top Text)" value={localConfig.heroTagline || ''} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} placeholder="e.g. New Collection" />
+              <Input label="Hero Title (Main)" value={localConfig.heroTitle} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
+              <Input label="Hero Subtitle" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
+              
+              <div className="border-t pt-4 mt-4">
+                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Background Media</p>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Image Upload</label>
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                      <Upload size={16}/> Choose Image
+                      <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} />
+                    </label>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">OR USE VIDEO</span></div>
+                  </div>
+
+                  <Input 
+                    label="Video URL (YouTube/MP4 Link)" 
+                    placeholder="https://..." 
+                    value={localConfig.heroVideo && !localConfig.heroVideo.startsWith('data:') ? localConfig.heroVideo : ''} 
+                    onChange={e => setLocalConfig({...localConfig, heroVideo: e.target.value})} 
+                  />
+                  
+                   <div>
+                    <label className="block text-sm font-medium mb-1">Video Upload (Max 10MB)</label>
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                      <Video size={16}/> Upload Short Video
+                      <input type="file" className="hidden" accept="video/*" onChange={handleVideoUpload} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
+               {localConfig.heroVideo ? (
+                 <>
+                   <video src={localConfig.heroVideo} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                   <button 
+                     onClick={() => setLocalConfig({...localConfig, heroVideo: ''})}
+                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                     title="Remove Video"
+                   >
+                     <Trash size={32} />
+                   </button>
+                 </>
+               ) : (
+                 <>
+                   <img 
+                     src={localConfig.heroImage || DEFAULT_HERO_IMAGE} 
+                     className="w-full h-full object-cover" 
+                     alt="Hero Preview" 
+                   />
+                   {localConfig.heroImage && (
+                     <button 
+                       onClick={() => setLocalConfig({...localConfig, heroImage: ''})}
+                       className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                       title="Delete Image (Revert to Default)"
+                     >
+                       <Trash size={32} />
+                     </button>
+                   )}
+                 </>
+               )}
+               <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs text-center pointer-events-none">Preview</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Titles */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Type className="mr-2" size={20}/> Homepage Section Titles</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input label="Category Section Title" value={localConfig.categoryTitle || ''} placeholder="Shop by Category" onChange={e => setLocalConfig({...localConfig, categoryTitle: e.target.value})} />
+            <Input label="Featured Section Title" value={localConfig.featuredTitle || ''} placeholder="New Arrivals" onChange={e => setLocalConfig({...localConfig, featuredTitle: e.target.value})} />
+            <Input label="Featured Section Subtitle" className="md:col-span-2" value={localConfig.featuredSubtitle || ''} placeholder="Fresh styles just added to our collection." onChange={e => setLocalConfig({...localConfig, featuredSubtitle: e.target.value})} />
+          </div>
+        </div>
+
+        {/* Sale / Promo Section */}
+        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-brand-900">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Megaphone className="mr-2" size={20}/> Sale Section (Explore Sale Banner)</h3>
+          <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">This controls the promotional banner in the middle of the homepage.</p>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <Input label="Banner Title" value={localConfig.promoTitle || ''} placeholder="Summer Sale is Live" onChange={e => setLocalConfig({...localConfig, promoTitle: e.target.value})} />
+              <div className="col-span-1">
+                <label className="block text-sm font-medium mb-1">Banner Description</label>
+                <textarea className="w-full border p-2 text-sm h-24" value={localConfig.promoText || ''} placeholder="Get up to 50% off on selected dresses and kurtis. Limited time offer." onChange={e => setLocalConfig({...localConfig, promoText: e.target.value})}></textarea>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <Input label="Button Label" value={localConfig.promoButtonText || ''} placeholder="Explore Sale" onChange={e => setLocalConfig({...localConfig, promoButtonText: e.target.value})} />
+                 <Input label="Button Link" value={localConfig.promoButtonLink || ''} placeholder="/shop" onChange={e => setLocalConfig({...localConfig, promoButtonLink: e.target.value})} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Banner Image</label>
+                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                  <Upload size={16}/> Upload Image
+                  <input type="file" className="hidden" accept="image/*" onChange={handlePromoUpload} />
+                </label>
+              </div>
+            </div>
+            <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
+               <img 
+                 src={localConfig.promoImage || DEFAULT_PROMO_IMAGE} 
+                 className="w-full h-full object-cover" 
+                 alt="Promo Preview" 
+               />
+               {localConfig.promoImage && (
+                 <button 
+                   onClick={() => setLocalConfig({...localConfig, promoImage: ''})}
+                   className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                   title="Delete Image (Revert to Default)"
+                 >
+                   <Trash size={32} />
+                 </button>
+               )}
+               <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs text-center pointer-events-none">Preview</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Trust Badges Section (New) */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><ShieldCheck className="mr-2" size={20}/> Homepage Trust Badges</h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="space-y-2 p-4 bg-gray-50 rounded">
+              <p className="font-bold text-sm text-gray-500 uppercase">Badge 1</p>
+              <Input label="Title" value={localConfig.trustBadge1Title || ''} placeholder="Premium Quality" onChange={e => setLocalConfig({...localConfig, trustBadge1Title: e.target.value})} />
+              <Input label="Text" value={localConfig.trustBadge1Text || ''} placeholder="Hand-picked fabrics..." onChange={e => setLocalConfig({...localConfig, trustBadge1Text: e.target.value})} />
+            </div>
+            <div className="space-y-2 p-4 bg-gray-50 rounded">
+              <p className="font-bold text-sm text-gray-500 uppercase">Badge 2</p>
+              <Input label="Title" value={localConfig.trustBadge2Title || ''} placeholder="Secure Payment" onChange={e => setLocalConfig({...localConfig, trustBadge2Title: e.target.value})} />
+              <Input label="Text" value={localConfig.trustBadge2Text || ''} placeholder="100% secure checkout..." onChange={e => setLocalConfig({...localConfig, trustBadge2Text: e.target.value})} />
+            </div>
+            <div className="space-y-2 p-4 bg-gray-50 rounded">
+              <p className="font-bold text-sm text-gray-500 uppercase">Badge 3</p>
+              <Input label="Title" value={localConfig.trustBadge3Title || ''} placeholder="Fast Delivery" onChange={e => setLocalConfig({...localConfig, trustBadge3Title: e.target.value})} />
+              <Input label="Text" value={localConfig.trustBadge3Text || ''} placeholder="Shipping within 3-5 days" onChange={e => setLocalConfig({...localConfig, trustBadge3Text: e.target.value})} />
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4">Website Content (About Us)</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input label="About Us Title" value={localConfig.aboutTitle || ''} onChange={e => setLocalConfig({...localConfig, aboutTitle: e.target.value})} />
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">About Us Content</label>
+              <textarea className="w-full border p-2 h-32" value={localConfig.aboutContent || ''} onChange={e => setLocalConfig({...localConfig, aboutContent: e.target.value})}></textarea>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Section */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4">Contact Information & Socials</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input label="Contact Email" value={localConfig.contactEmail || ''} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} />
+            <Input label="Contact Phone" value={localConfig.contactPhone || ''} onChange={e => setLocalConfig({...localConfig, contactPhone: e.target.value})} />
+            <Input label="Address" className="md:col-span-2" value={localConfig.contactAddress || ''} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} />
+            
+            <div className="md:col-span-2 grid md:grid-cols-3 gap-4 pt-4 border-t mt-4">
+               <div className="flex items-center gap-2 font-bold text-sm text-gray-500 mb-2 col-span-3"><Share2 size={16}/> Social Media Links</div>
+               <Input label="Instagram URL" value={localConfig.socialInstagram || ''} placeholder="https://instagram.com/..." onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} />
+               <Input label="Facebook URL" value={local

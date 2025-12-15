@@ -13,7 +13,6 @@ const fetchJson = async (endpoint: string, options: RequestInit = {}) => {
     const res = await fetch(`${PROXY_URL}${endpoint}`, { ...options, headers });
     const contentType = res.headers.get("content-type");
     if (res.status === 404 && contentType && contentType.includes("text/html")) throw new Error("Proxy failed");
-    if (res.status === 403) throw new Error("Access Denied: Your IP is blocked.");
     if (!res.ok) {
       const errorText = await res.text();
       // Try to parse JSON error first
@@ -70,14 +69,5 @@ export const api = {
     create: (data: Partial<User> & { password: string }) => fetchJson('/users', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id: string) => fetchJson(`/users/${id}`, { method: 'DELETE' }),
     updatePassword: (id: string, password: string) => fetchJson(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
-  },
-  logs: {
-    track: (data?: { path: string }) => fetchJson('/logs/track', { method: 'POST', body: JSON.stringify(data) }),
-    list: () => fetchJson('/logs'),
-  },
-  firewall: {
-    list: () => fetchJson('/firewall'),
-    block: (ip: string) => fetchJson('/firewall/block', { method: 'POST', body: JSON.stringify({ ip }) }),
-    unblock: (ip: string) => fetchJson('/firewall/unblock', { method: 'POST', body: JSON.stringify({ ip }) }),
   }
 };

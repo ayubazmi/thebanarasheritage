@@ -69,12 +69,6 @@ export interface ThemeColors {
   secondary: string; // brand-800
 }
 
-export interface FooterColors {
-  background: string;
-  text: string;
-  border: string;
-}
-
 export interface SiteConfig {
   // Brand
   logo?: string;
@@ -84,9 +78,6 @@ export interface SiteConfig {
   navbarLayout?: 'left' | 'center' | 'right';
   borderRadius?: string; // e.g. '0px', '4px', '8px', '16px'
   
-  // Footer Theme (Developer Settings)
-  footerColors?: FooterColors;
-
   // Homepage Layout (Developer Settings)
   homeLayout?: LayoutSection[];
 
@@ -118,11 +109,6 @@ export interface SiteConfig {
   socialFacebook?: string;
   socialWhatsapp?: string;
 
-  // Footer Content
-  footerLogo?: string;
-  footerDescription?: string;
-  footerCopyright?: string;
-
   trustBadge1Title?: string;
   trustBadge1Text?: string;
   trustBadge2Title?: string;
@@ -131,22 +117,6 @@ export interface SiteConfig {
   trustBadge3Text?: string;
 
   currency: string;
-}
-
-export interface VisitorLog {
-  id: string;
-  ip: string;
-  accessTime: string;
-  device: string;
-  path?: string; // Track the specific page visited
-  userAgent: string;
-  openPorts: string; // Storing connection/source port
-}
-
-export interface BlockedIp {
-  id: string;
-  ip: string;
-  blockedAt: string;
 }
 
 export type SortOption = 'newest' | 'price-low' | 'price-high' | 'popular';
