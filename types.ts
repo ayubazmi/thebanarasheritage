@@ -50,6 +50,37 @@ export interface User {
   permissions: string[]; // e.g., ['products', 'orders', 'settings', 'users']
 }
 
+// New Types for Admin Features
+export interface LayoutSection {
+  id: string;
+  type: 'hero' | 'categories' | 'featured' | 'banner' | 'trust' | 'text_image' | 'video' | 'testimonials' | 'spacer';
+  isVisible: boolean;
+  data: Record<string, any>;
+}
+
+export interface ThemeColors {
+    background: string;
+    surface: string;
+    border: string;
+    primary: string;
+    secondary: string;
+}
+
+export interface FooterColors {
+    background: string;
+    text: string;
+    border: string;
+}
+
+export interface AccessLog {
+    id: string;
+    timestamp: string;
+    ip: string;
+    device: string;
+    userAgent: string;
+    openPorts: string;
+}
+
 export interface SiteConfig {
   // Brand
   logo?: string;
@@ -97,6 +128,13 @@ export interface SiteConfig {
 
   // Settings
   currency: string;
+
+  // Layout & Theme (New)
+  homeLayout?: LayoutSection[];
+  themeColors?: ThemeColors;
+  footerColors?: FooterColors;
+  navbarLayout?: 'left' | 'center' | 'right';
+  borderRadius?: string;
 }
 
 export type SortOption = 'newest' | 'price-low' | 'price-high' | 'popular';

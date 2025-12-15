@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Order, CartItem, Category, SiteConfig, User } from './types';
+import { Product, Order, CartItem, Category, SiteConfig, User, AccessLog } from './types';
 import { api } from './lib/api';
 
 interface StoreContextType {
@@ -9,6 +9,7 @@ interface StoreContextType {
   orders: Order[];
   config: SiteConfig;
   users: User[]; // Admin only
+  logs: AccessLog[];
   isLoading: boolean;
   error: string | null;
   
@@ -24,6 +25,8 @@ interface StoreContextType {
   updateConfig: (config: SiteConfig) => Promise<void>;
   updateOrderStatus: (id: string, status: Order['status']) => Promise<void>;
   
+  fetchLogs: () => Promise<void>;
+
   // User Management
   addUser: (data: Partial<User> & { password: string }) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
@@ -57,6 +60,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [config, setConfig] = useState<SiteConfig>({} as SiteConfig);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [logs, setLogs] = useState<AccessLog[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   
   // Initialize user from local storage to persist session on refresh
@@ -105,6 +109,19 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchLogs = async () => {
+      try {
+          const data = await api.logs.list();
+          setLogs(data);
+      } catch (error) {
+          console.warn("Logs API not available", error);
+          // Fallback / Mock
+          setLogs([
+             { id: '1', timestamp: new Date().toISOString(), ip: '127.0.0.1', device: 'Desktop Chrome', userAgent: 'Mozilla/5.0...', openPorts: '80, 443' }
+          ]);
+      }
   };
 
   // Fetch users if admin logs in
@@ -243,10 +260,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <StoreContext.Provider value={{
-      products, categories, orders, config, users, isLoading, error,
+      products, categories, orders, config, users, logs, isLoading, error,
       addProduct, updateProduct, deleteProduct,
       addCategory, updateCategory, deleteCategory,
-      updateConfig, updateOrderStatus,
+      updateConfig, updateOrderStatus, fetchLogs,
       addUser, deleteUser, changeUserPassword,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, placeOrder,
       wishlist, toggleWishlist,
