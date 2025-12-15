@@ -99,6 +99,13 @@ export interface SiteConfig {
   currency: string;
 }
 
+export interface AccessLog {
+  id: string;
+  ip: string;
+  userAgent: string;
+  timestamp: string;
+}
+
 export type SortOption = 'newest' | 'price-low' | 'price-high' | 'popular';
 
 export interface FilterState {

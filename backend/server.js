@@ -123,6 +123,13 @@ const User = mongoose.model('User', new mongoose.Schema({
   permissions: [String]
 }, { toJSON: toJSONConfig }));
 
+// 6. Access Log
+const AccessLog = mongoose.model('AccessLog', new mongoose.Schema({
+  ip: String,
+  userAgent: String,
+  timestamp: { type: Date, default: Date.now }
+}, { toJSON: toJSONConfig }));
+
 // --- Routes ---
 
 app.get('/', (req, res) => res.send('API is running'));
@@ -231,6 +238,21 @@ app.post('/api/config', async (req, res) => {
     if (config) { config.set(req.body); await config.save(); } 
     else { config = new Config(req.body); await config.save(); }
     res.json(config);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Logs
+app.get('/api/logs', async (req, res) => {
+  try { res.json(await AccessLog.find().sort({ timestamp: -1 }).limit(100)); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/logs/visit', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    await new AccessLog({ ip, userAgent }).save();
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

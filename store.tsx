@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Order, CartItem, Category, SiteConfig, User } from './types';
+import { Product, Order, CartItem, Category, SiteConfig, User, AccessLog } from './types';
 import { api } from './lib/api';
 
 interface StoreContextType {
@@ -9,6 +9,7 @@ interface StoreContextType {
   orders: Order[];
   config: SiteConfig;
   users: User[]; // Admin only
+  logs: AccessLog[];
   isLoading: boolean;
   error: string | null;
   
@@ -28,6 +29,9 @@ interface StoreContextType {
   addUser: (data: Partial<User> & { password: string }) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   changeUserPassword: (id: string, pass: string) => Promise<void>;
+
+  // Logs
+  fetchLogs: () => Promise<void>;
 
   // Cart
   cart: CartItem[];
@@ -57,6 +61,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [config, setConfig] = useState<SiteConfig>({} as SiteConfig);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [logs, setLogs] = useState<AccessLog[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   
   // Initialize user from local storage to persist session on refresh
@@ -84,6 +89,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     localStorage.setItem('lumiere_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
+
+  // Record Visitor Log Once Per Session/Mount
+  useEffect(() => {
+    api.logs.record().catch(err => console.warn("Failed to record visit log", err));
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -172,6 +182,16 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     await api.users.updatePassword(id, pass);
   };
 
+  // --- Logs ---
+  const fetchLogs = async () => {
+    try {
+      const data = await api.logs.list();
+      setLogs(data);
+    } catch (e) {
+      console.error("Failed to fetch logs", e);
+    }
+  };
+
   // --- Cart ---
   const addToCart = (item: CartItem) => {
     setCart(prev => {
@@ -243,11 +263,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <StoreContext.Provider value={{
-      products, categories, orders, config, users, isLoading, error,
+      products, categories, orders, config, users, logs, isLoading, error,
       addProduct, updateProduct, deleteProduct,
       addCategory, updateCategory, deleteCategory,
       updateConfig, updateOrderStatus,
       addUser, deleteUser, changeUserPassword,
+      fetchLogs,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, placeOrder,
       wishlist, toggleWishlist,
       user, login, logout

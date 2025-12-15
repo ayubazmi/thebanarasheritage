@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader } from '../components/ui';
 import { Product, Category, User } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
-  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart
+  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
+  FileText
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -106,6 +107,55 @@ export const AdminDashboard: React.FC = () => {
             </tbody>
           </table>
           {orders.length === 0 && <p className="text-center py-4 text-gray-500">No orders yet.</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Logs Component ---
+export const AdminLogs: React.FC = () => {
+  const { logs, fetchLogs } = useStore();
+  
+  // Fetch logs on mount
+  useEffect(() => { fetchLogs(); }, []);
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Visitor Logs</h1>
+        <Button onClick={fetchLogs}><FileText size={16} className="mr-2" /> Refresh Logs</Button>
+      </div>
+
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 text-gray-700 uppercase">
+               <tr>
+                 <th className="px-6 py-4">Time</th>
+                 <th className="px-6 py-4">IP Address</th>
+                 <th className="px-6 py-4">Device / User Agent</th>
+               </tr>
+            </thead>
+            <tbody className="divide-y">
+              {logs.map(log => (
+                <tr key={log.id} className="hover:bg-gray-50">
+                   <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                     {new Date(log.timestamp).toLocaleString()}
+                   </td>
+                   <td className="px-6 py-4 font-mono font-medium text-brand-900">
+                     {log.ip}
+                   </td>
+                   <td className="px-6 py-4 text-gray-500 truncate max-w-md" title={log.userAgent}>
+                     {log.userAgent}
+                   </td>
+                </tr>
+              ))}
+              {logs.length === 0 && (
+                <tr><td colSpan={3} className="text-center py-8 text-gray-500">No logs found</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

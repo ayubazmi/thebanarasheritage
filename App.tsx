@@ -5,7 +5,7 @@ import { PublicLayout, AdminLayout } from './layouts';
 import { 
   HomePage, ShopPage, ProductDetailPage, CartPage, CheckoutPage, AboutPage, ContactPage 
 } from './pages/public';
-import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers } from './pages/admin';
+import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers, AdminLogs } from './pages/admin';
 import { Button } from './components/ui';
 import { AlertTriangle } from 'lucide-react';
 
@@ -67,6 +67,7 @@ const MainContent: React.FC = () => {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="logs" element={<AdminLogs />} />
         </Route>
       </Routes>
     </HashRouter>
