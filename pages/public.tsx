@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, Play, Quote } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, LayoutSection } from '../types';
+import { Product } from '../types';
 
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
   <Link to={`/product/${product.id}`} className="group block">
-    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4 rounded-md">
+    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
       {product.discountPrice && (
-        <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded">
+        <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1">
           SALE
         </div>
       )}
       {product.newArrival && (
-        <div className="absolute top-2 left-2 bg-white text-brand-900 text-xs font-bold px-2 py-1 tracking-widest rounded">
+        <div className="absolute top-2 left-2 bg-white text-brand-900 text-xs font-bold px-2 py-1 tracking-widest">
           NEW
         </div>
       )}
@@ -35,193 +35,123 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
   </Link>
 );
 
-// --- Sections ---
-
-const HeroSection: React.FC<{ data: any }> = ({ data }) => (
-  <section className="relative h-[85vh] w-full bg-stone-200 overflow-hidden">
-    {data.video ? (
-      <video src={data.video} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline />
-    ) : (
-      <img src={data.image} className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
-    )}
-    <div className="absolute inset-0 bg-black/20" />
-    <div className="absolute inset-0 flex items-center justify-center text-center">
-      <div className="max-w-2xl px-6">
-        <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
-          {data.tagline}
-        </span>
-        <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{data.title}</h1>
-        <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{data.subtitle}</p>
-        <Link to="/shop">
-          <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
-            SHOP NOW
-          </button>
-        </Link>
-      </div>
-    </div>
-  </section>
-);
-
-const CategoriesSection: React.FC<{ data: any }> = ({ data }) => {
-  const { categories } = useStore();
-  return (
-    <section className="py-20 container mx-auto px-4">
-      <SectionHeader title={data.title} center />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-        {categories.map(cat => (
-          <Link key={cat.id} to={`/shop?category=${cat.name}`} className="group relative aspect-[3/4] overflow-hidden rounded-md">
-            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition" />
-            <div className="absolute bottom-6 left-0 right-0 text-center">
-              <span className="text-white text-xl font-serif font-medium tracking-wide">{cat.name}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-};
-
-const FeaturedSection: React.FC<{ data: any }> = ({ data }) => {
-  const { products } = useStore();
-  const featured = products.filter(p => p.newArrival).slice(0, 4);
-  return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <SectionHeader title={data.title} subtitle={data.subtitle} center />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {featured.map(p => <ProductCard key={p.id} product={p} />)}
-        </div>
-        <div className="mt-12 text-center">
-          <Link to="/shop"><Button variant="outline" size="lg">View All Products</Button></Link>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const BannerSection: React.FC<{ data: any }> = ({ data }) => (
-  <section className="py-20 bg-brand-200">
-    <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-      <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
-        <h2 className="text-4xl font-serif text-brand-900 mb-4">{data.title}</h2>
-        <p className="text-brand-800 mb-8 text-lg">{data.text}</p>
-        <Link to="/shop"><Button>{data.buttonText}</Button></Link>
-      </div>
-      <div className="md:w-1/2">
-        <img src={data.image} alt="Sale" className="w-full h-80 object-cover shadow-xl rounded-md" />
-      </div>
-    </div>
-  </section>
-);
-
-const TrustSection: React.FC<{ data: any }> = ({ data }) => (
-  <section className="py-16 container mx-auto px-4 border-t border-brand-200">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-      <div className="flex flex-col items-center">
-        <BadgeCheck className="w-10 h-10 text-brand-800 mb-4" />
-        <h4 className="font-semibold mb-2">{data.badge1Title}</h4>
-        <p className="text-sm text-gray-600">{data.badge1Text}</p>
-      </div>
-      <div className="flex flex-col items-center">
-        <ShieldCheck className="w-10 h-10 text-brand-800 mb-4" />
-        <h4 className="font-semibold mb-2">{data.badge2Title}</h4>
-        <p className="text-sm text-gray-600">{data.badge2Text}</p>
-      </div>
-      <div className="flex flex-col items-center">
-        <Truck className="w-10 h-10 text-brand-800 mb-4" />
-        <h4 className="font-semibold mb-2">{data.badge3Title}</h4>
-        <p className="text-sm text-gray-600">{data.badge3Text}</p>
-      </div>
-    </div>
-  </section>
-);
-
-const TextImageSection: React.FC<{ data: any }> = ({ data }) => (
-  <section className="py-20 bg-white">
-    <div className={`container mx-auto px-4 flex flex-col ${data.imagePosition === 'right' ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-12`}>
-      <div className="md:w-1/2 space-y-6">
-        <h2 className="text-4xl font-serif text-brand-900">{data.title}</h2>
-        <div className="text-lg text-gray-600 leading-relaxed whitespace-pre-line">{data.content}</div>
-        {data.buttonText && (
-          <Link to={data.buttonLink || '/shop'}><Button variant="outline">{data.buttonText}</Button></Link>
-        )}
-      </div>
-      <div className="md:w-1/2">
-        <img src={data.image} alt="Section" className="w-full h-[500px] object-cover rounded-md shadow-lg" />
-      </div>
-    </div>
-  </section>
-);
-
-const VideoSection: React.FC<{ data: any }> = ({ data }) => (
-  <section className="py-20 bg-black text-white text-center relative overflow-hidden">
-    {data.videoUrl ? (
-        <video src={data.videoUrl} className="absolute inset-0 w-full h-full object-cover opacity-60" autoPlay muted loop playsInline />
-    ) : (
-        <div className="absolute inset-0 bg-brand-900 opacity-50"></div>
-    )}
-    <div className="relative z-10 container mx-auto px-4 py-20">
-       <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-8 backdrop-blur-sm cursor-pointer hover:bg-white/30 transition">
-          <Play fill="currentColor" className="text-white ml-1" />
-       </div>
-       <h2 className="text-4xl font-serif mb-6">{data.title}</h2>
-       <p className="max-w-2xl mx-auto text-lg opacity-90">{data.description}</p>
-    </div>
-  </section>
-);
-
-const TestimonialsSection: React.FC<{ data: any }> = ({ data }) => (
-  <section className="py-20 bg-brand-50">
-    <div className="container mx-auto px-4 text-center">
-      <SectionHeader title={data.title || "What our customers say"} center />
-      <div className="grid md:grid-cols-3 gap-8">
-        {[1, 2, 3].map((i) => (
-          data[`review${i}Text`] && (
-            <div key={i} className="bg-white p-8 rounded-lg shadow-sm border border-brand-100 relative">
-              <Quote className="absolute top-6 left-6 text-brand-200 w-8 h-8" />
-              <p className="text-gray-600 italic mb-6 mt-4 relative z-10">"{data[`review${i}Text`]}"</p>
-              <div className="font-bold text-brand-900">- {data[`review${i}Author`]}</div>
-            </div>
-          )
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-const SpacerSection: React.FC<{ data: any }> = ({ data }) => (
-  <div className="w-full relative" style={{ height: `${data.height || 50}px` }}>
-    {data.showLine && (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-full container mx-auto border-t border-brand-200"></div>
-      </div>
-    )}
-  </div>
-);
-
-// --- Home Page (Dynamic) ---
+// --- Home Page ---
 export const HomePage: React.FC = () => {
-  const { config } = useStore();
-  const layout = config.homeLayout || [];
+  const { products, categories, config } = useStore();
+  const featured = products.filter(p => p.newArrival).slice(0, 4);
+
+  const heroImage = config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
+  const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
   return (
     <>
-      {layout.map((section: LayoutSection) => {
-        if (!section.isVisible) return null;
-        switch (section.type) {
-          case 'hero': return <HeroSection key={section.id} data={section.data} />;
-          case 'categories': return <CategoriesSection key={section.id} data={section.data} />;
-          case 'featured': return <FeaturedSection key={section.id} data={section.data} />;
-          case 'banner': return <BannerSection key={section.id} data={section.data} />;
-          case 'trust': return <TrustSection key={section.id} data={section.data} />;
-          case 'text_image': return <TextImageSection key={section.id} data={section.data} />;
-          case 'video': return <VideoSection key={section.id} data={section.data} />;
-          case 'testimonials': return <TestimonialsSection key={section.id} data={section.data} />;
-          case 'spacer': return <SpacerSection key={section.id} data={section.data} />;
-          default: return null;
-        }
-      })}
+      {/* Hero */}
+      <section className="relative h-[85vh] w-full bg-stone-200 overflow-hidden">
+        {config.heroVideo ? (
+          <video 
+            src={config.heroVideo} 
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+          />
+        ) : (
+          <img 
+            src={heroImage} 
+            className="absolute inset-0 w-full h-full object-cover"
+            alt="Fashion Banner"
+          />
+        )}
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 flex items-center justify-center text-center">
+          <div className="max-w-2xl px-6">
+            <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
+              {config.heroTagline || 'New Collection'}
+            </span>
+            <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
+            <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
+            <Link to="/shop">
+              {/* Force visible button with distinct style */}
+              <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
+                SHOP NOW
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-20 container mx-auto px-4">
+        <SectionHeader title={config.categoryTitle || 'Shop by Category'} center />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          {categories.map(cat => (
+            <Link key={cat.id} to={`/shop?category=${cat.name}`} className="group relative aspect-[3/4] overflow-hidden rounded-sm">
+              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition" />
+              <div className="absolute bottom-6 left-0 right-0 text-center">
+                <span className="text-white text-xl font-serif font-medium tracking-wide">{cat.name}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <SectionHeader 
+            title={config.featuredTitle || 'New Arrivals'} 
+            subtitle={config.featuredSubtitle || 'Fresh styles just added to our collection.'} 
+            center 
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featured.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+          <div className="mt-12 text-center">
+            <Link to="/shop">
+              <Button variant="outline" size="lg">View All Products</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Promo (Dynamic) */}
+      <section className="py-20 bg-brand-200">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+          <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
+            <h2 className="text-4xl font-serif text-brand-900 mb-4">{config.promoTitle || 'Summer Sale is Live'}</h2>
+            <p className="text-brand-800 mb-8 text-lg">{config.promoText || 'Get up to 50% off on selected dresses and kurtis. Limited time offer.'}</p>
+            <Link to={config.promoButtonLink || "/shop"}>
+              <Button>{config.promoButtonText || "Explore Sale"}</Button>
+            </Link>
+          </div>
+          <div className="md:w-1/2">
+            <img src={promoImage} alt="Sale" className="w-full h-80 object-cover shadow-xl rounded-sm" />
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Badges */}
+      <section className="py-16 container mx-auto px-4 border-t border-brand-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="flex flex-col items-center">
+            <BadgeCheck className="w-10 h-10 text-brand-800 mb-4" />
+            <h4 className="font-semibold mb-2">{config.trustBadge1Title || 'Premium Quality'}</h4>
+            <p className="text-sm text-gray-600">{config.trustBadge1Text || 'Hand-picked fabrics and finest stitching.'}</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <ShieldCheck className="w-10 h-10 text-brand-800 mb-4" />
+            <h4 className="font-semibold mb-2">{config.trustBadge2Title || 'Secure Payment'}</h4>
+            <p className="text-sm text-gray-600">{config.trustBadge2Text || '100% secure checkout process.'}</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <Truck className="w-10 h-10 text-brand-800 mb-4" />
+            <h4 className="font-semibold mb-2">{config.trustBadge3Title || 'Fast Delivery'}</h4>
+            <p className="text-sm text-gray-600">{config.trustBadge3Text || 'Shipping within 3-5 business days.'}</p>
+          </div>
+        </div>
+      </section>
     </>
   );
 };
@@ -324,12 +254,12 @@ export const ProductDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Images */}
         <div className="space-y-4">
-          <div className="aspect-[3/4] bg-gray-100 overflow-hidden rounded-lg">
+          <div className="aspect-[3/4] bg-gray-100 overflow-hidden">
              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
           </div>
           <div className="grid grid-cols-4 gap-4">
              {product.images.map((img, idx) => (
-               <div key={idx} className="aspect-square bg-gray-100 cursor-pointer border hover:border-black rounded-md overflow-hidden">
+               <div key={idx} className="aspect-square bg-gray-100 cursor-pointer border hover:border-black">
                  <img src={img} alt="" className="w-full h-full object-cover" />
                </div>
              ))}
@@ -356,7 +286,7 @@ export const ProductDetailPage: React.FC = () => {
                      <button 
                       key={c} 
                       onClick={() => setSelectedColor(c)}
-                      className={`px-4 py-2 border text-sm transition-all rounded-md ${selectedColor === c ? 'border-black bg-black text-white' : 'border-gray-200 hover:border-gray-400'}`}
+                      className={`px-4 py-2 border text-sm transition-all ${selectedColor === c ? 'border-black bg-black text-white' : 'border-gray-200 hover:border-gray-400'}`}
                      >
                       {c}
                      </button>
@@ -373,7 +303,7 @@ export const ProductDetailPage: React.FC = () => {
                      <button 
                       key={s} 
                       onClick={() => setSelectedSize(s)}
-                      className={`w-12 h-12 flex items-center justify-center border text-sm transition-all rounded-md ${selectedSize === s ? 'border-black bg-black text-white' : 'border-gray-200 hover:border-gray-400'}`}
+                      className={`w-12 h-12 flex items-center justify-center border text-sm transition-all ${selectedSize === s ? 'border-black bg-black text-white' : 'border-gray-200 hover:border-gray-400'}`}
                      >
                       {s}
                      </button>
@@ -388,7 +318,7 @@ export const ProductDetailPage: React.FC = () => {
              <Button size="lg" className="flex-1" onClick={handleAdd}>Add to Cart</Button>
              <button 
                onClick={() => toggleWishlist(product.id)}
-               className={`p-3 border rounded-md transition-colors ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}
+               className={`p-3 border rounded transition-colors ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}
              >
                <Heart fill={isWishlisted ? "currentColor" : "none"} />
              </button>
@@ -425,7 +355,7 @@ export const CartPage: React.FC = () => {
         <div className="lg:w-2/3 space-y-6">
           {cart.map(item => (
             <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4 border-b pb-6">
-              <div className="w-24 h-32 bg-gray-100 flex-shrink-0 rounded-md overflow-hidden">
+              <div className="w-24 h-32 bg-gray-100 flex-shrink-0">
                 <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
@@ -435,7 +365,7 @@ export const CartPage: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-500 mb-4">{item.selectedColor} / {item.selectedSize}</p>
                 <div className="flex justify-between items-center">
-                   <div className="flex items-center border border-gray-300 rounded-sm">
+                   <div className="flex items-center border border-gray-300">
                      <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, -1)}>-</button>
                      <span className="px-3 py-1 text-sm">{item.quantity}</span>
                      <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, 1)}>+</button>
@@ -447,7 +377,7 @@ export const CartPage: React.FC = () => {
           ))}
         </div>
         <div className="lg:w-1/3">
-          <div className="bg-gray-50 p-6 rounded-lg">
+          <div className="bg-gray-50 p-6 rounded-sm">
             <h3 className="font-serif text-xl mb-4">Order Summary</h3>
             <div className="space-y-3 mb-6 border-b pb-6 text-sm">
                <div className="flex justify-between"><span>Subtotal</span><span>${cartTotal}</span></div>
@@ -491,14 +421,14 @@ export const CheckoutPage: React.FC = () => {
             </div>
             
             <h3 className="font-bold text-lg pt-4">Payment</h3>
-            <div className="p-4 border rounded-md bg-gray-50 text-sm text-gray-600">
+            <div className="p-4 border rounded bg-gray-50 text-sm text-gray-600">
               Payment Gateway integration would go here. For this demo, it's Cash on Delivery.
             </div>
 
             <Button type="submit" className="w-full" size="lg">Place Order - ${cartTotal}</Button>
           </form>
           
-          <div className="bg-gray-50 p-6 h-fit rounded-lg">
+          <div className="bg-gray-50 p-6 h-fit">
             <h3 className="font-bold mb-4">In Your Bag</h3>
             <div className="flex justify-between font-bold text-lg border-t pt-4">
                <span>Total to Pay</span>
@@ -520,7 +450,7 @@ export const AboutPage: React.FC = () => {
       <p className="text-lg text-gray-600 leading-relaxed mb-8 whitespace-pre-line">
         {config.aboutContent}
       </p>
-      <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200" className="w-full h-64 object-cover mb-8 rounded-lg" alt="Studio" />
+      <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200" className="w-full h-64 object-cover mb-8" alt="Studio" />
       <div className="grid md:grid-cols-3 gap-8 text-left mt-12">
          <div><h4 className="font-bold mb-2">Vision</h4><p className="text-sm text-gray-500">To be the global leader in sustainable luxury fashion.</p></div>
          <div><h4 className="font-bold mb-2">Mission</h4><p className="text-sm text-gray-500">Creating timeless pieces that last beyond seasons.</p></div>
@@ -560,7 +490,7 @@ export const ContactPage: React.FC = () => {
           <Input label="Email" type="email" placeholder="hello@example.com" />
           <div>
             <label className="block text-sm font-medium mb-1">Message</label>
-            <textarea className="w-full border p-3 text-sm h-32 focus:outline-none focus:ring-1 focus:ring-black rounded-md" placeholder="How can we help?"></textarea>
+            <textarea className="w-full border p-3 text-sm h-32 focus:outline-none focus:ring-1 focus:ring-black" placeholder="How can we help?"></textarea>
           </div>
           <Button className="w-full">Send Message</Button>
         </form>

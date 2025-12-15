@@ -85,21 +85,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     localStorage.setItem('lumiere_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  // Apply Theme Colors & Radius
-  useEffect(() => {
-    const root = document.documentElement;
-    if (config.themeColors) {
-      root.style.setProperty('--color-brand-50', config.themeColors.background);
-      root.style.setProperty('--color-brand-100', config.themeColors.surface);
-      root.style.setProperty('--color-brand-200', config.themeColors.border);
-      root.style.setProperty('--color-brand-800', config.themeColors.secondary);
-      root.style.setProperty('--color-brand-900', config.themeColors.primary);
-    }
-    if (config.borderRadius) {
-      root.style.setProperty('--radius', config.borderRadius);
-    }
-  }, [config]);
-
   const fetchData = async () => {
     try {
       setIsLoading(true);

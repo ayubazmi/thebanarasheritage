@@ -19,28 +19,12 @@
             },
             colors: {
               brand: {
-                50: 'var(--color-brand-50)',
-                100: 'var(--color-brand-100)',
-                200: 'var(--color-brand-200)',
-                300: 'var(--color-brand-300)',
-                800: 'var(--color-brand-800)',
-                900: 'var(--color-brand-900)',
-              }
-            },
-            borderRadius: {
-              DEFAULT: 'var(--radius)',
-              sm: 'calc(var(--radius) - 2px)',
-              md: 'var(--radius)',
-              lg: 'calc(var(--radius) + 2px)',
-              xl: 'calc(var(--radius) + 4px)',
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-in-out',
-            },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
+                50: '#F9F8F6',
+                100: '#F2EFE9',
+                200: '#E6E0D6',
+                300: '#D5CDC0',
+                800: '#4A4036',
+                900: '#2C251F',
               }
             }
           }
@@ -60,18 +44,6 @@
   }
 }
 </script>
-<style>
-  :root {
-    /* Default Lumiere Theme */
-    --color-brand-50: #F9F8F6;
-    --color-brand-100: #F2EFE9;
-    --color-brand-200: #E6E0D6;
-    --color-brand-300: #D5CDC0;
-    --color-brand-800: #4A4036;
-    --color-brand-900: #2C251F;
-    --radius: 2px;
-  }
-</style>
 </head>
   <body class="bg-brand-50 text-brand-900 antialiased selection:bg-brand-200 selection:text-brand-900">
     <div id="root"></div>

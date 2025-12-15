@@ -11,7 +11,7 @@ export interface Product {
   newArrival: boolean;
   bestSeller: boolean;
   stock: number;
-  likes?: number; 
+  likes?: number; // New field for wishlist count
 }
 
 export interface CartItem extends Product {
@@ -47,68 +47,47 @@ export interface User {
   id: string;
   username: string;
   role: 'admin' | 'staff';
-  permissions: string[]; 
-}
-
-// --- New Types for Developer Settings ---
-
-export type SectionType = 'hero' | 'featured' | 'categories' | 'banner' | 'trust' | 'text_image' | 'video' | 'testimonials' | 'spacer';
-
-export interface LayoutSection {
-  id: string;
-  type: SectionType;
-  isVisible: boolean;
-  data: any; // Dynamic config based on type
-}
-
-export interface ThemeColors {
-  background: string; // brand-50
-  surface: string; // brand-100
-  border: string; // brand-200
-  primary: string; // brand-900
-  secondary: string; // brand-800
+  permissions: string[]; // e.g., ['products', 'orders', 'settings', 'users']
 }
 
 export interface SiteConfig {
   // Brand
   logo?: string;
 
-  // Global Theme (Developer Settings)
-  themeColors?: ThemeColors;
-  navbarLayout?: 'left' | 'center' | 'right';
-  borderRadius?: string; // e.g. '0px', '4px', '8px', '16px'
-  
-  // Homepage Layout (Developer Settings)
-  homeLayout?: LayoutSection[];
-
-  // Legacy Fields (Used in Content & Settings)
+  // Hero
   heroImage: string;
-  heroVideo?: string;
+  heroVideo?: string; // Optional URL or base64 video
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
   
+  // Section Headers
   categoryTitle?: string;
   featuredTitle?: string;
   featuredSubtitle?: string;
 
+  // Promo Banner
   promoTitle?: string;
   promoText?: string;
   promoImage?: string;
   promoButtonText?: string;
   promoButtonLink?: string;
   
+  // Content
   aboutTitle: string;
   aboutContent: string;
   
+  // Contact
   contactEmail: string;
   contactPhone: string;
   contactAddress: string;
   
+  // Socials
   socialInstagram?: string;
   socialFacebook?: string;
   socialWhatsapp?: string;
 
+  // Trust Badges
   trustBadge1Title?: string;
   trustBadge1Text?: string;
   trustBadge2Title?: string;
@@ -116,6 +95,7 @@ export interface SiteConfig {
   trustBadge3Title?: string;
   trustBadge3Text?: string;
 
+  // Settings
   currency: string;
 }
 

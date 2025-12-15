@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, Code, PenTool } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users } from 'lucide-react';
 import { useStore } from './store';
 
 // --- Public Navbar ---
@@ -11,8 +11,6 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const layout = config.navbarLayout || 'center'; // 'left', 'center', 'right'
-
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -21,91 +19,31 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => setIsOpen(false), [location]);
 
-  const Logo = () => (
-    <Link to="/" className="z-50 shrink-0">
-      {config.logo ? (
-        <img src={config.logo} alt="LUMIÈRE" className="h-10 object-contain" />
-      ) : (
-        <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">LUMIÈRE</span>
-      )}
-    </Link>
-  );
-
-  const Links = () => (
-    <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
-      <Link to="/" className="hover:text-brand-800/70 transition">HOME</Link>
-      <Link to="/shop" className="hover:text-brand-800/70 transition">SHOP</Link>
-      <Link to="/about" className="hover:text-brand-800/70 transition">ABOUT</Link>
-      <Link to="/contact" className="hover:text-brand-800/70 transition">CONTACT</Link>
-    </div>
-  );
-
-  const Icons = () => (
-    <div className="flex items-center space-x-5 text-brand-900 z-50 shrink-0">
-      <Link to="/shop" className="hidden md:block hover:text-brand-800/70"><Search size={20} /></Link>
-      <Link to="/admin" className="hover:text-brand-800/70"><User size={20} /></Link>
-      <div className="relative cursor-pointer hover:text-brand-800/70" onClick={() => navigate('/cart')}>
-        <ShoppingBag size={20} />
-        {cart.length > 0 && <span className="absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{cart.length}</span>}
-      </div>
-      <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
-    </div>
-  );
-
   return (
     <>
       <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
-        <div className="container mx-auto px-4 md:px-8">
-          {layout === 'center' && (
-            <div className="flex justify-between items-center">
-              {/* Force center logo by using equal width flex items or grid */}
-              <div className="flex-1 flex justify-start"><Links /></div> {/* Links on left for center layout? Or usually links left/right split. Let's do standard center: Logo Center, Links Left/Right? No, usually Logo Center means links are somewhere else or split.
-              Let's do: 'center' = Logo Center, Links Hidden/Below/Split. 
-              Actually, the simplest standard layouts are:
-              1. Logo Left, Links Center, Icons Right (Standard)
-              2. Logo Center, Links Left, Icons Right (Split)
-              3. Logo Left, Links Right, Icons Right
-              
-              Let's implement:
-              'left': Logo Left, Links Center, Icons Right
-              'center': Logo Center, Links Left (hidden mobile), Icons Right
-              'right': Logo Left, Links Right, Icons Right
-              */}
-              
-              {/* Default/Left Layout */}
-              {/* Just overriding based on prop for simplicity */}
+        <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
+          <Link to="/" className="z-50">
+            {config.logo ? (
+              <img src={config.logo} alt="LUMIÈRE" className="h-10 object-contain" />
+            ) : (
+              <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">LUMIÈRE</span>
+            )}
+          </Link>
+          <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
+            <Link to="/" className="hover:text-brand-800/70 transition">HOME</Link>
+            <Link to="/shop" className="hover:text-brand-800/70 transition">SHOP</Link>
+            <Link to="/about" className="hover:text-brand-800/70 transition">ABOUT</Link>
+            <Link to="/contact" className="hover:text-brand-800/70 transition">CONTACT</Link>
+          </div>
+          <div className="flex items-center space-x-5 text-brand-900 z-50">
+            <Link to="/shop" className="hidden md:block hover:text-brand-800/70"><Search size={20} /></Link>
+            <Link to="/admin" className="hover:text-brand-800/70"><User size={20} /></Link>
+            <div className="relative cursor-pointer hover:text-brand-800/70" onClick={() => navigate('/cart')}>
+              <ShoppingBag size={20} />
+              {cart.length > 0 && <span className="absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{cart.length}</span>}
             </div>
-          )}
-
-          <div className="flex justify-between items-center relative">
-             {/* Left Layout: Logo Left, Links Center, Icons Right */}
-             {layout === 'left' && (
-               <>
-                 <Logo />
-                 <div className="absolute left-1/2 -translate-x-1/2"><Links /></div>
-                 <Icons />
-               </>
-             )}
-
-             {/* Center Layout: Links Left, Logo Center, Icons Right */}
-             {layout === 'center' && (
-               <>
-                 <div className="w-1/3 flex justify-start"><Links /></div>
-                 <div className="w-1/3 flex justify-center"><Logo /></div>
-                 <div className="w-1/3 flex justify-end"><Icons /></div>
-               </>
-             )}
-
-             {/* Right Layout: Logo Left, Links Right next to Icons */}
-             {layout === 'right' && (
-                <>
-                  <Logo />
-                  <div className="flex items-center space-x-8">
-                    <Links />
-                    <Icons />
-                  </div>
-                </>
-             )}
+            <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
           </div>
         </div>
       </nav>
@@ -152,8 +90,8 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="font-semibold mb-6 tracking-wide">STAY IN TOUCH</h4>
             <div className="flex space-x-2 mb-4">
-              <input type="email" placeholder="Your email" className="bg-brand-800/50 border border-brand-800 px-4 py-2 text-sm w-full focus:outline-none focus:border-brand-300 text-white rounded-md" />
-              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-brand-200 transition rounded-md">JOIN</button>
+              <input type="email" placeholder="Your email" className="bg-brand-800/50 border border-brand-800 px-4 py-2 text-sm w-full focus:outline-none focus:border-brand-300 text-white" />
+              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-brand-200 transition">JOIN</button>
             </div>
           </div>
         </div>
@@ -219,7 +157,6 @@ export const AdminLayout: React.FC = () => {
           <NavItem to="/admin/categories" icon={List} label="Categories" perm="categories" />
           <NavItem to="/admin/settings" icon={Settings} label="Content & Settings" perm="settings" />
           <NavItem to="/admin/users" icon={Users} label="User Management" perm="users" />
-          <NavItem to="/admin/developer" icon={PenTool} label="Developer Setting" perm="settings" />
         </nav>
         <div className="p-4 border-t border-gray-100">
           <button onClick={() => { logout(); navigate('/'); }} className="flex items-center space-x-3 px-4 py-3 w-full text-rose-600 hover:bg-rose-50 rounded-lg transition">
