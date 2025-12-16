@@ -130,6 +130,8 @@ export interface SiteConfig {
   footerNewsletterTitle?: string;
   footerNewsletterPlaceholder?: string;
   footerNewsletterButtonText?: string;
+  footerBgColor?: string;
+  footerTextColor?: string;
 
   // Settings
   currency: string;

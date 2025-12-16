@@ -147,6 +147,8 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   footerNewsletterTitle: { type: String, default: 'STAY IN TOUCH' },
   footerNewsletterPlaceholder: { type: String, default: 'Your email' },
   footerNewsletterButtonText: { type: String, default: 'JOIN' },
+  footerBgColor: { type: String, default: '#2C251F' },
+  footerTextColor: { type: String, default: '#F5F5F5' },
   
   // Settings
   currency: String,

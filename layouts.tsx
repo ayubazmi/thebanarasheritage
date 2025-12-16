@@ -85,28 +85,36 @@ export const Navbar: React.FC = () => {
 // --- Footer ---
 export const Footer: React.FC = () => {
   const { config } = useStore();
+  
+  // Defaults to original design if not set
+  const bgColor = config.footerBgColor || '#2C251F';
+  const textColor = config.footerTextColor || '#F5F5F5';
+
   return (
-    <footer className="bg-brand-900 text-brand-100 pt-16 pb-8">
+    <footer 
+      className="pt-16 pb-8 transition-colors duration-300"
+      style={{ backgroundColor: bgColor, color: textColor }}
+    >
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div>
             <h3 className="text-2xl font-serif font-bold mb-6">{config.siteName || "LUMIÈRE"}</h3>
-            <p className="text-brand-300/80 leading-relaxed text-sm">
+            <p className="opacity-80 leading-relaxed text-sm">
               {config.aboutContent ? config.aboutContent.substring(0, 150) + '...' : 'Redefining contemporary fashion with timeless elegance.'}
             </p>
           </div>
           <div>
             <h4 className="font-semibold mb-6 tracking-wide uppercase">{config.footerShopTitle || 'SHOP'}</h4>
-            <ul className="space-y-3 text-sm text-brand-300/80">
-              <li><Link to={config.footerLink1Url || '/shop?cat=new'} className="hover:text-white transition">{config.footerLink1Label || 'New Arrivals'}</Link></li>
-              <li><Link to={config.footerLink2Url || '/shop?cat=kurtis'} className="hover:text-white transition">{config.footerLink2Label || 'Kurtis'}</Link></li>
-              <li><Link to={config.footerLink3Url || '/shop?cat=dresses'} className="hover:text-white transition">{config.footerLink3Label || 'Dresses'}</Link></li>
-              <li><Link to={config.footerLink4Url || '/shop?cat=sale'} className="hover:text-white transition">{config.footerLink4Label || 'Sale'}</Link></li>
+            <ul className="space-y-3 text-sm opacity-80">
+              <li><Link to={config.footerLink1Url || '/shop?cat=new'} className="hover:opacity-100 transition hover:underline">{config.footerLink1Label || 'New Arrivals'}</Link></li>
+              <li><Link to={config.footerLink2Url || '/shop?cat=kurtis'} className="hover:opacity-100 transition hover:underline">{config.footerLink2Label || 'Kurtis'}</Link></li>
+              <li><Link to={config.footerLink3Url || '/shop?cat=dresses'} className="hover:opacity-100 transition hover:underline">{config.footerLink3Label || 'Dresses'}</Link></li>
+              <li><Link to={config.footerLink4Url || '/shop?cat=sale'} className="hover:opacity-100 transition hover:underline">{config.footerLink4Label || 'Sale'}</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-6 tracking-wide">CONTACT</h4>
-            <ul className="space-y-3 text-sm text-brand-300/80">
+            <ul className="space-y-3 text-sm opacity-80">
               <li>{config.contactAddress || '123 Fashion Ave, NY'}</li>
               <li>{config.contactPhone || '+1 (555) 123-4567'}</li>
               <li>{config.contactEmail || 'support@lumiere.com'}</li>
@@ -115,16 +123,28 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="font-semibold mb-6 tracking-wide uppercase">{config.footerNewsletterTitle || 'STAY IN TOUCH'}</h4>
             <div className="flex space-x-2 mb-4">
-              <input type="email" placeholder={config.footerNewsletterPlaceholder || 'Your email'} className="bg-brand-800/50 border border-brand-800 px-4 py-2 text-sm w-full focus:outline-none focus:border-brand-300 text-white" />
-              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-brand-200 transition">{config.footerNewsletterButtonText || 'JOIN'}</button>
+              <input 
+                type="email" 
+                placeholder={config.footerNewsletterPlaceholder || 'Your email'} 
+                className="bg-white/10 border border-white/20 px-4 py-2 text-sm w-full focus:outline-none focus:border-white/40 text-inherit placeholder:text-inherit/50" 
+              />
+              <button 
+                 className="px-4 py-2 text-sm font-medium transition hover:opacity-90"
+                 style={{ backgroundColor: textColor, color: bgColor }}
+              >
+                {config.footerNewsletterButtonText || 'JOIN'}
+              </button>
             </div>
           </div>
         </div>
-        <div className="border-t border-brand-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-brand-300/60">
+        <div 
+          className="border-t pt-8 flex flex-col md:flex-row justify-between items-center text-xs opacity-60"
+          style={{ borderColor: textColor ? `${textColor}33` : 'rgba(255,255,255,0.2)' }}
+        >
           <p>© 2024 {config.siteName || "Lumière Fashion"}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white">Terms of Service</Link>
+            <Link to="/privacy" className="hover:opacity-100 hover:underline">Privacy Policy</Link>
+            <Link to="/terms" className="hover:opacity-100 hover:underline">Terms of Service</Link>
           </div>
         </div>
       </div>
