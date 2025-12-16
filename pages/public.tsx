@@ -83,8 +83,6 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
                     </div>
                 </div>
             ))}
-            
-            {/* Navigation Arrows */}
             {slides.length > 1 && (
                 <>
                     <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100">
@@ -93,8 +91,6 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
                     <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100">
                         <ChevronRight size={24} />
                     </button>
-
-                    {/* Indicators */}
                     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
                         {slides.map((_, idx) => (
                             <button 
@@ -123,43 +119,46 @@ export const HomePage: React.FC = () => {
       if (config.heroMode === 'carousel' && config.heroSlides && config.heroSlides.length > 0) {
           return <section key="hero"><HeroCarousel slides={config.heroSlides} /></section>;
       }
-
-      // Static Fallback
       return (
         <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden">
             {config.heroVideo ? (
-            <video 
-                src={config.heroVideo} 
-                className="absolute inset-0 w-full h-full object-cover"
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-            />
+            <video src={config.heroVideo} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline />
             ) : (
-            <img 
-                src={heroImage} 
-                className="absolute inset-0 w-full h-full object-cover"
-                alt="Fashion Banner"
-            />
+            <img src={heroImage} className="absolute inset-0 w-full h-full object-cover" alt="Fashion Banner" />
             )}
             <div className="absolute inset-0 bg-black/20" />
             <div className="absolute inset-0 flex items-center justify-center text-center">
             <div className="max-w-2xl px-6">
-                <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
-                {config.heroTagline || 'New Collection'}
-                </span>
+                <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">{config.heroTagline || 'New Collection'}</span>
                 <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
                 <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
-                <Link to="/shop">
-                <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
-                    SHOP NOW
-                </button>
-                </Link>
+                <Link to="/shop"><button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">SHOP NOW</button></Link>
             </div>
             </div>
         </section>
       );
+  };
+
+  const renderSlider = () => {
+     if (!config.sliderImages || config.sliderImages.length === 0) return null;
+     
+     // Auto-scroll gallery logic can be added here, for now a simple grid/scroll
+     return (
+        <section key="slider" className="py-20 bg-brand-50 overflow-hidden">
+            <div className="container mx-auto px-4 mb-8">
+                 <h2 className="text-3xl font-serif text-center mb-2">Lookbook Gallery</h2>
+                 <div className="h-1 w-20 bg-brand-200 mx-auto"/>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-6 px-4 snap-x container mx-auto no-scrollbar">
+                {config.sliderImages.map(img => (
+                    <div key={img.id} className="flex-shrink-0 w-80 md:w-96 aspect-[3/4] snap-center bg-gray-200 rounded-lg overflow-hidden relative group">
+                        <img src={img.url} className="w-full h-full object-cover transition duration-500 group-hover:scale-105"/>
+                        {img.caption && <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white p-2 text-center text-sm">{img.caption}</div>}
+                    </div>
+                ))}
+            </div>
+        </section>
+     );
   };
 
   const renderCategories = () => (
@@ -241,14 +240,14 @@ export const HomePage: React.FC = () => {
   // Map IDs to Render Functions
   const sectionMap: Record<string, () => React.ReactNode> = {
     hero: renderHero,
+    slider: renderSlider,
     categories: renderCategories,
     featured: renderFeatured,
     promo: renderPromo,
     trust: renderTrust
   };
 
-  // Default Order if none in config
-  const order = config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'];
+  const order = config.homepageSections || ['hero', 'categories', 'featured', 'slider', 'promo', 'trust'];
 
   return (
     <>
