@@ -130,7 +130,7 @@ export const AdminLogs: React.FC = () => {
       <div className="bg-white rounded shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-5 text-gray-700 uppercase">
+            <thead className="bg-gray-50 text-gray-700 uppercase">
                <tr>
                  <th className="px-6 py-4">Time</th>
                  <th className="px-6 py-4">Client</th>
@@ -274,64 +274,11 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Announcement Bar */}
-        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-yellow-500">
-            <h3 className="font-bold text-lg mb-4 flex items-center text-yellow-800"><Bell className="mr-2" size={20}/> Announcement Bar Configuration</h3>
-            <div className="flex items-center gap-4 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={localConfig.announcementEnabled || false} onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})} className="w-5 h-5 accent-brand-900" />
-                    <span className="font-medium">Enable Announcement Bar</span>
-                </label>
-            </div>
-            {localConfig.announcementEnabled && (
-                <div className="space-y-4 animate-fade-in-up">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <Input label="Message" value={localConfig.announcementText || ''} onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} placeholder="Free Shipping on all orders!" />
-                      <Input label="Link (Optional)" value={localConfig.announcementLink || ''} onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} placeholder="/shop" />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4 border-t pt-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Background Color</label>
-                        <div className="flex gap-2">
-                           <input type="color" className="h-9 w-9 border rounded" value={localConfig.announcementBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} />
-                           <Input value={localConfig.announcementBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Text Color</label>
-                        <div className="flex gap-2">
-                           <input type="color" className="h-9 w-9 border rounded" value={localConfig.announcementTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} />
-                           <Input value={localConfig.announcementTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} />
-                        </div>
-                      </div>
-                    </div>
-                </div>
-            )}
-        </div>
-
-        {/* Footer Configuration */}
+        {/* Footer Configuration (Moved to Top for Visibility) */}
         <div className="bg-white p-8 rounded shadow-sm border-l-4 border-blue-500">
           <h3 className="font-bold text-lg mb-4 flex items-center text-blue-800"><Footprints className="mr-2" size={20}/> Footer Configuration (Shop & Contact)</h3>
           
           <div className="space-y-6">
-            {/* Colors */}
-            <div className="grid md:grid-cols-2 gap-4 border-b pb-4">
-               <div>
-                  <label className="block text-sm font-medium mb-1">Footer Background Color</label>
-                  <div className="flex gap-2">
-                     <input type="color" className="h-9 w-9 border rounded" value={localConfig.footerBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} />
-                     <Input value={localConfig.footerBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} />
-                  </div>
-               </div>
-               <div>
-                  <label className="block text-sm font-medium mb-1">Footer Text Color</label>
-                  <div className="flex gap-2">
-                     <input type="color" className="h-9 w-9 border rounded" value={localConfig.footerTextColor || '#D5CDC0'} onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} />
-                     <Input value={localConfig.footerTextColor || '#D5CDC0'} onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} />
-                  </div>
-               </div>
-            </div>
-
             {/* Shop Links */}
             <div>
                 <Input label="Footer Shop Section Title" value={localConfig.footerShopTitle || 'SHOP'} placeholder="SHOP" onChange={e => setLocalConfig({...localConfig, footerShopTitle: e.target.value})} />
@@ -556,454 +503,766 @@ export const AdminSettings: React.FC = () => {
   );
 };
 
-// --- Admin Products ---
-export const AdminProducts: React.FC = () => {
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useStore();
-  const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState<Partial<Product>>({});
+// --- Developer Settings (Enhanced) ---
+export const AdminDeveloperSettings: React.FC = () => {
+  const { config, updateConfig } = useStore();
+  const [localConfig, setLocalConfig] = useState(config);
+  
+  // Hero Slide State
+  const [newSlide, setNewSlide] = useState<Partial<HeroSlide>>({ title: '', subtitle: '', buttonText: 'SHOP NOW', buttonLink: '/shop' });
+  const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
+  const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name || !form.price) return alert("Name and Price are required");
-    
-    const productData = {
-      ...form,
-      price: Number(form.price),
-      discountPrice: form.discountPrice ? Number(form.discountPrice) : undefined,
-      stock: Number(form.stock || 0),
-      images: form.images || [],
-      sizes: form.sizes || [],
-      colors: form.colors || [],
-    } as Product;
-
-    if (form.id) {
-      await updateProduct(productData);
-    } else {
-      await addProduct(productData);
+  // Gallery Image State
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  
+  // Sync logic
+  useEffect(() => {
+    if (config && Object.keys(config).length > 0) {
+      setLocalConfig({
+        ...config,
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px',
+          ...config.theme
+        },
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'],
+        hiddenSections: config.hiddenSections || [],
+        heroMode: config.heroMode || 'static',
+        heroSlides: config.heroSlides || [],
+        sliderImages: config.sliderImages || []
+      });
     }
-    setIsEditing(false);
-    setForm({});
+  }, [config]);
+
+  const handleSave = () => {
+    updateConfig(localConfig);
+    alert('Developer settings updated successfully!');
   };
 
-  const handleEdit = (p: Product) => {
-    setForm(p);
-    setIsEditing(true);
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to reset all developer settings to default?")) {
+      setLocalConfig(prev => ({
+        ...prev,
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px'
+        },
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'],
+        hiddenSections: [],
+        heroMode: 'static'
+      }));
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure?')) await deleteProduct(id);
+  const moveSection = (index: number, direction: 'up' | 'down') => {
+    const newSections = [...(localConfig.homepageSections || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newSections.length) {
+      [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
+      setLocalConfig({ ...localConfig, homepageSections: newSections });
+    }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if(file) {
+  const toggleSectionVisibility = (sectionId: string) => {
+    const currentHidden = localConfig.hiddenSections || [];
+    let newHidden;
+    if (currentHidden.includes(sectionId)) {
+        newHidden = currentHidden.filter(id => id !== sectionId);
+    } else {
+        newHidden = [...currentHidden, sectionId];
+    }
+    setLocalConfig({ ...localConfig, hiddenSections: newHidden });
+  };
+
+  // --- Slide Logic ---
+  const openSlideModal = (idx?: number) => {
+    setEditingSlideIndex(idx ?? null);
+    setNewSlide(idx !== undefined ? { ...localConfig.heroSlides![idx] } : { title: '', subtitle: '', buttonText: 'SHOP', buttonLink: '/shop', image: '' });
+    setIsSlideModalOpen(true);
+  };
+  
+  const saveSlide = () => {
+    const slides = [...(localConfig.heroSlides || [])];
+    const data = { ...newSlide, id: newSlide.id || Date.now().toString() } as HeroSlide;
+    if (editingSlideIndex !== null) slides[editingSlideIndex] = data; else slides.push(data);
+    setLocalConfig({ ...localConfig, heroSlides: slides });
+    setIsSlideModalOpen(false);
+  };
+  
+  const deleteSlide = (idx: number) => {
+    const slides = [...(localConfig.heroSlides || [])];
+    slides.splice(idx, 1);
+    setLocalConfig({ ...localConfig, heroSlides: slides });
+  };
+  
+  const handleSlideUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if(f) { const r = new FileReader(); r.onload = () => setNewSlide(p => ({...p, image: r.result as string})); r.readAsDataURL(f); }
+  };
+
+  // --- Gallery Logic ---
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newImages: SliderImage[] = [];
+      let processedCount = 0;
+
+      // Convert all files to base64
+      Array.from(files).forEach((file: File) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-            setForm(prev => ({...prev, images: [reader.result as string, ...(prev.images || [])]}));
+          newImages.push({
+            id: Date.now().toString() + Math.random().toString(), // Unique ID
+            url: reader.result as string
+          });
+          processedCount++;
+          
+          // Once all files are processed, update state
+          if (processedCount === files.length) {
+            setLocalConfig(prev => ({
+              ...prev,
+              sliderImages: [...(prev.sliderImages || []), ...newImages]
+            }));
+          }
         };
         reader.readAsDataURL(file);
+      });
+      
+      // Clear input so same files can be selected again if needed
+      e.target.value = '';
     }
   };
 
-  if (isEditing) {
-    return (
-      <div className="max-w-2xl bg-white p-8 rounded shadow-sm">
-        <h2 className="text-xl font-bold mb-6">{form.id ? 'Edit Product' : 'Add New Product'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Name" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} required />
-          <div className="grid grid-cols-2 gap-4">
-             <Input label="Price" type="number" value={form.price || ''} onChange={e => setForm({...form, price: Number(e.target.value)})} required />
-             <Input label="Discount Price (Optional)" type="number" value={form.discountPrice || ''} onChange={e => setForm({...form, discountPrice: Number(e.target.value)})} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
-            <select className="w-full border p-2 rounded" value={form.category || ''} onChange={e => setForm({...form, category: e.target.value})}>
-              <option value="">Select Category</option>
-              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
-          <Input label="Stock" type="number" value={form.stock || 0} onChange={e => setForm({...form, stock: Number(e.target.value)})} />
-          <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea className="w-full border p-2 h-24" value={form.description || ''} onChange={e => setForm({...form, description: e.target.value})}></textarea>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Images</label>
-             <div className="flex flex-wrap gap-2 mb-2">
-               {form.images?.map((img, i) => (
-                 <div key={i} className="w-20 h-20 relative">
-                   <img src={img} className="w-full h-full object-cover rounded border" />
-                   <button type="button" onClick={() => setForm(prev => ({...prev, images: prev.images?.filter((_, idx) => idx !== i)}))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5"><X size={12}/></button>
-                 </div>
-               ))}
-             </div>
-             <input type="file" onChange={handleImageUpload} accept="image/*" />
-          </div>
+  const removeGalleryImage = (id: string) => {
+      setLocalConfig(p => ({ ...p, sliderImages: p.sliderImages?.filter(i => i.id !== id) }));
+  };
 
-          {/* Sizes and Colors as comma separated for simplicity */}
-          <Input label="Sizes (comma separated)" value={form.sizes?.join(', ') || ''} onChange={e => setForm({...form, sizes: e.target.value.split(',').map(s => s.trim())})} />
-          <Input label="Colors (comma separated)" value={form.colors?.join(', ') || ''} onChange={e => setForm({...form, colors: e.target.value.split(',').map(s => s.trim())})} />
+  const fonts = [
+    { name: 'Inter (Modern Sans)', value: 'Inter' },
+    { name: 'Lato (Friendly Sans)', value: 'Lato' },
+    { name: 'Montserrat (Geometric Sans)', value: 'Montserrat' },
+    { name: 'Open Sans (Neutral Sans)', value: 'Open Sans' },
+    { name: 'Cormorant Garamond (Elegant Serif)', value: 'Cormorant Garamond' },
+    { name: 'Playfair Display (Display Serif)', value: 'Playfair Display' },
+  ];
 
-          <div className="flex gap-4">
-             <label className="flex items-center gap-2"><input type="checkbox" checked={form.newArrival || false} onChange={e => setForm({...form, newArrival: e.target.checked})} /> New Arrival</label>
-             <label className="flex items-center gap-2"><input type="checkbox" checked={form.bestSeller || false} onChange={e => setForm({...form, bestSeller: e.target.checked})} /> Best Seller</label>
-          </div>
+  const sectionNames: Record<string, string> = {
+    hero: 'Hero Banner',
+    categories: 'Categories Grid',
+    featured: 'Featured Products',
+    promo: 'Promotional Banner',
+    trust: 'Trust Badges',
+    slider: 'Image Gallery / Slider'
+  };
 
-          <div className="flex gap-4 pt-4">
-            <Button type="submit">Save Product</Button>
-            <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-          </div>
-        </form>
-      </div>
-    )
-  }
+  if (!localConfig.theme) return <div>Loading...</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold font-serif">Products</h1>
-        <Button onClick={() => { setForm({}); setIsEditing(true); }}><Plus size={16} className="mr-2"/> Add Product</Button>
+    <div className="max-w-4xl pb-20">
+      <div className="mb-8">
+        <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
+        <p className="text-gray-500">Advanced customization for theme, layout, and specialized sections.</p>
       </div>
-      <div className="bg-white rounded shadow overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 uppercase text-gray-700">
-             <tr>
-               <th className="px-6 py-3">Image</th>
-               <th className="px-6 py-3">Name</th>
-               <th className="px-6 py-3">Category</th>
-               <th className="px-6 py-3">Price</th>
-               <th className="px-6 py-3">Stock</th>
-               <th className="px-6 py-3">Actions</th>
-             </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p.id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4"><img src={p.images[0]} className="w-10 h-10 object-cover rounded" /></td>
-                <td className="px-6 py-4 font-medium">{p.name}</td>
-                <td className="px-6 py-4">{p.category}</td>
-                <td className="px-6 py-4">${p.price}</td>
-                <td className="px-6 py-4">{p.stock}</td>
-                <td className="px-6 py-4 flex gap-2">
-                  <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-800"><Edit size={16}/></button>
-                  <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-800"><Trash size={16}/></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        
+        {/* Color Palette */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2" size={20}/> Color Palette</h3>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">Primary Color (Text & Dark BG)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.primaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.primaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})} 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Secondary / Accent Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.secondaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.secondaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})} 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Page Background Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.backgroundColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.backgroundColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})} 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Typography & Style */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Type className="mr-2" size={20}/> Typography & Style</h3>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">Heading Font (Serif)</label>
+              <select 
+                className="w-full border p-2 rounded"
+                value={localConfig.theme.fontFamilySerif}
+                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySerif: e.target.value}})}
+              >
+                {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Body Font (Sans)</label>
+              <select 
+                className="w-full border p-2 rounded"
+                value={localConfig.theme.fontFamilySans}
+                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySans: e.target.value}})}
+              >
+                {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Border Radius Style</label>
+              <div className="grid grid-cols-4 gap-2">
+                {['0px', '4px', '8px', '99px'].map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setLocalConfig({...localConfig, theme: {...localConfig.theme!, borderRadius: r}})}
+                    className={`border p-2 text-center text-xs ${localConfig.theme?.borderRadius === r ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}`}
+                    style={{ borderRadius: r }}
+                  >
+                    {r === '0px' ? 'Square' : r === '99px' ? 'Round' : r}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Announcement Bar */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-4 flex items-center"><Bell className="mr-2" size={20}/> Announcement Bar</h3>
+            <div className="flex items-center gap-4 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={localConfig.announcementEnabled || false} onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})} className="w-5 h-5 accent-brand-900" />
+                    <span className="font-medium">Enable Announcement Bar</span>
+                </label>
+            </div>
+            {localConfig.announcementEnabled && (
+                <div className="grid md:grid-cols-2 gap-4 animate-fade-in-up">
+                    <Input label="Message" value={localConfig.announcementText || ''} onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} placeholder="Free Shipping on all orders!" />
+                    <Input label="Link (Optional)" value={localConfig.announcementLink || ''} onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} placeholder="/shop" />
+                </div>
+            )}
+        </div>
+
+        {/* Hero Config */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-6 flex items-center"><MonitorPlay className="mr-2" size={20}/> Hero Section Config</h3>
+            <div className="flex gap-4 mb-6">
+                <button onClick={() => setLocalConfig({...localConfig, heroMode: 'static'})} className={`flex-1 p-3 border rounded text-center transition ${localConfig.heroMode === 'static' ? 'bg-brand-100 border-brand-900 font-bold' : 'hover:bg-gray-50'}`}>Static</button>
+                <button onClick={() => setLocalConfig({...localConfig, heroMode: 'carousel'})} className={`flex-1 p-3 border rounded text-center transition ${localConfig.heroMode === 'carousel' ? 'bg-brand-100 border-brand-900 font-bold' : 'hover:bg-gray-50'}`}>Carousel</button>
+            </div>
+            {localConfig.heroMode === 'carousel' && (
+                <div>
+                    <div className="flex justify-between mb-2"><h4>Slides</h4><Button size="sm" onClick={() => openSlideModal()}><Plus size={14}/> Add Slide</Button></div>
+                    <div className="space-y-2">
+                        {localConfig.heroSlides?.map((s, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 border rounded bg-gray-50">
+                                <div className="flex items-center gap-2"><img src={s.image} className="w-10 h-10 object-cover rounded"/><span>{s.title || 'Slide ' + (i+1)}</span></div>
+                                <div><button onClick={() => openSlideModal(i)} className="p-1 mr-2 text-blue-600"><Edit size={16}/></button><button onClick={() => deleteSlide(i)} className="p-1 text-red-600"><Trash size={16}/></button></div>
+                            </div>
+                        ))}
+                        {localConfig.heroSlides?.length === 0 && <p className="text-gray-400 text-sm">No slides added.</p>}
+                    </div>
+                </div>
+            )}
+        </div>
+
+        {/* Standalone Gallery Config */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-6 flex items-center"><Images className="mr-2" size={20}/> Standalone Image Slider / Gallery</h3>
+            <div className="mb-6">
+                <Input label="Section Title" value={localConfig.sliderTitle || ''} placeholder="Lookbook" onChange={e => setLocalConfig({...localConfig, sliderTitle: e.target.value})} />
+            </div>
+            <p className="text-sm text-gray-500 mb-4">Upload multiple images to create an automatic scrolling gallery on your homepage.</p>
+            
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-6">
+                {localConfig.sliderImages?.map((img) => (
+                    <div key={img.id} className="relative aspect-[3/4] group bg-gray-100 rounded overflow-hidden shadow-sm border">
+                        <img src={img.url} className="w-full h-full object-cover" />
+                        <button 
+                          onClick={() => removeGalleryImage(img.id)} 
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition shadow-md"
+                          title="Remove Image"
+                        >
+                          <X size={12}/>
+                        </button>
+                    </div>
+                ))}
+                
+                <label className="aspect-[3/4] border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-500 transition-colors rounded text-gray-400">
+                    <Plus size={24}/>
+                    <span className="text-xs mt-2 font-medium">Add Images</span>
+                    {/* KEY CHANGE: Added 'multiple' attribute */}
+                    <input type="file" className="hidden" accept="image/*" multiple onChange={handleGalleryUpload} />
+                </label>
+            </div>
+            {localConfig.sliderImages?.length === 0 && (
+              <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded">Tip: You can select multiple files at once when uploading.</p>
+            )}
+        </div>
+
+        {/* Section Reordering */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Layers className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
+          <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage. Toggle visibility with the eye icon.</p>
+          
+          <div className="space-y-2 max-w-lg">
+            {localConfig.homepageSections?.map((sectionId, index) => {
+              const isHidden = localConfig.hiddenSections?.includes(sectionId);
+              return (
+              <div key={sectionId} className={`flex items-center justify-between p-3 border rounded transition ${isHidden ? 'bg-gray-100 border-gray-200' : 'bg-gray-50 border-gray-200 hover:bg-white hover:shadow-sm'}`}>
+                <span className={`font-medium capitalize ${isHidden ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{sectionNames[sectionId] || sectionId}</span>
+                <div className="flex gap-2 items-center">
+                  <button 
+                    onClick={() => toggleSectionVisibility(sectionId)}
+                    className={`p-1 rounded ${isHidden ? 'text-gray-400 hover:bg-gray-200' : 'text-gray-600 hover:bg-gray-200'}`}
+                    title={isHidden ? "Unhide Section" : "Hide Section"}
+                  >
+                    {isHidden ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  </button>
+                  <div className="flex gap-1 border-l pl-2 border-gray-300">
+                    <button 
+                        onClick={() => moveSection(index, 'up')}
+                        disabled={index === 0}
+                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                    >
+                        <ArrowUp size={16}/>
+                    </button>
+                    <button 
+                        onClick={() => moveSection(index, 'down')}
+                        disabled={index === (localConfig.homepageSections?.length || 0) - 1}
+                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                    >
+                        <ArrowDown size={16}/>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )})}
+          </div>
+        </div>
+
       </div>
+
+      <div className="mt-8 pt-4 border-t flex justify-end gap-4">
+         <Button onClick={handleReset} variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+            <RotateCcw size={16} className="mr-2" /> Reset Defaults
+         </Button>
+         <Button onClick={handleSave} size="lg">Save Configuration</Button>
+      </div>
+
+      {/* Slide Modal */}
+      {isSlideModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-xl">Edit Slide</h3>
+                    <button onClick={() => setIsSlideModalOpen(false)}><X size={20}/></button>
+                  </div>
+                  <div className="space-y-4">
+                      <Input label="Title" value={newSlide.title} onChange={e => setNewSlide({...newSlide, title: e.target.value})} />
+                      <Input label="Subtitle" value={newSlide.subtitle} onChange={e => setNewSlide({...newSlide, subtitle: e.target.value})} />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input label="Button Text" value={newSlide.buttonText} onChange={e => setNewSlide({...newSlide, buttonText: e.target.value})} />
+                        <Input label="Button Link" value={newSlide.buttonLink} onChange={e => setNewSlide({...newSlide, buttonLink: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1">Image</label>
+                        {newSlide.image && <img src={newSlide.image} className="w-full h-32 object-cover mb-2 rounded border" />}
+                        <input type="file" onChange={handleSlideUpload} />
+                      </div>
+                  </div>
+                  <div className="mt-6 flex justify-end gap-2"><Button variant="secondary" onClick={() => setIsSlideModalOpen(false)}>Cancel</Button><Button onClick={saveSlide}>Save</Button></div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
 
-// --- Admin Orders ---
 export const AdminOrders: React.FC = () => {
     const { orders, updateOrderStatus } = useStore();
-
     return (
         <div>
-            <h1 className="text-2xl font-bold font-serif mb-6">Orders</h1>
-            <div className="space-y-4">
-                {orders.map(order => (
-                    <div key={order.id} className="bg-white p-6 rounded shadow-sm border border-gray-100">
-                        <div className="flex flex-col md:flex-row justify-between mb-4">
-                            <div>
-                                <h3 className="font-bold text-lg">Order #{order.id}</h3>
-                                <p className="text-sm text-gray-500">{new Date(order.date).toLocaleDateString()} by {order.customerName}</p>
-                                <p className="text-xs text-gray-400">{order.email}</p>
-                            </div>
-                            <div className="flex items-center gap-4 mt-4 md:mt-0">
-                                <span className="font-bold text-lg">${order.total}</span>
-                                <select 
-                                    className="border rounded px-2 py-1 text-sm bg-gray-50" 
-                                    value={order.status}
-                                    onChange={(e) => updateOrderStatus(order.id, e.target.value as any)}
-                                >
-                                    <option value="Pending">Pending</option>
-                                    <option value="Shipped">Shipped</option>
-                                    <option value="Delivered">Delivered</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded text-sm">
-                            <p className="font-bold mb-2">Items:</p>
-                            <ul className="space-y-2">
-                                {order.items.map((item, idx) => (
-                                    <li key={idx} className="flex justify-between">
-                                        <span>{item.quantity}x {item.name} ({item.selectedSize}, {item.selectedColor})</span>
-                                        <span>${(item.discountPrice || item.price) * item.quantity}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div className="mt-4 text-xs text-gray-500">
-                             Shipping To: {order.shippingAddress.address}, {order.shippingAddress.city}, {order.shippingAddress.zip}
-                        </div>
-                    </div>
-                ))}
-                {orders.length === 0 && <p>No orders found.</p>}
+            <h1 className="text-2xl font-serif font-bold mb-8">Manage Orders</h1>
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-gray-700 uppercase">
+                        <tr>
+                            <th className="px-6 py-4">ID</th>
+                            <th className="px-6 py-4">Customer</th>
+                            <th className="px-6 py-4">Date</th>
+                            <th className="px-6 py-4">Total</th>
+                            <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {orders.map(order => (
+                            <tr key={order.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-medium">{order.id}</td>
+                                <td className="px-6 py-4">
+                                    <div>{order.customerName}</div>
+                                    <div className="text-xs text-gray-500">{order.email}</div>
+                                </td>
+                                <td className="px-6 py-4">{order.date}</td>
+                                <td className="px-6 py-4">${order.total}</td>
+                                <td className="px-6 py-4">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {order.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <select 
+                                        value={order.status} 
+                                        onChange={(e) => updateOrderStatus(order.id, e.target.value as any)} 
+                                        className="border text-xs p-1 rounded bg-white"
+                                    >
+                                        <option>Pending</option>
+                                        <option>Shipped</option>
+                                        <option>Delivered</option>
+                                        <option>Cancelled</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {orders.length === 0 && <div className="p-8 text-center text-gray-500">No orders found.</div>}
             </div>
         </div>
     );
 };
 
-// --- Admin Categories ---
-export const AdminCategories: React.FC = () => {
-    const { categories, addCategory, deleteCategory } = useStore();
-    const [name, setName] = useState('');
-    const [image, setImage] = useState('');
+export const AdminProducts: React.FC = () => {
+  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Partial<Product>>({});
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if(!name) return;
-        await addCategory({ id: name.toLowerCase().replace(/\s+/g, '-'), name, image: image || 'https://via.placeholder.com/400' });
-        setName(''); setImage('');
-    };
+  const handleSave = async () => {
+     if (!editingProduct.name || !editingProduct.price) return alert("Name and Price are required");
+     
+     const productData = {
+        ...editingProduct,
+        id: editingProduct.id || Date.now().toString(),
+        images: editingProduct.images || [],
+        sizes: editingProduct.sizes || [],
+        colors: editingProduct.colors || [],
+        stock: Number(editingProduct.stock) || 0,
+        price: Number(editingProduct.price),
+        discountPrice: editingProduct.discountPrice ? Number(editingProduct.discountPrice) : undefined,
+        newArrival: editingProduct.newArrival || false,
+        bestSeller: editingProduct.bestSeller || false,
+     } as Product;
 
-    const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => setImage(reader.result as string);
-            reader.readAsDataURL(file);
-        }
-    };
+     if (editingProduct.id) {
+        await updateProduct(productData);
+     } else {
+        await addProduct(productData);
+     }
+     setIsModalOpen(false);
+  };
 
-    return (
-        <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-                <h1 className="text-2xl font-bold font-serif mb-6">Categories</h1>
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+           setEditingProduct(prev => ({ ...prev, images: [...(prev.images || []), reader.result as string] }));
+        };
+        reader.readAsDataURL(file);
+     }
+  };
+
+  return (
+    <div>
+       <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-serif font-bold">Products</h1>
+          <Button onClick={() => { setEditingProduct({}); setIsModalOpen(true); }}><Plus size={16} className="mr-2"/> Add Product</Button>
+       </div>
+       
+       <div className="bg-white rounded shadow-sm overflow-hidden">
+         <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-700 uppercase">
+              <tr>
+                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Price</th>
+                <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+               {products.map(p => (
+                  <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 flex items-center gap-3">
+                       <img src={p.images[0]} className="w-10 h-10 object-cover rounded bg-gray-100" />
+                       <div>
+                          <div className="font-medium">{p.name}</div>
+                          {p.newArrival && <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded mr-1">NEW</span>}
+                          {p.bestSeller && <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded">HOT</span>}
+                       </div>
+                    </td>
+                    <td className="px-6 py-4">{p.category}</td>
+                    <td className="px-6 py-4">${p.price}</td>
+                    <td className="px-6 py-4">{p.stock}</td>
+                    <td className="px-6 py-4 flex gap-2">
+                       <button onClick={() => { setEditingProduct(p); setIsModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button>
+                       <button onClick={() => { if(confirm('Delete?')) deleteProduct(p.id); }} className="text-red-600 hover:bg-red-50 p-1 rounded"><Trash size={16}/></button>
+                    </td>
+                  </tr>
+               ))}
+            </tbody>
+         </table>
+       </div>
+
+       {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <h3 className="font-bold text-xl mb-4">{editingProduct.id ? 'Edit' : 'Add'} Product</h3>
                 <div className="grid grid-cols-2 gap-4">
-                    {categories.map(c => (
-                        <div key={c.id} className="relative group aspect-square bg-gray-100 rounded overflow-hidden">
-                            <img src={c.image} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">{c.name}</span>
-                            </div>
-                            <button onClick={() => deleteCategory(c.id)} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition"><Trash size={16}/></button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div>
-                <div className="bg-white p-6 rounded shadow-sm sticky top-6">
-                    <h3 className="font-bold mb-4">Add Category</h3>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <Input label="Name" value={name} onChange={e => setName(e.target.value)} required />
-                        <div>
-                             <label className="block text-sm font-medium mb-1">Image</label>
-                             <input type="file" onChange={handleImage} accept="image/*" className="text-sm" />
-                             {image && <img src={image} className="mt-2 w-full h-32 object-cover rounded" />}
-                        </div>
-                        <Button type="submit" className="w-full">Add Category</Button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
-};
+                   <Input label="Name" value={editingProduct.name || ''} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
+                   <div>
+                      <label className="block text-sm font-medium mb-1">Category</label>
+                      <select className="w-full border p-2 rounded" value={editingProduct.category || ''} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}>
+                         <option value="">Select Category</option>
+                         {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                      </select>
+                   </div>
+                   <Input label="Price" type="number" value={editingProduct.price || ''} onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})} />
+                   <Input label="Discount Price" type="number" value={editingProduct.discountPrice || ''} onChange={e => setEditingProduct({...editingProduct, discountPrice: Number(e.target.value)})} />
+                   <Input label="Stock" type="number" value={editingProduct.stock || ''} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
+                   
+                   <div className="col-span-2 space-y-2">
+                      <label className="flex items-center gap-2">
+                         <input type="checkbox" checked={editingProduct.newArrival || false} onChange={e => setEditingProduct({...editingProduct, newArrival: e.target.checked})} />
+                         New Arrival
+                      </label>
+                      <label className="flex items-center gap-2">
+                         <input type="checkbox" checked={editingProduct.bestSeller || false} onChange={e => setEditingProduct({...editingProduct, bestSeller: e.target.checked})} />
+                         Best Seller
+                      </label>
+                   </div>
 
-// --- Admin Users ---
-export const AdminUsers: React.FC = () => {
-    const { users, addUser, deleteUser, changeUserPassword } = useStore();
-    const [isAdding, setIsAdding] = useState(false);
-    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
-    
-    // ... basic crud ...
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await addUser(newUser as any);
-        setIsAdding(false); setNewUser({ username: '', password: '', role: 'staff' });
-    }
+                   <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-1">Description</label>
+                      <textarea className="w-full border p-2" value={editingProduct.description || ''} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}></textarea>
+                   </div>
 
-    return (
-        <div>
-             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold font-serif">Users</h1>
-                <Button onClick={() => setIsAdding(!isAdding)}>{isAdding ? 'Cancel' : 'Add User'}</Button>
-             </div>
-
-             {isAdding && (
-                 <div className="bg-white p-6 mb-6 rounded shadow-sm max-w-md">
-                     <form onSubmit={handleAdd} className="space-y-4">
-                         <Input label="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required />
-                         <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required />
-                         <div>
-                             <label className="block text-sm font-medium mb-1">Role</label>
-                             <select className="w-full border p-2 rounded" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                                 <option value="staff">Staff</option>
-                                 <option value="admin">Admin</option>
-                             </select>
-                         </div>
-                         <Button type="submit">Create User</Button>
-                     </form>
-                 </div>
-             )}
-
-             <div className="bg-white rounded shadow-sm overflow-hidden">
-                 <table className="w-full text-sm text-left">
-                     <thead className="bg-gray-50 uppercase text-gray-700">
-                         <tr>
-                             <th className="px-6 py-3">Username</th>
-                             <th className="px-6 py-3">Role</th>
-                             <th className="px-6 py-3">Actions</th>
-                         </tr>
-                     </thead>
-                     <tbody>
-                         {users.map(u => (
-                             <tr key={u.id} className="border-b">
-                                 <td className="px-6 py-4">{u.username}</td>
-                                 <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{u.role}</span></td>
-                                 <td className="px-6 py-4">
-                                     <button onClick={() => deleteUser(u.id)} className="text-red-500 hover:text-red-700"><Trash size={16}/></button>
-                                 </td>
-                             </tr>
+                   <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-1">Images</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                         {editingProduct.images?.map((img, i) => (
+                            <img key={i} src={img} className="w-16 h-16 object-cover border" />
                          ))}
-                     </tbody>
-                 </table>
+                      </div>
+                      <input type="file" onChange={handleImageUpload} />
+                   </div>
+
+                   {/* Sizes and Colors as comma separated strings for simplicity */}
+                   <Input label="Sizes (comma separated)" value={editingProduct.sizes?.join(',') || ''} onChange={e => setEditingProduct({...editingProduct, sizes: e.target.value.split(',').map(s => s.trim())})} />
+                   <Input label="Colors (comma separated)" value={editingProduct.colors?.join(',') || ''} onChange={e => setEditingProduct({...editingProduct, colors: e.target.value.split(',').map(s => s.trim())})} />
+                </div>
+                <div className="mt-6 flex justify-end gap-2">
+                   <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                   <Button onClick={handleSave}>Save Product</Button>
+                </div>
              </div>
-        </div>
-    );
+          </div>
+       )}
+    </div>
+  );
 };
 
-// --- Admin Developer Settings ---
-export const AdminDeveloperSettings: React.FC = () => {
-    const { config, updateConfig } = useStore();
-    const [local, setLocal] = useState(config);
-    
-    useEffect(() => { setLocal(config); }, [config]);
+export const AdminCategories: React.FC = () => {
+  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Partial<Category>>({});
 
-    const handleSave = () => {
-        updateConfig(local);
-        alert('Saved!');
-    };
+  const handleSave = async () => {
+     if (!editingCategory.name) return;
+     const catData = {
+        ...editingCategory,
+        id: editingCategory.id || editingCategory.name.toLowerCase().replace(/\s+/g, '-'),
+        image: editingCategory.image || ''
+     } as Category;
+     
+     if (editingCategory.id) await updateCategory(catData);
+     else await addCategory(catData);
+     setIsModalOpen(false);
+  };
 
-    return (
-        <div className="max-w-4xl pb-20">
-             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold font-serif">Developer Settings</h1>
-                <Button onClick={handleSave}>Save Changes</Button>
-             </div>
-             
-             <div className="space-y-6">
-                 {/* Theme */}
-                 <div className="bg-white p-6 rounded shadow-sm">
-                     <h3 className="font-bold mb-4 flex items-center gap-2"><Palette size={20}/> Theme Configuration</h3>
-                     <div className="grid md:grid-cols-3 gap-4">
-                         <div>
-                             <label className="block text-sm font-medium mb-1">Primary Color (900)</label>
-                             <div className="flex gap-2">
-                                <input type="color" className="w-8 h-8 rounded border" value={local.theme?.primaryColor || '#000000'} onChange={e => setLocal({...local, theme: {...local.theme!, primaryColor: e.target.value}})} />
-                                <Input value={local.theme?.primaryColor || ''} onChange={e => setLocal({...local, theme: {...local.theme!, primaryColor: e.target.value}})} />
-                             </div>
-                         </div>
-                         <div>
-                             <label className="block text-sm font-medium mb-1">Secondary Color (200)</label>
-                             <div className="flex gap-2">
-                                <input type="color" className="w-8 h-8 rounded border" value={local.theme?.secondaryColor || '#e5e7eb'} onChange={e => setLocal({...local, theme: {...local.theme!, secondaryColor: e.target.value}})} />
-                                <Input value={local.theme?.secondaryColor || ''} onChange={e => setLocal({...local, theme: {...local.theme!, secondaryColor: e.target.value}})} />
-                             </div>
-                         </div>
-                         <div>
-                             <label className="block text-sm font-medium mb-1">Background Color (50)</label>
-                             <div className="flex gap-2">
-                                <input type="color" className="w-8 h-8 rounded border" value={local.theme?.backgroundColor || '#f9fafb'} onChange={e => setLocal({...local, theme: {...local.theme!, backgroundColor: e.target.value}})} />
-                                <Input value={local.theme?.backgroundColor || ''} onChange={e => setLocal({...local, theme: {...local.theme!, backgroundColor: e.target.value}})} />
-                             </div>
-                         </div>
-                     </div>
-                 </div>
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file) {
+        const reader = new FileReader();
+        reader.onload = () => setEditingCategory(prev => ({ ...prev, image: reader.result as string }));
+        reader.readAsDataURL(file);
+     }
+  };
 
-                 {/* Sections */}
-                 <div className="bg-white p-6 rounded shadow-sm">
-                     <h3 className="font-bold mb-4 flex items-center gap-2"><Layers size={20}/> Homepage Sections</h3>
-                     <div className="space-y-2">
-                        {['hero', 'categories', 'featured', 'slider', 'promo', 'trust'].map(sec => (
-                            <div key={sec} className="flex items-center justify-between p-3 border rounded bg-gray-50">
-                                <span className="uppercase font-medium text-sm">{sec}</span>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={!local.hiddenSections?.includes(sec)} 
-                                        onChange={(e) => {
-                                            const hidden = local.hiddenSections || [];
-                                            if (e.target.checked) {
-                                                setLocal({...local, hiddenSections: hidden.filter(h => h !== sec)});
-                                            } else {
-                                                setLocal({...local, hiddenSections: [...hidden, sec]});
-                                            }
-                                        }}
-                                    />
-                                    Visible
-                                </label>
-                            </div>
-                        ))}
-                     </div>
-                 </div>
-
-                 {/* Hero Mode */}
-                 <div className="bg-white p-6 rounded shadow-sm">
-                     <h3 className="font-bold mb-4 flex items-center gap-2"><MonitorPlay size={20}/> Hero Mode</h3>
-                     <select 
-                        className="w-full border p-2 rounded mb-4" 
-                        value={local.heroMode || 'static'} 
-                        onChange={e => setLocal({...local, heroMode: e.target.value as any})}
-                     >
-                         <option value="static">Static Image/Video</option>
-                         <option value="carousel">Carousel Slideshow</option>
-                     </select>
-                     
-                     {local.heroMode === 'carousel' && (
-                         <div className="space-y-4">
-                             <p className="text-sm text-gray-500">Add slides for the carousel.</p>
-                             {local.heroSlides?.map((slide, idx) => (
-                                 <div key={idx} className="border p-4 rounded relative">
-                                     <button onClick={() => setLocal(prev => ({...prev, heroSlides: prev.heroSlides?.filter((_, i) => i !== idx)}))} className="absolute top-2 right-2 text-red-500"><X size={16}/></button>
-                                     <div className="grid grid-cols-2 gap-4">
-                                         <Input label="Title" value={slide.title} onChange={e => {
-                                             const slides = [...(local.heroSlides || [])];
-                                             slides[idx].title = e.target.value;
-                                             setLocal({...local, heroSlides: slides});
-                                         }} />
-                                         <Input label="Image URL" value={slide.image} onChange={e => {
-                                             const slides = [...(local.heroSlides || [])];
-                                             slides[idx].image = e.target.value;
-                                             setLocal({...local, heroSlides: slides});
-                                         }} />
-                                     </div>
-                                 </div>
-                             ))}
-                             <Button onClick={() => setLocal(prev => ({...prev, heroSlides: [...(prev.heroSlides || []), { id: Date.now().toString(), title: 'New Slide', subtitle: 'Subtitle', image: 'https://via.placeholder.com/1920x1080', buttonText: 'Shop', buttonLink: '/shop' }] }))}>Add Slide</Button>
-                         </div>
-                     )}
-                 </div>
-                 
-                 {/* Image Slider */}
-                 <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold mb-4 flex items-center gap-2"><Images size={20}/> Lookbook Slider</h3>
-                    <Input label="Slider Section Title" value={local.sliderTitle || ''} onChange={e => setLocal({...local, sliderTitle: e.target.value})} className="mb-4" />
-                    <div className="flex overflow-x-auto gap-4 py-2">
-                        {local.sliderImages?.map((img, idx) => (
-                            <div key={idx} className="w-32 h-40 flex-shrink-0 relative group">
-                                <img src={img.url} className="w-full h-full object-cover rounded" />
-                                <button onClick={() => setLocal(prev => ({...prev, sliderImages: prev.sliderImages?.filter((_, i) => i !== idx)}))} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"><X size={12}/></button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-4">
-                         <label className="btn btn-sm cursor-pointer bg-gray-100 px-4 py-2 rounded text-sm hover:bg-gray-200 inline-block">
-                             Add Image URL (Simple)
-                             <input type="button" className="hidden" onClick={() => {
-                                 const url = prompt("Enter Image URL");
-                                 if(url) setLocal(prev => ({...prev, sliderImages: [...(prev.sliderImages || []), { id: Date.now().toString(), url }]}));
-                             }} />
-                         </label>
-                    </div>
-                 </div>
-             </div>
+  return (
+     <div>
+        <div className="flex justify-between items-center mb-6">
+           <h1 className="text-2xl font-serif font-bold">Categories</h1>
+           <Button onClick={() => { setEditingCategory({}); setIsModalOpen(true); }}><Plus size={16} className="mr-2"/> Add Category</Button>
         </div>
-    );
-}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+           {categories.map(c => (
+              <div key={c.id} className="bg-white p-4 rounded shadow-sm relative group">
+                 <img src={c.image} className="w-full h-32 object-cover rounded mb-2 bg-gray-100" />
+                 <h3 className="font-bold text-center">{c.name}</h3>
+                 <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center gap-2 rounded transition">
+                    <button onClick={() => { setEditingCategory(c); setIsModalOpen(true); }} className="text-white p-2 hover:bg-white/20 rounded"><Edit size={20}/></button>
+                    <button onClick={() => { if(confirm("Delete?")) deleteCategory(c.id); }} className="text-red-400 p-2 hover:bg-white/20 rounded"><Trash size={20}/></button>
+                 </div>
+              </div>
+           ))}
+        </div>
+
+        {isModalOpen && (
+           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded p-6 w-full max-w-md">
+                 <h3 className="font-bold text-xl mb-4">{editingCategory.id ? 'Edit' : 'Add'} Category</h3>
+                 <Input label="Name" value={editingCategory.name || ''} onChange={e => setEditingCategory({...editingCategory, name: e.target.value})} className="mb-4" />
+                 <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">Image</label>
+                    {editingCategory.image && <img src={editingCategory.image} className="w-full h-32 object-cover mb-2 rounded" />}
+                    <input type="file" onChange={handleImageUpload} />
+                 </div>
+                 <div className="flex justify-end gap-2">
+                    <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save</Button>
+                 </div>
+              </div>
+           </div>
+        )}
+     </div>
+  );
+};
+
+export const AdminUsers: React.FC = () => {
+   const { users, addUser, deleteUser, changeUserPassword } = useStore();
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
+
+   const handleAdd = async () => {
+      if(!newUser.username || !newUser.password) return alert("Username and Password required");
+      await addUser({
+         ...newUser,
+         permissions: ['products', 'orders'] // Default permissions for staff
+      });
+      setIsModalOpen(false);
+      setNewUser({ username: '', password: '', role: 'staff' });
+   };
+
+   return (
+      <div>
+         <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-serif font-bold">User Management</h1>
+            <Button onClick={() => setIsModalOpen(true)}><Plus size={16} className="mr-2"/> Add User</Button>
+         </div>
+         
+         <div className="bg-white rounded shadow-sm overflow-hidden">
+            <table className="w-full text-left text-sm">
+               <thead className="bg-gray-50 text-gray-700 uppercase">
+                  <tr>
+                     <th className="px-6 py-4">Username</th>
+                     <th className="px-6 py-4">Role</th>
+                     <th className="px-6 py-4">Actions</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y">
+                  {users.map(u => (
+                     <tr key={u.id}>
+                        <td className="px-6 py-4 font-medium">{u.username}</td>
+                        <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase">{u.role}</span></td>
+                        <td className="px-6 py-4 flex gap-4">
+                           {u.role !== 'admin' && (
+                              <button onClick={() => { if(confirm("Delete user?")) deleteUser(u.id); }} className="text-red-600 hover:underline">Delete</button>
+                           )}
+                           <button onClick={() => {
+                              const newPass = prompt("Enter new password:");
+                              if(newPass) changeUserPassword(u.id, newPass);
+                           }} className="text-blue-600 hover:underline">Reset Password</button>
+                        </td>
+                     </tr>
+                  ))}
+               </tbody>
+            </table>
+         </div>
+
+         {isModalOpen && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+               <div className="bg-white rounded p-6 w-full max-w-md">
+                  <h3 className="font-bold text-xl mb-4">Add User</h3>
+                  <div className="space-y-4">
+                     <Input label="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+                     <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+                     <div>
+                        <label className="block text-sm font-medium mb-1">Role</label>
+                        <select className="w-full border p-2 rounded" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
+                           <option value="staff">Staff</option>
+                           <option value="admin">Admin</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div className="mt-6 flex justify-end gap-2">
+                     <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                     <Button onClick={handleAdd}>Create User</Button>
+                  </div>
+               </div>
+            </div>
+         )}
+      </div>
+   );
+};
