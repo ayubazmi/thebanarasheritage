@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader } from '../components/ui';
-import { Product, Category, User, SiteConfig } from '../types';
+import { Product, Category, User, SiteConfig, HeroSlide, SliderImage } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, Bell, MonitorPlay, Images, Layers
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -313,7 +313,8 @@ export const AdminSettings: React.FC = () => {
 
         {/* Hero Section */}
         <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner</h3>
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner (Static Mode Config)</h3>
+          <p className="text-sm text-gray-500 mb-4 italic">Note: Use "Developer Settings" to enable Carousel Mode.</p>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <Input label="Hero Tagline (Top Text)" value={localConfig.heroTagline || ''} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} placeholder="e.g. New Collection" />
@@ -502,17 +503,24 @@ export const AdminSettings: React.FC = () => {
   );
 };
 
-// --- Developer Settings (New Feature) ---
+// --- Developer Settings (Enhanced) ---
 export const AdminDeveloperSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
   const [localConfig, setLocalConfig] = useState(config);
+  
+  // Hero Slide State
+  const [newSlide, setNewSlide] = useState<Partial<HeroSlide>>({ title: '', subtitle: '', buttonText: 'SHOP NOW', buttonLink: '/shop' });
+  const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
+  const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
+
+  // Gallery Image State
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
   
   // Sync logic
   useEffect(() => {
     if (config && Object.keys(config).length > 0) {
       setLocalConfig({
         ...config,
-        // Ensure defaults exist if config is incomplete from DB
         theme: {
           primaryColor: '#2C251F',
           secondaryColor: '#D5CDC0',
@@ -522,7 +530,10 @@ export const AdminDeveloperSettings: React.FC = () => {
           borderRadius: '0px',
           ...config.theme
         },
-        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust']
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'],
+        heroMode: config.heroMode || 'static',
+        heroSlides: config.heroSlides || [],
+        sliderImages: config.sliderImages || []
       });
     }
   }, [config]);
@@ -544,7 +555,8 @@ export const AdminDeveloperSettings: React.FC = () => {
           fontFamilySerif: 'Cormorant Garamond',
           borderRadius: '0px'
         },
-        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust']
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'],
+        heroMode: 'static'
       }));
     }
   };
@@ -557,6 +569,48 @@ export const AdminDeveloperSettings: React.FC = () => {
       [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
       setLocalConfig({ ...localConfig, homepageSections: newSections });
     }
+  };
+
+  // --- Slide Logic ---
+  const openSlideModal = (idx?: number) => {
+    setEditingSlideIndex(idx ?? null);
+    setNewSlide(idx !== undefined ? { ...localConfig.heroSlides![idx] } : { title: '', subtitle: '', buttonText: 'SHOP', buttonLink: '/shop', image: '' });
+    setIsSlideModalOpen(true);
+  };
+  
+  const saveSlide = () => {
+    const slides = [...(localConfig.heroSlides || [])];
+    const data = { ...newSlide, id: newSlide.id || Date.now().toString() } as HeroSlide;
+    if (editingSlideIndex !== null) slides[editingSlideIndex] = data; else slides.push(data);
+    setLocalConfig({ ...localConfig, heroSlides: slides });
+    setIsSlideModalOpen(false);
+  };
+  
+  const deleteSlide = (idx: number) => {
+    const slides = [...(localConfig.heroSlides || [])];
+    slides.splice(idx, 1);
+    setLocalConfig({ ...localConfig, heroSlides: slides });
+  };
+  
+  const handleSlideUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if(f) { const r = new FileReader(); r.onload = () => setNewSlide(p => ({...p, image: r.result as string})); r.readAsDataURL(f); }
+  };
+
+  // --- Gallery Logic ---
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; 
+    if(f) { 
+        const r = new FileReader(); 
+        r.onload = () => {
+             // Immediately add to list
+             const newImg: SliderImage = { id: Date.now().toString(), url: r.result as string };
+             setLocalConfig(p => ({ ...p, sliderImages: [...(p.sliderImages || []), newImg] }));
+        }; 
+        r.readAsDataURL(f); 
+    }
+  };
+  const removeGalleryImage = (id: string) => {
+      setLocalConfig(p => ({ ...p, sliderImages: p.sliderImages?.filter(i => i.id !== id) }));
   };
 
   const fonts = [
@@ -573,7 +627,8 @@ export const AdminDeveloperSettings: React.FC = () => {
     categories: 'Categories Grid',
     featured: 'Featured Products',
     promo: 'Promotional Banner',
-    trust: 'Trust Badges'
+    trust: 'Trust Badges',
+    slider: 'Image Gallery / Slider'
   };
 
   if (!localConfig.theme) return <div>Loading...</div>;
@@ -582,7 +637,7 @@ export const AdminDeveloperSettings: React.FC = () => {
     <div className="max-w-4xl pb-20">
       <div className="mb-8">
         <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
-        <p className="text-gray-500">Advanced customization for theme and layout.</p>
+        <p className="text-gray-500">Advanced customization for theme, layout, and specialized sections.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -688,9 +743,69 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Announcement Bar */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-4 flex items-center"><Bell className="mr-2" size={20}/> Announcement Bar</h3>
+            <div className="flex items-center gap-4 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={localConfig.announcementEnabled || false} onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})} className="w-5 h-5 accent-brand-900" />
+                    <span className="font-medium">Enable Announcement Bar</span>
+                </label>
+            </div>
+            {localConfig.announcementEnabled && (
+                <div className="grid md:grid-cols-2 gap-4 animate-fade-in-up">
+                    <Input label="Message" value={localConfig.announcementText || ''} onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} placeholder="Free Shipping on all orders!" />
+                    <Input label="Link (Optional)" value={localConfig.announcementLink || ''} onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} placeholder="/shop" />
+                </div>
+            )}
+        </div>
+
+        {/* Hero Config */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-6 flex items-center"><MonitorPlay className="mr-2" size={20}/> Hero Section Config</h3>
+            <div className="flex gap-4 mb-6">
+                <button onClick={() => setLocalConfig({...localConfig, heroMode: 'static'})} className={`flex-1 p-3 border rounded text-center transition ${localConfig.heroMode === 'static' ? 'bg-brand-100 border-brand-900 font-bold' : 'hover:bg-gray-50'}`}>Static</button>
+                <button onClick={() => setLocalConfig({...localConfig, heroMode: 'carousel'})} className={`flex-1 p-3 border rounded text-center transition ${localConfig.heroMode === 'carousel' ? 'bg-brand-100 border-brand-900 font-bold' : 'hover:bg-gray-50'}`}>Carousel</button>
+            </div>
+            {localConfig.heroMode === 'carousel' && (
+                <div>
+                    <div className="flex justify-between mb-2"><h4>Slides</h4><Button size="sm" onClick={() => openSlideModal()}><Plus size={14}/> Add Slide</Button></div>
+                    <div className="space-y-2">
+                        {localConfig.heroSlides?.map((s, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 border rounded bg-gray-50">
+                                <div className="flex items-center gap-2"><img src={s.image} className="w-10 h-10 object-cover rounded"/><span>{s.title || 'Slide ' + (i+1)}</span></div>
+                                <div><button onClick={() => openSlideModal(i)} className="p-1 mr-2 text-blue-600"><Edit size={16}/></button><button onClick={() => deleteSlide(i)} className="p-1 text-red-600"><Trash size={16}/></button></div>
+                            </div>
+                        ))}
+                        {localConfig.heroSlides?.length === 0 && <p className="text-gray-400 text-sm">No slides added.</p>}
+                    </div>
+                </div>
+            )}
+        </div>
+
+        {/* Standalone Gallery Config */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-6 flex items-center"><Images className="mr-2" size={20}/> Standalone Image Slider / Gallery</h3>
+            <p className="text-sm text-gray-500 mb-4">Add images here to appear in the "Image Gallery / Slider" section on the homepage.</p>
+            
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+                {localConfig.sliderImages?.map((img) => (
+                    <div key={img.id} className="relative aspect-square group bg-gray-100 rounded overflow-hidden">
+                        <img src={img.url} className="w-full h-full object-cover" />
+                        <button onClick={() => removeGalleryImage(img.id)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"><X size={12}/></button>
+                    </div>
+                ))}
+                <label className="aspect-square border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 rounded text-gray-400">
+                    <Plus size={24}/>
+                    <span className="text-xs mt-1">Add Image</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleGalleryUpload} />
+                </label>
+            </div>
+        </div>
+
         {/* Section Reordering */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Layers className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
           <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
           
           <div className="space-y-2 max-w-lg">
@@ -726,6 +841,32 @@ export const AdminDeveloperSettings: React.FC = () => {
          </Button>
          <Button onClick={handleSave} size="lg">Save Configuration</Button>
       </div>
+
+      {/* Slide Modal */}
+      {isSlideModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-xl">Edit Slide</h3>
+                    <button onClick={() => setIsSlideModalOpen(false)}><X size={20}/></button>
+                  </div>
+                  <div className="space-y-4">
+                      <Input label="Title" value={newSlide.title} onChange={e => setNewSlide({...newSlide, title: e.target.value})} />
+                      <Input label="Subtitle" value={newSlide.subtitle} onChange={e => setNewSlide({...newSlide, subtitle: e.target.value})} />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input label="Button Text" value={newSlide.buttonText} onChange={e => setNewSlide({...newSlide, buttonText: e.target.value})} />
+                        <Input label="Button Link" value={newSlide.buttonLink} onChange={e => setNewSlide({...newSlide, buttonLink: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1">Image</label>
+                        {newSlide.image && <img src={newSlide.image} className="w-full h-32 object-cover mb-2 rounded border" />}
+                        <input type="file" onChange={handleSlideUpload} />
+                      </div>
+                  </div>
+                  <div className="mt-6 flex justify-end gap-2"><Button variant="secondary" onClick={() => setIsSlideModalOpen(false)}>Cancel</Button><Button onClick={saveSlide}>Save</Button></div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
