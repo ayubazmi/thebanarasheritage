@@ -11,9 +11,9 @@ const AnnouncementBar: React.FC = () => {
   return (
     <div className="bg-brand-900 text-white text-xs md:text-sm py-2 px-4 text-center tracking-wide relative z-[60]">
       {config.announcementLink ? (
-        <Link to={config.announcementLink} className="hover:underline">{config.announcementText}</Link>
+        <Link to={config.announcementLink} className="hover:underline animate-pulse font-medium">{config.announcementText}</Link>
       ) : (
-        <span>{config.announcementText}</span>
+        <span className="animate-pulse font-medium">{config.announcementText}</span>
       )}
     </div>
   );
