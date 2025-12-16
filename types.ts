@@ -68,6 +68,13 @@ export interface SiteConfig {
   theme?: ThemeConfig;
   homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust']
 
+  // Announcement Bar
+  announcementEnabled?: boolean;
+  announcementText?: string;
+  announcementLink?: string;
+  announcementBgColor?: string;
+  announcementTextColor?: string;
+
   // Hero
   heroImage: string;
   heroVideo?: string; // Optional URL or base64 video

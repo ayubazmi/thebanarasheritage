@@ -587,6 +587,74 @@ export const AdminDeveloperSettings: React.FC = () => {
 
       <div className="grid md:grid-cols-2 gap-8">
         
+        {/* Announcement Bar Settings */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-yellow-400">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Megaphone className="mr-2" size={20}/> Announcement Bar</h3>
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+               <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border hover:bg-gray-100">
+                 <input 
+                   type="checkbox" 
+                   className="w-5 h-5 accent-brand-900"
+                   checked={localConfig.announcementEnabled || false} 
+                   onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})}
+                 />
+                 <span className="font-medium text-sm">Enable Announcement Bar</span>
+               </label>
+            </div>
+
+            {localConfig.announcementEnabled && (
+              <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up p-4 bg-gray-50 rounded">
+                <Input 
+                  label="Announcement Text" 
+                  value={localConfig.announcementText || ''} 
+                  placeholder="e.g., Free Shipping on Orders Over $50!" 
+                  onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} 
+                />
+                <Input 
+                  label="Link URL (Optional)" 
+                  value={localConfig.announcementLink || ''} 
+                  placeholder="/shop" 
+                  onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} 
+                />
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Background Color</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="color" 
+                      value={localConfig.announcementBgColor || '#000000'} 
+                      onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})}
+                      className="w-10 h-10 rounded cursor-pointer border-0"
+                    />
+                    <Input 
+                      value={localConfig.announcementBgColor || '#000000'} 
+                      onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Text Color</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="color" 
+                      value={localConfig.announcementTextColor || '#FFFFFF'} 
+                      onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})}
+                      className="w-10 h-10 rounded cursor-pointer border-0"
+                    />
+                    <Input 
+                      value={localConfig.announcementTextColor || '#FFFFFF'} 
+                      onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} 
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Color Palette */}
         <div className="bg-white p-8 rounded shadow-sm">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2" size={20}/> Color Palette</h3>

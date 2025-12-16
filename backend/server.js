@@ -87,6 +87,13 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     default: ['hero', 'categories', 'featured', 'promo', 'trust'] 
   },
 
+  // Announcement Bar
+  announcementEnabled: { type: Boolean, default: false },
+  announcementText: String,
+  announcementLink: String,
+  announcementBgColor: { type: String, default: '#000000' },
+  announcementTextColor: { type: String, default: '#FFFFFF' },
+
   // Hero Section
   heroImage: String,
   heroVideo: String,

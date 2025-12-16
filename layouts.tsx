@@ -19,34 +19,54 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => setIsOpen(false), [location]);
 
+  const hasAnnouncement = config.announcementEnabled && config.announcementText;
+
   return (
     <>
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
-        <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
-          <Link to="/" className="z-50">
-            {config.logo ? (
-              <img src={config.logo} alt={config.siteName || "LUMIÈRE"} className="h-10 object-contain" />
-            ) : (
-              <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">{config.siteName || "LUMIÈRE"}</span>
-            )}
-          </Link>
-          <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
-            <Link to="/" className="hover:text-brand-800/70 transition">HOME</Link>
-            <Link to="/shop" className="hover:text-brand-800/70 transition">SHOP</Link>
-            <Link to="/about" className="hover:text-brand-800/70 transition">ABOUT</Link>
-            <Link to="/contact" className="hover:text-brand-800/70 transition">CONTACT</Link>
-          </div>
-          <div className="flex items-center space-x-5 text-brand-900 z-50">
-            <Link to="/shop" className="hidden md:block hover:text-brand-800/70"><Search size={20} /></Link>
-            <Link to="/admin" className="hover:text-brand-800/70"><User size={20} /></Link>
-            <div className="relative cursor-pointer hover:text-brand-800/70" onClick={() => navigate('/cart')}>
-              <ShoppingBag size={20} />
-              {cart.length > 0 && <span className="absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{cart.length}</span>}
+      <div className={`fixed w-full z-50 transition-all duration-300 flex flex-col ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm' : ''}`}>
+        
+        {/* Announcement Bar */}
+        {hasAnnouncement && (
+           <div 
+              className="w-full py-2.5 px-4 text-center text-xs font-medium tracking-wide relative z-[51]"
+              style={{ backgroundColor: config.announcementBgColor || '#000', color: config.announcementTextColor || '#FFF' }}
+           >
+              {config.announcementLink ? (
+                <Link to={config.announcementLink} className="hover:underline">{config.announcementText}</Link>
+              ) : (
+                <span>{config.announcementText}</span>
+              )}
+           </div>
+        )}
+
+        <nav className={`w-full transition-all duration-300 ${scrolled || isOpen ? 'py-3' : 'py-5'}`}>
+          <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
+            <Link to="/" className="z-50">
+              {config.logo ? (
+                <img src={config.logo} alt={config.siteName || "LUMIÈRE"} className="h-10 object-contain" />
+              ) : (
+                <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">{config.siteName || "LUMIÈRE"}</span>
+              )}
+            </Link>
+            <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
+              <Link to="/" className="hover:text-brand-800/70 transition">HOME</Link>
+              <Link to="/shop" className="hover:text-brand-800/70 transition">SHOP</Link>
+              <Link to="/about" className="hover:text-brand-800/70 transition">ABOUT</Link>
+              <Link to="/contact" className="hover:text-brand-800/70 transition">CONTACT</Link>
             </div>
-            <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
+            <div className="flex items-center space-x-5 text-brand-900 z-50">
+              <Link to="/shop" className="hidden md:block hover:text-brand-800/70"><Search size={20} /></Link>
+              <Link to="/admin" className="hover:text-brand-800/70"><User size={20} /></Link>
+              <div className="relative cursor-pointer hover:text-brand-800/70" onClick={() => navigate('/cart')}>
+                <ShoppingBag size={20} />
+                {cart.length > 0 && <span className="absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{cart.length}</span>}
+              </div>
+              <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
+
       <div className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col items-center justify-center space-y-8 text-xl font-serif ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <Link to="/" className="hover:text-brand-600">Home</Link>
         <Link to="/shop" className="hover:text-brand-600">Shop</Link>
@@ -107,15 +127,22 @@ export const Footer: React.FC = () => {
   );
 };
 
-export const PublicLayout: React.FC = () => (
-  <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <main className="flex-grow pt-20 md:pt-24 pb-12">
-      <Outlet />
-    </main>
-    <Footer />
-  </div>
-);
+export const PublicLayout: React.FC = () => {
+  const { config } = useStore();
+  // Adjust top padding based on whether announcement bar is visible to prevent overlap content
+  // Note: The Navbar is fixed, so we add padding to main to push content down.
+  // Standard nav is approx 80px (20rem), with bar approx 110px.
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className={`flex-grow pb-12 transition-all duration-300 ${config.announcementEnabled && config.announcementText ? 'pt-32 md:pt-36' : 'pt-20 md:pt-24'}`}>
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 // --- Admin Layout ---
 export const AdminLayout: React.FC = () => {
