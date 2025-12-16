@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText, Code2 } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText, Code2, Star, Sparkles } from 'lucide-react';
 import { useStore } from './store';
 
 // --- Announcement Bar ---
@@ -9,12 +9,22 @@ const AnnouncementBar: React.FC = () => {
   if (!config.announcementEnabled || !config.announcementText) return null;
 
   return (
-    <div className="bg-brand-900 text-white text-xs md:text-sm py-2 px-4 text-center tracking-wide relative z-[60]">
-      {config.announcementLink ? (
-        <Link to={config.announcementLink} className="hover:underline">{config.announcementText}</Link>
-      ) : (
-        <span>{config.announcementText}</span>
-      )}
+    <div className="bg-brand-900 text-white text-xs md:text-sm py-2.5 px-4 text-center tracking-wide relative z-[60] overflow-hidden group">
+      {/* Shimmer Effect */}
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 animate-shimmer pointer-events-none" />
+      
+      <div className="relative z-10 flex items-center justify-center gap-2">
+        <Sparkles size={14} className="text-brand-200 animate-pulse" />
+        {config.announcementLink ? (
+          <Link to={config.announcementLink} className="hover:text-brand-200 transition-colors font-medium flex items-center gap-2">
+            {config.announcementText}
+            <span className="hidden md:inline-block border-b border-brand-200/50 leading-none">Shop Now</span>
+          </Link>
+        ) : (
+          <span className="font-medium">{config.announcementText}</span>
+        )}
+        <Sparkles size={14} className="text-brand-200 animate-pulse" />
+      </div>
     </div>
   );
 };
@@ -37,7 +47,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className={`fixed w-full z-50 transition-all duration-300 top-0 ${config.announcementEnabled ? 'mt-[32px] md:mt-[36px]' : ''} ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-300 top-0 ${config.announcementEnabled ? 'mt-[36px] md:mt-[40px]' : ''} ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
           <Link to="/" className="z-50">
             {config.logo ? (

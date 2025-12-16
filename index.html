@@ -32,6 +32,21 @@
               'sm': 'var(--border-radius)',
               'md': 'var(--border-radius)',
               'lg': 'var(--border-radius)',
+            },
+            animation: {
+              'shimmer': 'shimmer 2.5s infinite',
+              'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+            },
+            keyframes: {
+              shimmer: {
+                '0%': { transform: 'skewX(-20deg) translateX(-150%)' },
+                '50%': { transform: 'skewX(-20deg) translateX(150%)' },
+                '100%': { transform: 'skewX(-20deg) translateX(150%)' },
+              },
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
             }
           }
         }
