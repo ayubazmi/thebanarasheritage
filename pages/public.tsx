@@ -57,7 +57,12 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
                     key={idx} 
                     className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
                 >
-                    <img src={slide.image} className="absolute inset-0 w-full h-full object-cover" alt={slide.title} />
+                    <img 
+                        src={slide.image} 
+                        className="absolute inset-0 w-full h-full block object-cover object-top transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)]" 
+                        alt={slide.title} 
+                        style={{ color: 'transparent' }}
+                    />
                     <div className="absolute inset-0 bg-black/30" />
                     <div className="absolute inset-0 flex items-center justify-center text-center p-6">
                         <div className="max-w-2xl px-6 text-white">
