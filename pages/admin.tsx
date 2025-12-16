@@ -6,7 +6,7 @@ import { Product, Category, User } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText
+  FileText, Footprints
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -442,6 +442,41 @@ export const AdminSettings: React.FC = () => {
                <Input label="Instagram URL" value={localConfig.socialInstagram || ''} placeholder="https://instagram.com/..." onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} />
                <Input label="Facebook URL" value={localConfig.socialFacebook || ''} placeholder="https://facebook.com/..." onChange={e => setLocalConfig({...localConfig, socialFacebook: e.target.value})} />
                <Input label="WhatsApp URL" value={localConfig.socialWhatsapp || ''} placeholder="https://wa.me/..." onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Configuration (New) */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Footprints className="mr-2" size={20}/> Footer Configuration</h3>
+          
+          <div className="space-y-6">
+            {/* Shop Links */}
+            <div>
+                <Input label="Shop Section Title" value={localConfig.footerShopTitle || ''} onChange={e => setLocalConfig({...localConfig, footerShopTitle: e.target.value})} />
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                    <Input label="Link 1 Label" value={localConfig.footerLink1Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink1Label: e.target.value})} />
+                    <Input label="Link 1 URL" value={localConfig.footerLink1Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink1Url: e.target.value})} />
+                    
+                    <Input label="Link 2 Label" value={localConfig.footerLink2Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink2Label: e.target.value})} />
+                    <Input label="Link 2 URL" value={localConfig.footerLink2Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink2Url: e.target.value})} />
+
+                    <Input label="Link 3 Label" value={localConfig.footerLink3Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink3Label: e.target.value})} />
+                    <Input label="Link 3 URL" value={localConfig.footerLink3Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink3Url: e.target.value})} />
+
+                    <Input label="Link 4 Label" value={localConfig.footerLink4Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink4Label: e.target.value})} />
+                    <Input label="Link 4 URL" value={localConfig.footerLink4Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink4Url: e.target.value})} />
+                </div>
+            </div>
+
+            {/* Newsletter */}
+            <div className="pt-4 border-t">
+                <h4 className="font-bold text-sm mb-2 text-gray-600 uppercase">Newsletter Section</h4>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <Input label="Section Title" value={localConfig.footerNewsletterTitle || ''} onChange={e => setLocalConfig({...localConfig, footerNewsletterTitle: e.target.value})} />
+                    <Input label="Input Placeholder" value={localConfig.footerNewsletterPlaceholder || ''} onChange={e => setLocalConfig({...localConfig, footerNewsletterPlaceholder: e.target.value})} />
+                    <Input label="Button Text" value={localConfig.footerNewsletterButtonText || ''} onChange={e => setLocalConfig({...localConfig, footerNewsletterButtonText: e.target.value})} />
+                </div>
             </div>
           </div>
         </div>

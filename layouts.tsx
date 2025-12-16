@@ -71,12 +71,12 @@ export const Footer: React.FC = () => {
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-6 tracking-wide">SHOP</h4>
+            <h4 className="font-semibold mb-6 tracking-wide uppercase">{config.footerShopTitle || 'SHOP'}</h4>
             <ul className="space-y-3 text-sm text-brand-300/80">
-              <li><Link to="/shop?cat=new" className="hover:text-white transition">New Arrivals</Link></li>
-              <li><Link to="/shop?cat=kurtis" className="hover:text-white transition">Kurtis</Link></li>
-              <li><Link to="/shop?cat=dresses" className="hover:text-white transition">Dresses</Link></li>
-              <li><Link to="/shop?cat=sale" className="hover:text-white transition">Sale</Link></li>
+              <li><Link to={config.footerLink1Url || '/shop?cat=new'} className="hover:text-white transition">{config.footerLink1Label || 'New Arrivals'}</Link></li>
+              <li><Link to={config.footerLink2Url || '/shop?cat=kurtis'} className="hover:text-white transition">{config.footerLink2Label || 'Kurtis'}</Link></li>
+              <li><Link to={config.footerLink3Url || '/shop?cat=dresses'} className="hover:text-white transition">{config.footerLink3Label || 'Dresses'}</Link></li>
+              <li><Link to={config.footerLink4Url || '/shop?cat=sale'} className="hover:text-white transition">{config.footerLink4Label || 'Sale'}</Link></li>
             </ul>
           </div>
           <div>
@@ -88,10 +88,10 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-6 tracking-wide">STAY IN TOUCH</h4>
+            <h4 className="font-semibold mb-6 tracking-wide uppercase">{config.footerNewsletterTitle || 'STAY IN TOUCH'}</h4>
             <div className="flex space-x-2 mb-4">
-              <input type="email" placeholder="Your email" className="bg-brand-800/50 border border-brand-800 px-4 py-2 text-sm w-full focus:outline-none focus:border-brand-300 text-white" />
-              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-brand-200 transition">JOIN</button>
+              <input type="email" placeholder={config.footerNewsletterPlaceholder || 'Your email'} className="bg-brand-800/50 border border-brand-800 px-4 py-2 text-sm w-full focus:outline-none focus:border-brand-300 text-white" />
+              <button className="bg-white text-brand-900 px-4 py-2 text-sm font-medium hover:bg-brand-200 transition">{config.footerNewsletterButtonText || 'JOIN'}</button>
             </div>
           </div>
         </div>

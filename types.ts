@@ -95,6 +95,20 @@ export interface SiteConfig {
   trustBadge3Title?: string;
   trustBadge3Text?: string;
 
+  // Footer Configuration
+  footerShopTitle?: string;
+  footerLink1Label?: string;
+  footerLink1Url?: string;
+  footerLink2Label?: string;
+  footerLink2Url?: string;
+  footerLink3Label?: string;
+  footerLink3Url?: string;
+  footerLink4Label?: string;
+  footerLink4Url?: string;
+  footerNewsletterTitle?: string;
+  footerNewsletterPlaceholder?: string;
+  footerNewsletterButtonText?: string;
+
   // Settings
   currency: string;
 }

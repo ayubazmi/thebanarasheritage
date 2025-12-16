@@ -110,6 +110,20 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   trustBadge2Text: String,
   trustBadge3Title: String,
   trustBadge3Text: String,
+
+  // Footer Configuration
+  footerShopTitle: { type: String, default: 'SHOP' },
+  footerLink1Label: { type: String, default: 'New Arrivals' },
+  footerLink1Url: { type: String, default: '/shop?cat=new' },
+  footerLink2Label: { type: String, default: 'Kurtis' },
+  footerLink2Url: { type: String, default: '/shop?cat=kurtis' },
+  footerLink3Label: { type: String, default: 'Dresses' },
+  footerLink3Url: { type: String, default: '/shop?cat=dresses' },
+  footerLink4Label: { type: String, default: 'Sale' },
+  footerLink4Url: { type: String, default: '/shop?cat=sale' },
+  footerNewsletterTitle: { type: String, default: 'STAY IN TOUCH' },
+  footerNewsletterPlaceholder: { type: String, default: 'Your email' },
+  footerNewsletterButtonText: { type: String, default: 'JOIN' },
   
   // Settings
   currency: String,
