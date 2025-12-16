@@ -274,64 +274,11 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Announcement Bar */}
-        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-yellow-500">
-            <h3 className="font-bold text-lg mb-4 flex items-center text-yellow-800"><Bell className="mr-2" size={20}/> Announcement Bar Configuration</h3>
-            <div className="flex items-center gap-4 mb-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={localConfig.announcementEnabled || false} onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})} className="w-5 h-5 accent-brand-900" />
-                    <span className="font-medium">Enable Announcement Bar</span>
-                </label>
-            </div>
-            {localConfig.announcementEnabled && (
-                <div className="space-y-4 animate-fade-in-up">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <Input label="Message" value={localConfig.announcementText || ''} onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} placeholder="Free Shipping on all orders!" />
-                      <Input label="Link (Optional)" value={localConfig.announcementLink || ''} onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} placeholder="/shop" />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4 border-t pt-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Background Color</label>
-                        <div className="flex gap-2">
-                           <input type="color" className="h-9 w-9 border rounded" value={localConfig.announcementBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} />
-                           <Input value={localConfig.announcementBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Text Color</label>
-                        <div className="flex gap-2">
-                           <input type="color" className="h-9 w-9 border rounded" value={localConfig.announcementTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} />
-                           <Input value={localConfig.announcementTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} />
-                        </div>
-                      </div>
-                    </div>
-                </div>
-            )}
-        </div>
-
-        {/* Footer Configuration */}
+        {/* Footer Configuration (Moved to Top for Visibility) */}
         <div className="bg-white p-8 rounded shadow-sm border-l-4 border-blue-500">
           <h3 className="font-bold text-lg mb-4 flex items-center text-blue-800"><Footprints className="mr-2" size={20}/> Footer Configuration (Shop & Contact)</h3>
           
           <div className="space-y-6">
-            {/* Colors */}
-            <div className="grid md:grid-cols-2 gap-4 border-b pb-4">
-               <div>
-                  <label className="block text-sm font-medium mb-1">Footer Background Color</label>
-                  <div className="flex gap-2">
-                     <input type="color" className="h-9 w-9 border rounded" value={localConfig.footerBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} />
-                     <Input value={localConfig.footerBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} />
-                  </div>
-               </div>
-               <div>
-                  <label className="block text-sm font-medium mb-1">Footer Text Color</label>
-                  <div className="flex gap-2">
-                     <input type="color" className="h-9 w-9 border rounded" value={localConfig.footerTextColor || '#D5CDC0'} onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} />
-                     <Input value={localConfig.footerTextColor || '#D5CDC0'} onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} />
-                  </div>
-               </div>
-            </div>
-
             {/* Shop Links */}
             <div>
                 <Input label="Footer Shop Section Title" value={localConfig.footerShopTitle || 'SHOP'} placeholder="SHOP" onChange={e => setLocalConfig({...localConfig, footerShopTitle: e.target.value})} />
@@ -556,357 +503,7 @@ export const AdminSettings: React.FC = () => {
   );
 };
 
-// --- Admin Products ---
-export const AdminProducts: React.FC = () => {
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useStore();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Partial<Product>>({});
-
-  const handleSave = async () => {
-     if (!editingProduct.name || !editingProduct.price) return alert("Name and Price are required");
-     
-     const productData = {
-        ...editingProduct,
-        id: editingProduct.id || Date.now().toString(),
-        images: editingProduct.images || [],
-        sizes: editingProduct.sizes || [],
-        colors: editingProduct.colors || [],
-        stock: Number(editingProduct.stock) || 0,
-        price: Number(editingProduct.price),
-        discountPrice: editingProduct.discountPrice ? Number(editingProduct.discountPrice) : undefined,
-        newArrival: editingProduct.newArrival || false,
-        bestSeller: editingProduct.bestSeller || false,
-     } as Product;
-
-     if (editingProduct.id) {
-        await updateProduct(productData);
-     } else {
-        await addProduct(productData);
-     }
-     setIsModalOpen(false);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-     const file = e.target.files?.[0];
-     if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-           setEditingProduct(prev => ({ ...prev, images: [...(prev.images || []), reader.result as string] }));
-        };
-        reader.readAsDataURL(file);
-     }
-  };
-
-  return (
-    <div>
-       <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-serif font-bold">Products</h1>
-          <Button onClick={() => { setEditingProduct({}); setIsModalOpen(true); }}><Plus size={16} className="mr-2"/> Add Product</Button>
-       </div>
-       
-       <div className="bg-white rounded shadow-sm overflow-hidden">
-         <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-700 uppercase">
-              <tr>
-                <th className="px-6 py-4">Product</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Price</th>
-                <th className="px-6 py-4">Stock</th>
-                <th className="px-6 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-               {products.map(p => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 flex items-center gap-3">
-                       <img src={p.images[0]} className="w-10 h-10 object-cover rounded bg-gray-100" />
-                       <div>
-                          <div className="font-medium">{p.name}</div>
-                          {p.newArrival && <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded mr-1">NEW</span>}
-                          {p.bestSeller && <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded">HOT</span>}
-                       </div>
-                    </td>
-                    <td className="px-6 py-4">{p.category}</td>
-                    <td className="px-6 py-4">${p.price}</td>
-                    <td className="px-6 py-4">{p.stock}</td>
-                    <td className="px-6 py-4 flex gap-2">
-                       <button onClick={() => { setEditingProduct(p); setIsModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button>
-                       <button onClick={() => { if(confirm('Delete?')) deleteProduct(p.id); }} className="text-red-600 hover:bg-red-50 p-1 rounded"><Trash size={16}/></button>
-                    </td>
-                  </tr>
-               ))}
-            </tbody>
-         </table>
-       </div>
-
-       {isModalOpen && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <h3 className="font-bold text-xl mb-4">{editingProduct.id ? 'Edit' : 'Add'} Product</h3>
-                <div className="grid grid-cols-2 gap-4">
-                   <Input label="Name" value={editingProduct.name || ''} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
-                   <div>
-                      <label className="block text-sm font-medium mb-1">Category</label>
-                      <select className="w-full border p-2 rounded" value={editingProduct.category || ''} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}>
-                         <option value="">Select Category</option>
-                         {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                      </select>
-                   </div>
-                   <Input label="Price" type="number" value={editingProduct.price || ''} onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})} />
-                   <Input label="Discount Price" type="number" value={editingProduct.discountPrice || ''} onChange={e => setEditingProduct({...editingProduct, discountPrice: Number(e.target.value)})} />
-                   <Input label="Stock" type="number" value={editingProduct.stock || ''} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
-                   
-                   <div className="col-span-2 space-y-2">
-                      <label className="flex items-center gap-2">
-                         <input type="checkbox" checked={editingProduct.newArrival || false} onChange={e => setEditingProduct({...editingProduct, newArrival: e.target.checked})} />
-                         New Arrival
-                      </label>
-                      <label className="flex items-center gap-2">
-                         <input type="checkbox" checked={editingProduct.bestSeller || false} onChange={e => setEditingProduct({...editingProduct, bestSeller: e.target.checked})} />
-                         Best Seller
-                      </label>
-                   </div>
-
-                   <div className="col-span-2">
-                      <label className="block text-sm font-medium mb-1">Description</label>
-                      <textarea className="w-full border p-2" value={editingProduct.description || ''} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}></textarea>
-                   </div>
-
-                   <div className="col-span-2">
-                      <label className="block text-sm font-medium mb-1">Images</label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                         {editingProduct.images?.map((img, i) => (
-                            <img key={i} src={img} className="w-16 h-16 object-cover border" />
-                         ))}
-                      </div>
-                      <input type="file" onChange={handleImageUpload} />
-                   </div>
-
-                   {/* Sizes and Colors as comma separated strings for simplicity */}
-                   <Input label="Sizes (comma separated)" value={editingProduct.sizes?.join(',') || ''} onChange={e => setEditingProduct({...editingProduct, sizes: e.target.value.split(',').map(s => s.trim())})} />
-                   <Input label="Colors (comma separated)" value={editingProduct.colors?.join(',') || ''} onChange={e => setEditingProduct({...editingProduct, colors: e.target.value.split(',').map(s => s.trim())})} />
-                </div>
-                <div className="mt-6 flex justify-end gap-2">
-                   <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                   <Button onClick={handleSave}>Save Product</Button>
-                </div>
-             </div>
-          </div>
-       )}
-    </div>
-  );
-};
-
-export const AdminOrders: React.FC = () => {
-  const { orders, updateOrderStatus } = useStore();
-
-  return (
-    <div>
-      <h1 className="text-2xl font-serif font-bold mb-6">Orders</h1>
-      <div className="bg-white rounded shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-700 uppercase">
-              <tr>
-                <th className="px-6 py-4">Order ID</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {orders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-mono text-xs">{order.id}</td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium">{order.customerName}</div>
-                    <div className="text-xs text-gray-500">{order.email}</div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">{order.date}</td>
-                  <td className="px-6 py-4 font-medium">${order.total}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <select 
-                      value={order.status}
-                      onChange={(e) => updateOrderStatus(order.id, e.target.value as any)}
-                      className="text-xs border rounded p-1"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-              {orders.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No orders found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const AdminCategories: React.FC = () => {
-  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Partial<Category>>({});
-
-  const handleSave = async () => {
-     if (!editingCategory.name) return;
-     const catData = {
-        ...editingCategory,
-        id: editingCategory.id || editingCategory.name.toLowerCase().replace(/\s+/g, '-'),
-        image: editingCategory.image || ''
-     } as Category;
-     
-     if (editingCategory.id) await updateCategory(catData);
-     else await addCategory(catData);
-     setIsModalOpen(false);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-     const file = e.target.files?.[0];
-     if (file) {
-        const reader = new FileReader();
-        reader.onload = () => setEditingCategory(prev => ({ ...prev, image: reader.result as string }));
-        reader.readAsDataURL(file);
-     }
-  };
-
-  return (
-     <div>
-        <div className="flex justify-between items-center mb-6">
-           <h1 className="text-2xl font-serif font-bold">Categories</h1>
-           <Button onClick={() => { setEditingCategory({}); setIsModalOpen(true); }}><Plus size={16} className="mr-2"/> Add Category</Button>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-           {categories.map(c => (
-              <div key={c.id} className="bg-white p-4 rounded shadow-sm relative group">
-                 <img src={c.image} className="w-full h-32 object-cover rounded mb-2 bg-gray-100" />
-                 <h3 className="font-bold text-center">{c.name}</h3>
-                 <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center gap-2 rounded transition">
-                    <button onClick={() => { setEditingCategory(c); setIsModalOpen(true); }} className="text-white p-2 hover:bg-white/20 rounded"><Edit size={20}/></button>
-                    <button onClick={() => { if(confirm("Delete?")) deleteCategory(c.id); }} className="text-red-400 p-2 hover:bg-white/20 rounded"><Trash size={20}/></button>
-                 </div>
-              </div>
-           ))}
-        </div>
-
-        {isModalOpen && (
-           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded p-6 w-full max-w-md">
-                 <h3 className="font-bold text-xl mb-4">{editingCategory.id ? 'Edit' : 'Add'} Category</h3>
-                 <Input label="Name" value={editingCategory.name || ''} onChange={e => setEditingCategory({...editingCategory, name: e.target.value})} className="mb-4" />
-                 <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1">Image</label>
-                    {editingCategory.image && <img src={editingCategory.image} className="w-full h-32 object-cover mb-2 rounded" />}
-                    <input type="file" onChange={handleImageUpload} />
-                 </div>
-                 <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSave}>Save</Button>
-                 </div>
-              </div>
-           </div>
-        )}
-     </div>
-  );
-};
-
-export const AdminUsers: React.FC = () => {
-   const { users, addUser, deleteUser, changeUserPassword } = useStore();
-   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
-
-   const handleAdd = async () => {
-      if(!newUser.username || !newUser.password) return alert("Username and Password required");
-      await addUser({
-         ...newUser,
-         permissions: ['products', 'orders'] // Default permissions for staff
-      });
-      setIsModalOpen(false);
-      setNewUser({ username: '', password: '', role: 'staff' });
-   };
-
-   return (
-      <div>
-         <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-serif font-bold">User Management</h1>
-            <Button onClick={() => setIsModalOpen(true)}><Plus size={16} className="mr-2"/> Add User</Button>
-         </div>
-         
-         <div className="bg-white rounded shadow-sm overflow-hidden">
-            <table className="w-full text-left text-sm">
-               <thead className="bg-gray-50 text-gray-700 uppercase">
-                  <tr>
-                     <th className="px-6 py-4">Username</th>
-                     <th className="px-6 py-4">Role</th>
-                     <th className="px-6 py-4">Actions</th>
-                  </tr>
-               </thead>
-               <tbody className="divide-y">
-                  {users.map(u => (
-                     <tr key={u.id}>
-                        <td className="px-6 py-4 font-medium">{u.username}</td>
-                        <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase">{u.role}</span></td>
-                        <td className="px-6 py-4 flex gap-4">
-                           {u.role !== 'admin' && (
-                              <button onClick={() => { if(confirm("Delete user?")) deleteUser(u.id); }} className="text-red-600 hover:underline">Delete</button>
-                           )}
-                           <button onClick={() => {
-                              const newPass = prompt("Enter new password:");
-                              if(newPass) changeUserPassword(u.id, newPass);
-                           }} className="text-blue-600 hover:underline">Reset Password</button>
-                        </td>
-                     </tr>
-                  ))}
-               </tbody>
-            </table>
-         </div>
-
-         {isModalOpen && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded p-6 w-full max-w-md">
-                  <h3 className="font-bold text-xl mb-4">Add User</h3>
-                  <div className="space-y-4">
-                     <Input label="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
-                     <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
-                     <div>
-                        <label className="block text-sm font-medium mb-1">Role</label>
-                        <select className="w-full border p-2 rounded" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                           <option value="staff">Staff</option>
-                           <option value="admin">Admin</option>
-                        </select>
-                     </div>
-                  </div>
-                  <div className="mt-6 flex justify-end gap-2">
-                     <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                     <Button onClick={handleAdd}>Create User</Button>
-                  </div>
-               </div>
-            </div>
-         )}
-      </div>
-   );
-};
-
-// --- Admin Developer Settings ---
+// --- Developer Settings (Enhanced) ---
 export const AdminDeveloperSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
   const [localConfig, setLocalConfig] = useState(config);
@@ -1330,4 +927,342 @@ export const AdminDeveloperSettings: React.FC = () => {
       )}
     </div>
   );
+};
+
+export const AdminOrders: React.FC = () => {
+    const { orders, updateOrderStatus } = useStore();
+    return (
+        <div>
+            <h1 className="text-2xl font-serif font-bold mb-8">Manage Orders</h1>
+            <div className="bg-white rounded shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 text-gray-700 uppercase">
+                        <tr>
+                            <th className="px-6 py-4">ID</th>
+                            <th className="px-6 py-4">Customer</th>
+                            <th className="px-6 py-4">Date</th>
+                            <th className="px-6 py-4">Total</th>
+                            <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {orders.map(order => (
+                            <tr key={order.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-medium">{order.id}</td>
+                                <td className="px-6 py-4">
+                                    <div>{order.customerName}</div>
+                                    <div className="text-xs text-gray-500">{order.email}</div>
+                                </td>
+                                <td className="px-6 py-4">{order.date}</td>
+                                <td className="px-6 py-4">${order.total}</td>
+                                <td className="px-6 py-4">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {order.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <select 
+                                        value={order.status} 
+                                        onChange={(e) => updateOrderStatus(order.id, e.target.value as any)} 
+                                        className="border text-xs p-1 rounded bg-white"
+                                    >
+                                        <option>Pending</option>
+                                        <option>Shipped</option>
+                                        <option>Delivered</option>
+                                        <option>Cancelled</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {orders.length === 0 && <div className="p-8 text-center text-gray-500">No orders found.</div>}
+            </div>
+        </div>
+    );
+};
+
+export const AdminProducts: React.FC = () => {
+  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Partial<Product>>({});
+
+  const handleSave = async () => {
+     if (!editingProduct.name || !editingProduct.price) return alert("Name and Price are required");
+     
+     const productData = {
+        ...editingProduct,
+        id: editingProduct.id || Date.now().toString(),
+        images: editingProduct.images || [],
+        sizes: editingProduct.sizes || [],
+        colors: editingProduct.colors || [],
+        stock: Number(editingProduct.stock) || 0,
+        price: Number(editingProduct.price),
+        discountPrice: editingProduct.discountPrice ? Number(editingProduct.discountPrice) : undefined,
+        newArrival: editingProduct.newArrival || false,
+        bestSeller: editingProduct.bestSeller || false,
+     } as Product;
+
+     if (editingProduct.id) {
+        await updateProduct(productData);
+     } else {
+        await addProduct(productData);
+     }
+     setIsModalOpen(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+           setEditingProduct(prev => ({ ...prev, images: [...(prev.images || []), reader.result as string] }));
+        };
+        reader.readAsDataURL(file);
+     }
+  };
+
+  return (
+    <div>
+       <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-serif font-bold">Products</h1>
+          <Button onClick={() => { setEditingProduct({}); setIsModalOpen(true); }}><Plus size={16} className="mr-2"/> Add Product</Button>
+       </div>
+       
+       <div className="bg-white rounded shadow-sm overflow-hidden">
+         <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-700 uppercase">
+              <tr>
+                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Price</th>
+                <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+               {products.map(p => (
+                  <tr key={p.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 flex items-center gap-3">
+                       <img src={p.images[0]} className="w-10 h-10 object-cover rounded bg-gray-100" />
+                       <div>
+                          <div className="font-medium">{p.name}</div>
+                          {p.newArrival && <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded mr-1">NEW</span>}
+                          {p.bestSeller && <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded">HOT</span>}
+                       </div>
+                    </td>
+                    <td className="px-6 py-4">{p.category}</td>
+                    <td className="px-6 py-4">${p.price}</td>
+                    <td className="px-6 py-4">{p.stock}</td>
+                    <td className="px-6 py-4 flex gap-2">
+                       <button onClick={() => { setEditingProduct(p); setIsModalOpen(true); }} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button>
+                       <button onClick={() => { if(confirm('Delete?')) deleteProduct(p.id); }} className="text-red-600 hover:bg-red-50 p-1 rounded"><Trash size={16}/></button>
+                    </td>
+                  </tr>
+               ))}
+            </tbody>
+         </table>
+       </div>
+
+       {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <h3 className="font-bold text-xl mb-4">{editingProduct.id ? 'Edit' : 'Add'} Product</h3>
+                <div className="grid grid-cols-2 gap-4">
+                   <Input label="Name" value={editingProduct.name || ''} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
+                   <div>
+                      <label className="block text-sm font-medium mb-1">Category</label>
+                      <select className="w-full border p-2 rounded" value={editingProduct.category || ''} onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}>
+                         <option value="">Select Category</option>
+                         {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                      </select>
+                   </div>
+                   <Input label="Price" type="number" value={editingProduct.price || ''} onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})} />
+                   <Input label="Discount Price" type="number" value={editingProduct.discountPrice || ''} onChange={e => setEditingProduct({...editingProduct, discountPrice: Number(e.target.value)})} />
+                   <Input label="Stock" type="number" value={editingProduct.stock || ''} onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})} />
+                   
+                   <div className="col-span-2 space-y-2">
+                      <label className="flex items-center gap-2">
+                         <input type="checkbox" checked={editingProduct.newArrival || false} onChange={e => setEditingProduct({...editingProduct, newArrival: e.target.checked})} />
+                         New Arrival
+                      </label>
+                      <label className="flex items-center gap-2">
+                         <input type="checkbox" checked={editingProduct.bestSeller || false} onChange={e => setEditingProduct({...editingProduct, bestSeller: e.target.checked})} />
+                         Best Seller
+                      </label>
+                   </div>
+
+                   <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-1">Description</label>
+                      <textarea className="w-full border p-2" value={editingProduct.description || ''} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}></textarea>
+                   </div>
+
+                   <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-1">Images</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                         {editingProduct.images?.map((img, i) => (
+                            <img key={i} src={img} className="w-16 h-16 object-cover border" />
+                         ))}
+                      </div>
+                      <input type="file" onChange={handleImageUpload} />
+                   </div>
+
+                   {/* Sizes and Colors as comma separated strings for simplicity */}
+                   <Input label="Sizes (comma separated)" value={editingProduct.sizes?.join(',') || ''} onChange={e => setEditingProduct({...editingProduct, sizes: e.target.value.split(',').map(s => s.trim())})} />
+                   <Input label="Colors (comma separated)" value={editingProduct.colors?.join(',') || ''} onChange={e => setEditingProduct({...editingProduct, colors: e.target.value.split(',').map(s => s.trim())})} />
+                </div>
+                <div className="mt-6 flex justify-end gap-2">
+                   <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                   <Button onClick={handleSave}>Save Product</Button>
+                </div>
+             </div>
+          </div>
+       )}
+    </div>
+  );
+};
+
+export const AdminCategories: React.FC = () => {
+  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Partial<Category>>({});
+
+  const handleSave = async () => {
+     if (!editingCategory.name) return;
+     const catData = {
+        ...editingCategory,
+        id: editingCategory.id || editingCategory.name.toLowerCase().replace(/\s+/g, '-'),
+        image: editingCategory.image || ''
+     } as Category;
+     
+     if (editingCategory.id) await updateCategory(catData);
+     else await addCategory(catData);
+     setIsModalOpen(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file) {
+        const reader = new FileReader();
+        reader.onload = () => setEditingCategory(prev => ({ ...prev, image: reader.result as string }));
+        reader.readAsDataURL(file);
+     }
+  };
+
+  return (
+     <div>
+        <div className="flex justify-between items-center mb-6">
+           <h1 className="text-2xl font-serif font-bold">Categories</h1>
+           <Button onClick={() => { setEditingCategory({}); setIsModalOpen(true); }}><Plus size={16} className="mr-2"/> Add Category</Button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+           {categories.map(c => (
+              <div key={c.id} className="bg-white p-4 rounded shadow-sm relative group">
+                 <img src={c.image} className="w-full h-32 object-cover rounded mb-2 bg-gray-100" />
+                 <h3 className="font-bold text-center">{c.name}</h3>
+                 <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center gap-2 rounded transition">
+                    <button onClick={() => { setEditingCategory(c); setIsModalOpen(true); }} className="text-white p-2 hover:bg-white/20 rounded"><Edit size={20}/></button>
+                    <button onClick={() => { if(confirm("Delete?")) deleteCategory(c.id); }} className="text-red-400 p-2 hover:bg-white/20 rounded"><Trash size={20}/></button>
+                 </div>
+              </div>
+           ))}
+        </div>
+
+        {isModalOpen && (
+           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded p-6 w-full max-w-md">
+                 <h3 className="font-bold text-xl mb-4">{editingCategory.id ? 'Edit' : 'Add'} Category</h3>
+                 <Input label="Name" value={editingCategory.name || ''} onChange={e => setEditingCategory({...editingCategory, name: e.target.value})} className="mb-4" />
+                 <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">Image</label>
+                    {editingCategory.image && <img src={editingCategory.image} className="w-full h-32 object-cover mb-2 rounded" />}
+                    <input type="file" onChange={handleImageUpload} />
+                 </div>
+                 <div className="flex justify-end gap-2">
+                    <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save</Button>
+                 </div>
+              </div>
+           </div>
+        )}
+     </div>
+  );
+};
+
+export const AdminUsers: React.FC = () => {
+   const { users, addUser, deleteUser, changeUserPassword } = useStore();
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
+
+   const handleAdd = async () => {
+      if(!newUser.username || !newUser.password) return alert("Username and Password required");
+      await addUser({
+         ...newUser,
+         permissions: ['products', 'orders'] // Default permissions for staff
+      });
+      setIsModalOpen(false);
+      setNewUser({ username: '', password: '', role: 'staff' });
+   };
+
+   return (
+      <div>
+         <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-serif font-bold">User Management</h1>
+            <Button onClick={() => setIsModalOpen(true)}><Plus size={16} className="mr-2"/> Add User</Button>
+         </div>
+         
+         <div className="bg-white rounded shadow-sm overflow-hidden">
+            <table className="w-full text-left text-sm">
+               <thead className="bg-gray-50 text-gray-700 uppercase">
+                  <tr>
+                     <th className="px-6 py-4">Username</th>
+                     <th className="px-6 py-4">Role</th>
+                     <th className="px-6 py-4">Actions</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y">
+                  {users.map(u => (
+                     <tr key={u.id}>
+                        <td className="px-6 py-4 font-medium">{u.username}</td>
+                        <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase">{u.role}</span></td>
+                        <td className="px-6 py-4 flex gap-4">
+                           {u.role !== 'admin' && (
+                              <button onClick={() => { if(confirm("Delete user?")) deleteUser(u.id); }} className="text-red-600 hover:underline">Delete</button>
+                           )}
+                           <button onClick={() => {
+                              const newPass = prompt("Enter new password:");
+                              if(newPass) changeUserPassword(u.id, newPass);
+                           }} className="text-blue-600 hover:underline">Reset Password</button>
+                        </td>
+                     </tr>
+                  ))}
+               </tbody>
+            </table>
+         </div>
+
+         {isModalOpen && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+               <div className="bg-white rounded p-6 w-full max-w-md">
+                  <h3 className="font-bold text-xl mb-4">Add User</h3>
+                  <div className="space-y-4">
+                     <Input label="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+                     <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+                     <div>
+                        <label className="block text-sm font-medium mb-1">Role</label>
+                        <select className="w-full border p-2 rounded" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
+                           <option value="staff">Staff</option>
+                           <option value="admin">Admin</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div className="mt-6 flex justify-end gap-2">
+                     <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                     <Button onClick={handleAdd}>Create User</Button>
+                  </div>
+               </div>
+            </div>
+         )}
+      </div>
+   );
 };

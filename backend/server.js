@@ -76,8 +76,6 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   announcementEnabled: { type: Boolean, default: false },
   announcementText: String,
   announcementLink: String,
-  announcementBgColor: { type: String, default: '#2C251F' },
-  announcementTextColor: { type: String, default: '#FFFFFF' },
 
   // Developer Settings (Theme)
   theme: {
@@ -148,7 +146,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   trustBadge1Title: String,
   trustBadge1Text: String,
   trustBadge2Title: String,
-  trustBadge2Text: String,  
+  trustBadge2Text: String,
   trustBadge3Title: String,
   trustBadge3Text: String,
 
@@ -165,8 +163,6 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   footerNewsletterTitle: { type: String, default: 'STAY IN TOUCH' },
   footerNewsletterPlaceholder: { type: String, default: 'Your email' },
   footerNewsletterButtonText: { type: String, default: 'JOIN' },
-  footerBgColor: { type: String, default: '#2C251F' },
-  footerTextColor: { type: String, default: '#D5CDC0' },
   
   // Settings
   currency: String,
