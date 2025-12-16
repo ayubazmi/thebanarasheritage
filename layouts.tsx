@@ -3,22 +3,6 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText, Code2 } from 'lucide-react';
 import { useStore } from './store';
 
-// --- Announcement Bar ---
-const AnnouncementBar: React.FC = () => {
-  const { config } = useStore();
-  if (!config.announcementEnabled || !config.announcementText) return null;
-
-  return (
-    <div className="bg-brand-900 text-white text-xs md:text-sm py-2 px-4 text-center tracking-wide relative z-[60]">
-      {config.announcementLink ? (
-        <Link to={config.announcementLink} className="hover:underline animate-pulse font-medium">{config.announcementText}</Link>
-      ) : (
-        <span className="animate-pulse font-medium">{config.announcementText}</span>
-      )}
-    </div>
-  );
-};
-
 // --- Public Navbar ---
 export const Navbar: React.FC = () => {
   const { cart, config } = useStore();
@@ -37,7 +21,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className={`fixed w-full z-50 transition-all duration-300 top-0 ${config.announcementEnabled ? 'mt-[32px] md:mt-[36px]' : ''} ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isOpen ? 'bg-white/95 backdrop-blur-sm shadow-sm py-3' : 'bg-transparent py-5'}`}>
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
           <Link to="/" className="z-50">
             {config.logo ? (
@@ -125,7 +109,6 @@ export const Footer: React.FC = () => {
 
 export const PublicLayout: React.FC = () => (
   <div className="flex flex-col min-h-screen">
-    <AnnouncementBar />
     <Navbar />
     <main className="flex-grow pt-20 md:pt-24 pb-12">
       <Outlet />

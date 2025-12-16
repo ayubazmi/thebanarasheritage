@@ -59,49 +59,22 @@ export interface ThemeConfig {
   borderRadius: string;   // '0px', '4px', '8px', '99px'
 }
 
-export interface HeroSlide {
-  id: string;
-  image: string;
-  title: string;
-  subtitle: string;
-  buttonText: string;
-  buttonLink: string;
-}
-
-export interface SliderImage {
-  id: string;
-  url: string;
-  caption?: string;
-}
-
 export interface SiteConfig {
   // Brand
   siteName?: string;
   logo?: string;
 
-  // Announcement Bar (New Feature)
-  announcementEnabled?: boolean;
-  announcementText?: string;
-  announcementLink?: string;
-
   // Developer Settings (Theme & Layout)
   theme?: ThemeConfig;
-  homepageSections?: string[]; // IDs: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider']
+  homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust']
 
-  // Hero Configuration (New Feature)
-  heroMode?: 'static' | 'carousel';
-  heroSlides?: HeroSlide[];
-
-  // Hero (Static Fallback)
+  // Hero
   heroImage: string;
   heroVideo?: string; // Optional URL or base64 video
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
   
-  // Standalone Image Slider Section (New Feature)
-  sliderImages?: SliderImage[];
-
   // Section Headers
   categoryTitle?: string;
   featuredTitle?: string;
