@@ -88,7 +88,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   },
   homepageSections: { 
     type: [String], 
-    default: ['hero', 'categories', 'featured', 'promo', 'trust'] 
+    default: ['hero', 'categories', 'featured', 'slider', 'promo', 'trust'] 
   },
 
   // Hero Configuration
@@ -96,13 +96,17 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   heroSlides: [{
     id: String,
     image: String,
+    video: String,
     title: String,
     subtitle: String,
+    tagline: String,
     buttonText: String,
-    buttonLink: String
+    buttonLink: String,
+    textAlignment: { type: String, default: 'center' },
+    textColor: { type: String, default: 'white' }
   }],
 
-  // Hero Section (Static)
+  // Hero Section (Static Fallback)
   heroImage: String,
   heroVideo: String,
   heroTagline: { type: String, default: 'New Collection' }, 
@@ -110,10 +114,10 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   heroSubtitle: String,
   
   // Standalone Slider
-  sliderTitle: { type: String, default: 'Lookbook' },
   sliderImages: [{
     id: String,
     url: String,
+    link: String,
     caption: String
   }],
 
@@ -186,9 +190,9 @@ const AccessLog = mongoose.model('AccessLog', new mongoose.Schema({
 }, { toJSON: toJSONConfig }));
 
 // --- Routes ---
-
 app.get('/', (req, res) => res.send('API is running'));
 
+// Standard CRUD endpoints (omitted for brevity, assume they exist as per previous state)
 // Products
 app.get('/api/products', async (req, res) => { try { res.json(await Product.find().sort({ _id: -1 })); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post('/api/products', async (req, res) => { try { const { id, ...data } = req.body; res.json(await new Product(data).save()); } catch (err) { res.status(500).json({ error: err.message }); } });
@@ -208,35 +212,19 @@ app.post('/api/orders', async (req, res) => { try { const { id, ...data } = req.
 app.put('/api/orders/:id', async (req, res) => { try { res.json(await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true })); } catch (err) { res.status(500).json({ error: err.message }); } });
 
 // Config
-app.get('/api/config', async (req, res) => {
-  try {
-    let config = await Config.findOne();
-    if (!config) {
-      config = new Config({ siteName: 'LUMIÈRE' });
-      await config.save();
-    }
-    res.json(config);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-app.post('/api/config', async (req, res) => {
-  try {
-    let config = await Config.findOne();
-    if (config) { config.set(req.body); await config.save(); } 
-    else { config = new Config(req.body); await config.save(); }
-    res.json(config);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+app.get('/api/config', async (req, res) => { try { let config = await Config.findOne(); if (!config) { config = new Config({ siteName: 'LUMIÈRE' }); await config.save(); } res.json(config); } catch (err) { res.status(500).json({ error: err.message }); } });
+app.post('/api/config', async (req, res) => { try { let config = await Config.findOne(); if (config) { config.set(req.body); await config.save(); } else { config = new Config(req.body); await config.save(); } res.json(config); } catch (err) { res.status(500).json({ error: err.message }); } });
 
 // Logs & Users
 app.get('/api/logs', async (req, res) => { try { res.json(await AccessLog.find().sort({ timestamp: -1 }).limit(100)); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post('/api/logs/visit', async (req, res) => { try { const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress; await new AccessLog({ ip, userAgent: req.headers['user-agent'] }).save(); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
-app.post('/api/auth/login', async (req, res) => { try { const user = await User.findOne({ username: req.body.username, password: req.body.password }); if (user) res.json(user); else res.status(401).json({ error: "Invalid credentials" }); } catch (err) { res.status(500).json({ error: err.message }); } });
+app.post('/api/auth/login', async (req, res) => { try { const user = await User.findOne({ username: req.body.username, password: req.body.password }); if(user) res.json(user); else res.status(401).json({error: "Invalid"}); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.get('/api/users', async (req, res) => { try { res.json(await User.find({}, '-password')); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post('/api/users', async (req, res) => { try { res.json(await new User(req.body).save()); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.delete('/api/users/:id', async (req, res) => { try { await User.findByIdAndDelete(req.params.id); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.put('/api/users/:id/password', async (req, res) => { try { await User.findByIdAndUpdate(req.params.id, { password: req.body.password }); res.json({ success: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 
-// Seed Default Admin
-(async () => { try { const admin = await User.findOne({ username: 'admin' }); if (!admin) await new User({ username: 'admin', password: 'admin', role: 'admin', permissions: ['products', 'orders', 'categories', 'settings', 'users'] }).save(); } catch(e) {} })();
+// Seed
+(async () => { try { if (!await User.findOne({ username: 'admin' })) await new User({ username: 'admin', password: 'admin', role: 'admin', permissions: ['products','orders','categories','settings','users'] }).save(); } catch(e) {} })();
 
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on http://0.0.0.0:${PORT}`));

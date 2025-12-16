@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight, Instagram } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, SliderImage } from '../types';
+import { Product } from '../types';
 
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
@@ -59,17 +59,22 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
                 >
                     <img src={slide.image} className="absolute inset-0 w-full h-full object-cover" alt={slide.title} />
                     <div className="absolute inset-0 bg-black/30" />
-                    <div className="absolute inset-0 flex items-center justify-center text-center p-6">
-                        <div className="max-w-2xl px-6 text-white">
+                    <div className={`absolute inset-0 flex items-center justify-center p-6 ${slide.textAlignment === 'left' ? 'text-left items-center justify-start container mx-auto' : slide.textAlignment === 'right' ? 'text-right items-center justify-end container mx-auto' : 'text-center'}`}>
+                        <div className={`max-w-2xl ${slide.textAlignment === 'left' || slide.textAlignment === 'right' ? 'px-8' : 'px-6'} ${slide.textColor === 'black' ? 'text-brand-900' : slide.textColor === 'brand' ? 'text-brand-500' : 'text-white'}`}>
+                            {slide.tagline && (
+                                <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
+                                    {slide.tagline}
+                                </span>
+                            )}
                             <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight drop-shadow-lg">
                                 {slide.title}
                             </h1>
-                            <p className="text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md opacity-90 block">
+                            <p className="text-lg mb-8 font-light max-w-lg drop-shadow-md opacity-90 block">
                                 {slide.subtitle}
                             </p>
                             {slide.buttonText && (
                                 <Link to={slide.buttonLink || '/shop'}>
-                                    <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
+                                    <button className={`px-10 py-4 font-medium tracking-wide transition-colors shadow-lg ${slide.textColor === 'black' ? 'bg-brand-900 text-white hover:bg-black' : 'bg-white text-brand-900 hover:bg-brand-50'}`}>
                                         {slide.buttonText}
                                     </button>
                                 </Link>
@@ -99,87 +104,6 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
             )}
         </div>
     );
-};
-
-// --- Gallery Slideshow Component ---
-const GallerySlideshow: React.FC<{ images: SliderImage[] }> = ({ images }) => {
-  const { config } = useStore();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const { current } = scrollRef;
-      // Scroll by one item width + gap approx
-      const scrollAmount = 320; 
-      
-      if (direction === 'left') {
-        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      } else {
-        // Loop check: if close to end, go back to start
-        const maxScroll = current.scrollWidth - current.clientWidth;
-        if (current.scrollLeft >= maxScroll - 10) {
-            current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
-      }
-    }
-  };
-
-  // Auto-play
-  useEffect(() => {
-    if (isPaused) return;
-    const interval = setInterval(() => {
-        scroll('right');
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [isPaused]);
-
-  if (!images || images.length === 0) return null;
-
-  return (
-    <section className="py-20 bg-brand-50 border-t border-brand-100" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
-        <div className="container mx-auto px-4 relative group">
-            <div className="mb-10 text-center">
-                <h2 className="text-3xl font-serif text-brand-900 mb-2 flex items-center justify-center gap-2">
-                    <Instagram size={28} className="text-brand-800"/> 
-                    {config.sliderTitle || 'Lookbook'}
-                </h2>
-                <div className="h-0.5 w-16 bg-brand-200 mx-auto" />
-            </div>
-            
-            <button 
-                onClick={() => scroll('left')} 
-                className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-3 rounded-full shadow-lg text-brand-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-brand-900 hover:text-white"
-                aria-label="Previous image"
-            >
-                <ChevronLeft size={24}/>
-            </button>
-
-            <div 
-                ref={scrollRef}
-                className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-2 md:px-0 pb-4"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-                {images.map((img) => (
-                    <div key={img.id} className="flex-shrink-0 w-72 md:w-80 aspect-[3/4] bg-gray-200 rounded-sm overflow-hidden relative snap-center group/img">
-                        <img src={img.url} className="w-full h-full object-cover transition duration-700 group-hover/img:scale-110" alt="Gallery Image" />
-                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/img:opacity-100 transition-opacity" />
-                    </div>
-                ))}
-            </div>
-
-            <button 
-                onClick={() => scroll('right')} 
-                className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-3 rounded-full shadow-lg text-brand-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-brand-900 hover:text-white"
-                aria-label="Next image"
-            >
-                <ChevronRight size={24}/>
-            </button>
-        </div>
-    </section>
-  );
 };
 
 // --- Home Page ---
@@ -217,7 +141,24 @@ export const HomePage: React.FC = () => {
 
   const renderSlider = () => {
      if (!config.sliderImages || config.sliderImages.length === 0) return null;
-     return <section key="slider"><GallerySlideshow images={config.sliderImages} /></section>;
+     
+     // Auto-scroll gallery logic can be added here, for now a simple grid/scroll
+     return (
+        <section key="slider" className="py-20 bg-brand-50 overflow-hidden">
+            <div className="container mx-auto px-4 mb-8">
+                 <h2 className="text-3xl font-serif text-center mb-2">Lookbook Gallery</h2>
+                 <div className="h-1 w-20 bg-brand-200 mx-auto"/>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-6 px-4 snap-x container mx-auto no-scrollbar">
+                {config.sliderImages.map(img => (
+                    <div key={img.id} className="flex-shrink-0 w-80 md:w-96 aspect-[3/4] snap-center bg-gray-200 rounded-lg overflow-hidden relative group">
+                        <img src={img.url} className="w-full h-full object-cover transition duration-500 group-hover:scale-105"/>
+                        {img.caption && <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white p-2 text-center text-sm">{img.caption}</div>}
+                    </div>
+                ))}
+            </div>
+        </section>
+     );
   };
 
   const renderCategories = () => (

@@ -11,7 +11,7 @@ export interface Product {
   newArrival: boolean;
   bestSeller: boolean;
   stock: number;
-  likes?: number; // New field for wishlist count
+  likes?: number;
 }
 
 export interface CartItem extends Product {
@@ -47,30 +47,35 @@ export interface User {
   id: string;
   username: string;
   role: 'admin' | 'staff';
-  permissions: string[]; // e.g., ['products', 'orders', 'settings', 'users']
+  permissions: string[];
 }
 
 export interface ThemeConfig {
-  primaryColor: string;   // Brand 900 (Dark text/bg)
-  secondaryColor: string; // Brand 200/300 (Accents)
-  backgroundColor: string;// Brand 50 (Page BG)
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
   fontFamilySans: string;
   fontFamilySerif: string;
-  borderRadius: string;   // '0px', '4px', '8px', '99px'
+  borderRadius: string;
 }
 
 export interface HeroSlide {
   id: string;
   image: string;
+  video?: string;
   title: string;
   subtitle: string;
-  buttonText: string;
-  buttonLink: string;
+  tagline?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  textAlignment?: 'left' | 'center' | 'right';
+  textColor?: 'white' | 'black' | 'brand';
 }
 
 export interface SliderImage {
   id: string;
   url: string;
+  link?: string;
   caption?: string;
 }
 
@@ -79,7 +84,7 @@ export interface SiteConfig {
   siteName?: string;
   logo?: string;
 
-  // Announcement Bar (New Feature)
+  // Announcement Bar
   announcementEnabled?: boolean;
   announcementText?: string;
   announcementLink?: string;
@@ -88,19 +93,18 @@ export interface SiteConfig {
   theme?: ThemeConfig;
   homepageSections?: string[]; // IDs: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider']
 
-  // Hero Configuration (New Feature)
+  // Hero Configuration
   heroMode?: 'static' | 'carousel';
   heroSlides?: HeroSlide[];
 
   // Hero (Static Fallback)
   heroImage: string;
-  heroVideo?: string; // Optional URL or base64 video
+  heroVideo?: string;
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
   
-  // Standalone Image Slider Section (New Feature)
-  sliderTitle?: string;
+  // Standalone Image Slider Section
   sliderImages?: SliderImage[];
 
   // Section Headers
