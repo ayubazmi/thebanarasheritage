@@ -6,7 +6,7 @@ import { Product, Category, User, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -532,6 +532,23 @@ export const AdminDeveloperSettings: React.FC = () => {
     alert('Developer settings updated successfully!');
   };
 
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to reset all developer settings to default?")) {
+      setLocalConfig(prev => ({
+        ...prev,
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px'
+        },
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust']
+      }));
+    }
+  };
+
   const moveSection = (index: number, direction: 'up' | 'down') => {
     const newSections = [...(localConfig.homepageSections || [])];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -703,7 +720,10 @@ export const AdminDeveloperSettings: React.FC = () => {
 
       </div>
 
-      <div className="mt-8 pt-4 border-t flex justify-end">
+      <div className="mt-8 pt-4 border-t flex justify-end gap-4">
+         <Button onClick={handleReset} variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+            <RotateCcw size={16} className="mr-2" /> Reset Defaults
+         </Button>
          <Button onClick={handleSave} size="lg">Save Configuration</Button>
       </div>
     </div>
