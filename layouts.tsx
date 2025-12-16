@@ -25,9 +25,9 @@ export const Navbar: React.FC = () => {
         <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
           <Link to="/" className="z-50">
             {config.logo ? (
-              <img src={config.logo} alt="LUMIÈRE" className="h-10 object-contain" />
+              <img src={config.logo} alt={config.siteName || "LUMIÈRE"} className="h-10 object-contain" />
             ) : (
-              <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">LUMIÈRE</span>
+              <span className="text-2xl font-serif tracking-widest font-bold text-brand-900">{config.siteName || "LUMIÈRE"}</span>
             )}
           </Link>
           <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
@@ -65,7 +65,7 @@ export const Footer: React.FC = () => {
       <div className="container mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div>
-            <h3 className="text-2xl font-serif font-bold mb-6">LUMIÈRE</h3>
+            <h3 className="text-2xl font-serif font-bold mb-6">{config.siteName || "LUMIÈRE"}</h3>
             <p className="text-brand-300/80 leading-relaxed text-sm">
               {config.aboutContent ? config.aboutContent.substring(0, 150) + '...' : 'Redefining contemporary fashion with timeless elegance.'}
             </p>
@@ -96,7 +96,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
         <div className="border-t border-brand-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-brand-300/60">
-          <p>© 2024 Lumière Fashion. All rights reserved.</p>
+          <p>© 2024 {config.siteName || "Lumière Fashion"}. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white">Terms of Service</Link>
@@ -119,7 +119,7 @@ export const PublicLayout: React.FC = () => (
 
 // --- Admin Layout ---
 export const AdminLayout: React.FC = () => {
-  const { logout, user } = useStore();
+  const { logout, user, config } = useStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -146,7 +146,7 @@ export const AdminLayout: React.FC = () => {
     <div className="flex h-screen bg-brand-50">
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
         <div className="p-8">
-           <Link to="/" className="text-xl font-serif font-bold text-brand-900 tracking-wider">LUMIÈRE</Link>
+           <Link to="/" className="text-xl font-serif font-bold text-brand-900 tracking-wider">{config.siteName || "LUMIÈRE"}</Link>
            <div className="text-xs text-gray-500 mt-1 uppercase tracking-widest">Admin Panel</div>
            <div className="text-xs text-brand-800 font-bold mt-2">Hi, {user.username}</div>
         </div>

@@ -244,29 +244,33 @@ export const AdminSettings: React.FC = () => {
         {/* Brand Identity */}
         <div className="bg-white p-8 rounded shadow-sm">
           <h3 className="font-bold text-lg mb-4 flex items-center"><Hexagon className="mr-2" size={20}/> Brand Identity</h3>
-          <div className="flex items-center gap-8">
-            <div className="w-24 h-24 bg-gray-100 border rounded flex items-center justify-center overflow-hidden relative group">
-               {localConfig.logo ? (
-                 <>
-                   <img src={localConfig.logo} alt="Logo" className="w-full h-full object-contain p-2" />
-                   <button 
-                     onClick={() => setLocalConfig({...localConfig, logo: ''})}
-                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                     title="Delete Logo"
-                   >
-                     <Trash size={16} />
-                   </button>
-                 </>
-               ) : (
-                 <span className="text-xs text-gray-400">No Logo</span>
-               )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Upload Website Logo</label>
-              <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
-                <Upload size={16}/> Choose Logo
-                <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-              </label>
+          <div className="flex flex-col gap-6">
+            <Input label="Website Name" value={localConfig.siteName || ''} placeholder="LUMIÈRE" onChange={e => setLocalConfig({...localConfig, siteName: e.target.value})} />
+            
+            <div className="flex items-center gap-8">
+              <div className="w-24 h-24 bg-gray-100 border rounded flex items-center justify-center overflow-hidden relative group">
+                 {localConfig.logo ? (
+                   <>
+                     <img src={localConfig.logo} alt="Logo" className="w-full h-full object-contain p-2" />
+                     <button 
+                       onClick={() => setLocalConfig({...localConfig, logo: ''})}
+                       className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                       title="Delete Logo"
+                     >
+                       <Trash size={16} />
+                     </button>
+                   </>
+                 ) : (
+                   <span className="text-xs text-gray-400">No Logo</span>
+                 )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Upload Website Logo</label>
+                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                  <Upload size={16}/> Choose Logo
+                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                </label>
+              </div>
             </div>
           </div>
         </div>

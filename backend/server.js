@@ -70,6 +70,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
 // 4. Site Config (Extended)
 const Config = mongoose.model('Config', new mongoose.Schema({
   // Brand
+  siteName: { type: String, default: 'LUMIÈRE' },
   logo: String,
 
   // Hero Section
@@ -225,6 +226,7 @@ app.get('/api/config', async (req, res) => {
     let config = await Config.findOne();
     if (!config) {
       config = new Config({
+        siteName: 'LUMIÈRE',
         heroImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000',
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',

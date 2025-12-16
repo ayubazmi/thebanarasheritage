@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { StoreProvider, useStore } from './store';
 import { PublicLayout, AdminLayout } from './layouts';
@@ -11,13 +11,20 @@ import { AlertTriangle } from 'lucide-react';
 
 // Wrapper to handle global loading state and layout
 const MainContent: React.FC = () => {
-  const { isLoading, error } = useStore();
+  const { isLoading, error, config } = useStore();
+
+  // Dynamic Browser Title
+  useEffect(() => {
+    if (config?.siteName) {
+      document.title = `${config.siteName} | Modern Fashion`;
+    }
+  }, [config?.siteName]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-brand-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-900 mb-4"></div>
-        <p className="text-brand-900 font-serif">Loading LUMIÈRE...</p>
+        <p className="text-brand-900 font-serif">Loading...</p>
       </div>
     );
   }

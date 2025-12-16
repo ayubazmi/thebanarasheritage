@@ -52,6 +52,7 @@ export interface User {
 
 export interface SiteConfig {
   // Brand
+  siteName?: string;
   logo?: string;
 
   // Hero
