@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight, Instagram } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product } from '../types';
+import { Product, SliderImage } from '../types';
 
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
@@ -101,6 +101,63 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
     );
 };
 
+// --- Gallery Slideshow Component ---
+const GallerySlideshow: React.FC<{ images: SliderImage[] }> = ({ images }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll logic
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    let scrollAmount = 0;
+    const speed = 1; // Pixels per frame
+    
+    const animate = () => {
+      if (container) {
+        container.scrollLeft += speed;
+        scrollAmount += speed;
+        
+        // Reset scroll when reaching the end of the first set of images
+        if (container.scrollLeft >= (container.scrollWidth / 2)) {
+           container.scrollLeft = 0;
+        }
+      }
+      requestAnimationFrame(animate);
+    };
+
+    const animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [images]);
+
+  if (!images || images.length === 0) return null;
+
+  // Duplicate images to create infinite scroll effect
+  const displayImages = [...images, ...images, ...images];
+
+  return (
+    <div className="w-full overflow-hidden bg-brand-50 py-12" >
+        <div className="container mx-auto px-4 mb-8 text-center">
+             <h2 className="text-3xl font-serif text-brand-900 mb-2 flex items-center justify-center gap-2">
+               <Instagram size={28} className="text-brand-800"/> 
+               Follow Us
+             </h2>
+             <p className="text-brand-800/60 text-sm">@lumiere.fashion</p>
+        </div>
+        <div ref={scrollRef} className="flex gap-4 overflow-x-hidden whitespace-nowrap py-4">
+            {displayImages.map((img, idx) => (
+                <div key={`${img.id}-${idx}`} className="inline-block w-64 md:w-80 aspect-[3/4] flex-shrink-0 bg-gray-200 rounded overflow-hidden relative group">
+                    <img src={img.url} className="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt="Gallery" />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Instagram className="text-white w-8 h-8" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+  );
+};
+
 // --- Home Page ---
 export const HomePage: React.FC = () => {
   const { products, categories, config } = useStore();
@@ -136,22 +193,7 @@ export const HomePage: React.FC = () => {
 
   const renderSlider = () => {
      if (!config.sliderImages || config.sliderImages.length === 0) return null;
-     
-     return (
-        <section key="slider" className="py-20 bg-brand-50 overflow-hidden">
-            <div className="container mx-auto px-4 mb-8">
-                 <h2 className="text-3xl font-serif text-center mb-2">Lookbook Gallery</h2>
-                 <div className="h-1 w-20 bg-brand-200 mx-auto"/>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-6 px-4 snap-x container mx-auto no-scrollbar">
-                {config.sliderImages.map(img => (
-                    <div key={img.id} className="flex-shrink-0 w-80 md:w-96 aspect-[3/4] snap-center bg-gray-200 rounded-lg overflow-hidden relative group">
-                        <img src={img.url} className="w-full h-full object-cover transition duration-500 group-hover:scale-105"/>
-                    </div>
-                ))}
-            </div>
-        </section>
-     );
+     return <section key="slider"><GallerySlideshow images={config.sliderImages} /></section>;
   };
 
   const renderCategories = () => (
