@@ -51,47 +51,65 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
     if (!slides || slides.length === 0) return null;
 
     return (
-        <div className="relative h-[85vh] w-full bg-brand-200 overflow-hidden group">
-            {slides.map((slide, idx) => (
-                <div 
-                    key={idx} 
-                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                >
-                    <img src={slide.image} className="absolute inset-0 w-full h-full object-cover" alt={slide.title} />
-                    <div className="absolute inset-0 bg-black/30" />
-                    <div className="absolute inset-0 flex items-center justify-center text-center p-6">
-                        <div className="max-w-2xl px-6 text-white">
-                            <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight drop-shadow-lg">
-                                {slide.title}
-                            </h1>
-                            <p className="text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md opacity-90 block">
-                                {slide.subtitle}
-                            </p>
-                            {slide.buttonText && (
-                                <Link to={slide.buttonLink || '/shop'}>
-                                    <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
-                                        {slide.buttonText}
-                                    </button>
-                                </Link>
-                            )}
+        <div className="relative w-full overflow-hidden group">
+            {/* Container */}
+            <div className="relative h-[60vh] md:h-[85vh] w-full">
+                {slides.map((slide, idx) => (
+                    <div 
+                        key={idx} 
+                        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                    >
+                        <img 
+                            src={slide.image} 
+                            className="absolute inset-0 w-full h-full block object-cover object-top transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)]" 
+                            alt={slide.title} 
+                            style={{ color: 'transparent' }}
+                        />
+                        <div className="absolute inset-0 bg-black/30" />
+                        <div className="absolute inset-0 flex items-center justify-center text-center p-6">
+                            <div className="max-w-2xl px-6 text-white animate-fade-in-up">
+                                {slide.title && <h1 className="text-4xl md:text-7xl font-serif font-bold mb-4 leading-tight drop-shadow-lg">
+                                    {slide.title}
+                                </h1>}
+                                {slide.subtitle && <p className="text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md opacity-90 block">
+                                    {slide.subtitle}
+                                </p>}
+                                {slide.buttonText && (
+                                    <Link to={slide.buttonLink || '/shop'}>
+                                        <button className="bg-white text-brand-900 px-8 py-3 md:px-10 md:py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
+                                            {slide.buttonText}
+                                        </button>
+                                    </Link>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
+
+            {/* Navigation Arrows */}
             {slides.length > 1 && (
                 <>
-                    <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100">
-                        <ChevronLeft size={24} />
+                    <button 
+                        onClick={prevSlide} 
+                        className="absolute left-4 md:left-7 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/50 border border-white/10 flex items-center justify-center backdrop-blur-sm transition-opacity opacity-0 group-hover:opacity-100"
+                    >
+                        <ChevronLeft size={18} className="text-white" />
                     </button>
-                    <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100">
-                        <ChevronRight size={24} />
+                    <button 
+                        onClick={nextSlide} 
+                        className="absolute right-4 md:right-7 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/50 border border-white/10 flex items-center justify-center backdrop-blur-sm transition-opacity opacity-0 group-hover:opacity-100"
+                    >
+                        <ChevronRight size={18} className="text-white" />
                     </button>
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
+                    
+                    {/* Dots */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
                         {slides.map((_, idx) => (
                             <button 
                                 key={idx}
                                 onClick={() => setCurrent(idx)}
-                                className={`w-2.5 h-2.5 rounded-full transition-all ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'}`}
+                                className={`h-2 rounded-full transition-all duration-300 ${idx === current ? 'bg-white w-8' : 'bg-white/50 w-2 hover:bg-white/80'}`}
                             />
                         ))}
                     </div>
