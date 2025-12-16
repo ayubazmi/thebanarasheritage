@@ -89,6 +89,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
 
   // Announcement Bar
   announcementEnabled: { type: Boolean, default: false },
+  announcementBlink: { type: Boolean, default: false },
   announcementText: String,
   announcementLink: String,
   announcementBgColor: { type: String, default: '#000000' },

@@ -32,9 +32,14 @@ export const Navbar: React.FC = () => {
               style={{ backgroundColor: config.announcementBgColor || '#000', color: config.announcementTextColor || '#FFF' }}
            >
               {config.announcementLink ? (
-                <Link to={config.announcementLink} className="hover:underline">{config.announcementText}</Link>
+                <Link 
+                  to={config.announcementLink} 
+                  className={`hover:underline ${config.announcementBlink ? 'animate-pulse' : ''}`}
+                >
+                  {config.announcementText}
+                </Link>
               ) : (
-                <span>{config.announcementText}</span>
+                <span className={config.announcementBlink ? 'animate-pulse' : ''}>{config.announcementText}</span>
               )}
            </div>
         )}

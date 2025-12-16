@@ -592,15 +592,25 @@ export const AdminDeveloperSettings: React.FC = () => {
           <h3 className="font-bold text-lg mb-6 flex items-center"><Megaphone className="mr-2" size={20}/> Announcement Bar</h3>
           
           <div className="space-y-6">
-            <div className="flex items-center gap-4">
-               <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border hover:bg-gray-100">
+            <div className="flex flex-wrap items-center gap-4">
+               <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border hover:bg-gray-100 transition-colors">
                  <input 
                    type="checkbox" 
-                   className="w-5 h-5 accent-brand-900"
+                   className="w-5 h-5 accent-brand-900 rounded"
                    checked={localConfig.announcementEnabled || false} 
                    onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})}
                  />
-                 <span className="font-medium text-sm">Enable Announcement Bar</span>
+                 <span className="font-medium text-sm">Enable Bar</span>
+               </label>
+
+               <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border hover:bg-gray-100 transition-colors">
+                 <input 
+                   type="checkbox" 
+                   className="w-5 h-5 accent-brand-900 rounded"
+                   checked={localConfig.announcementBlink || false} 
+                   onChange={e => setLocalConfig({...localConfig, announcementBlink: e.target.checked})}
+                 />
+                 <span className="font-medium text-sm">Blink Animation</span>
                </label>
             </div>
 

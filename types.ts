@@ -70,6 +70,7 @@ export interface SiteConfig {
 
   // Announcement Bar
   announcementEnabled?: boolean;
+  announcementBlink?: boolean;
   announcementText?: string;
   announcementLink?: string;
   announcementBgColor?: string;
