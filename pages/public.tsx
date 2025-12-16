@@ -307,14 +307,10 @@ export const HomePage: React.FC = () => {
   };
 
   const order = config.homepageSections || ['hero', 'categories', 'featured', 'slider', 'promo', 'trust'];
-  const hidden = config.hiddenSections || [];
 
   return (
     <>
-      {order.map(sectionId => {
-        if (hidden.includes(sectionId)) return null;
-        return sectionMap[sectionId] ? sectionMap[sectionId]() : null;
-      })}
+      {order.map(sectionId => sectionMap[sectionId] ? sectionMap[sectionId]() : null)}
     </>
   );
 };

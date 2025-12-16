@@ -6,7 +6,7 @@ import { Product, Category, User, SiteConfig, HeroSlide, SliderImage } from '../
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, Bell, MonitorPlay, Images, Layers, Eye, EyeOff
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, Bell, MonitorPlay, Images, Layers
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -531,7 +531,6 @@ export const AdminDeveloperSettings: React.FC = () => {
           ...config.theme
         },
         homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'],
-        hiddenSections: config.hiddenSections || [],
         heroMode: config.heroMode || 'static',
         heroSlides: config.heroSlides || [],
         sliderImages: config.sliderImages || []
@@ -557,7 +556,6 @@ export const AdminDeveloperSettings: React.FC = () => {
           borderRadius: '0px'
         },
         homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'],
-        hiddenSections: [],
         heroMode: 'static'
       }));
     }
@@ -571,17 +569,6 @@ export const AdminDeveloperSettings: React.FC = () => {
       [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
       setLocalConfig({ ...localConfig, homepageSections: newSections });
     }
-  };
-
-  const toggleSectionVisibility = (sectionId: string) => {
-    const currentHidden = localConfig.hiddenSections || [];
-    let newHidden;
-    if (currentHidden.includes(sectionId)) {
-        newHidden = currentHidden.filter(id => id !== sectionId);
-    } else {
-        newHidden = [...currentHidden, sectionId];
-    }
-    setLocalConfig({ ...localConfig, hiddenSections: newHidden });
   };
 
   // --- Slide Logic ---
@@ -853,41 +840,30 @@ export const AdminDeveloperSettings: React.FC = () => {
         {/* Section Reordering */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Layers className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
-          <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage. Toggle visibility with the eye icon.</p>
+          <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
           
           <div className="space-y-2 max-w-lg">
-            {localConfig.homepageSections?.map((sectionId, index) => {
-              const isHidden = localConfig.hiddenSections?.includes(sectionId);
-              return (
-              <div key={sectionId} className={`flex items-center justify-between p-3 border rounded transition ${isHidden ? 'bg-gray-100 border-gray-200' : 'bg-gray-50 border-gray-200 hover:bg-white hover:shadow-sm'}`}>
-                <span className={`font-medium capitalize ${isHidden ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{sectionNames[sectionId] || sectionId}</span>
-                <div className="flex gap-2 items-center">
+            {localConfig.homepageSections?.map((sectionId, index) => (
+              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition">
+                <span className="font-medium capitalize">{sectionNames[sectionId] || sectionId}</span>
+                <div className="flex gap-1">
                   <button 
-                    onClick={() => toggleSectionVisibility(sectionId)}
-                    className={`p-1 rounded ${isHidden ? 'text-gray-400 hover:bg-gray-200' : 'text-gray-600 hover:bg-gray-200'}`}
-                    title={isHidden ? "Unhide Section" : "Hide Section"}
+                    onClick={() => moveSection(index, 'up')}
+                    disabled={index === 0}
+                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
                   >
-                    {isHidden ? <EyeOff size={16}/> : <Eye size={16}/>}
+                    <ArrowUp size={16}/>
                   </button>
-                  <div className="flex gap-1 border-l pl-2 border-gray-300">
-                    <button 
-                        onClick={() => moveSection(index, 'up')}
-                        disabled={index === 0}
-                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                    >
-                        <ArrowUp size={16}/>
-                    </button>
-                    <button 
-                        onClick={() => moveSection(index, 'down')}
-                        disabled={index === (localConfig.homepageSections?.length || 0) - 1}
-                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                    >
-                        <ArrowDown size={16}/>
-                    </button>
-                  </div>
+                  <button 
+                    onClick={() => moveSection(index, 'down')}
+                    disabled={index === (localConfig.homepageSections?.length || 0) - 1}
+                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                  >
+                    <ArrowDown size={16}/>
+                  </button>
                 </div>
               </div>
-            )})}
+            ))}
           </div>
         </div>
 
