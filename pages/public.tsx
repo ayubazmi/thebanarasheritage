@@ -104,57 +104,80 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
 // --- Gallery Slideshow Component ---
 const GallerySlideshow: React.FC<{ images: SliderImage[] }> = ({ images }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Auto-scroll logic
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
+  const [isPaused, setIsPaused] = useState(false);
 
-    let scrollAmount = 0;
-    const speed = 1; // Pixels per frame
-    
-    const animate = () => {
-      if (container) {
-        container.scrollLeft += speed;
-        scrollAmount += speed;
-        
-        // Reset scroll when reaching the end of the first set of images
-        if (container.scrollLeft >= (container.scrollWidth / 2)) {
-           container.scrollLeft = 0;
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { current } = scrollRef;
+      // Scroll by one item width + gap approx
+      const scrollAmount = 320; 
+      
+      if (direction === 'left') {
+        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      } else {
+        // Loop check: if close to end, go back to start
+        const maxScroll = current.scrollWidth - current.clientWidth;
+        if (current.scrollLeft >= maxScroll - 10) {
+            current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+            current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
       }
-      requestAnimationFrame(animate);
-    };
+    }
+  };
 
-    const animationId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationId);
-  }, [images]);
+  // Auto-play
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+        scroll('right');
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isPaused]);
 
   if (!images || images.length === 0) return null;
 
-  // Duplicate images to create infinite scroll effect
-  const displayImages = [...images, ...images, ...images];
-
   return (
-    <div className="w-full overflow-hidden bg-brand-50 py-12" >
-        <div className="container mx-auto px-4 mb-8 text-center">
-             <h2 className="text-3xl font-serif text-brand-900 mb-2 flex items-center justify-center gap-2">
-               <Instagram size={28} className="text-brand-800"/> 
-               Follow Us
-             </h2>
-             <p className="text-brand-800/60 text-sm">@lumiere.fashion</p>
-        </div>
-        <div ref={scrollRef} className="flex gap-4 overflow-x-hidden whitespace-nowrap py-4">
-            {displayImages.map((img, idx) => (
-                <div key={`${img.id}-${idx}`} className="inline-block w-64 md:w-80 aspect-[3/4] flex-shrink-0 bg-gray-200 rounded overflow-hidden relative group">
-                    <img src={img.url} className="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt="Gallery" />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Instagram className="text-white w-8 h-8" />
+    <section className="py-20 bg-brand-50 border-t border-brand-100" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
+        <div className="container mx-auto px-4 relative group">
+            <div className="mb-10 text-center">
+                <h2 className="text-3xl font-serif text-brand-900 mb-2 flex items-center justify-center gap-2">
+                    <Instagram size={28} className="text-brand-800"/> 
+                    Lookbook
+                </h2>
+                <div className="h-0.5 w-16 bg-brand-200 mx-auto" />
+            </div>
+            
+            <button 
+                onClick={() => scroll('left')} 
+                className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-3 rounded-full shadow-lg text-brand-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-brand-900 hover:text-white"
+                aria-label="Previous image"
+            >
+                <ChevronLeft size={24}/>
+            </button>
+
+            <div 
+                ref={scrollRef}
+                className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-2 md:px-0 pb-4"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+                {images.map((img) => (
+                    <div key={img.id} className="flex-shrink-0 w-72 md:w-80 aspect-[3/4] bg-gray-200 rounded-sm overflow-hidden relative snap-center group/img">
+                        <img src={img.url} className="w-full h-full object-cover transition duration-700 group-hover/img:scale-110" alt="Gallery Image" />
+                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/img:opacity-100 transition-opacity" />
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
+
+            <button 
+                onClick={() => scroll('right')} 
+                className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-3 rounded-full shadow-lg text-brand-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-brand-900 hover:text-white"
+                aria-label="Next image"
+            >
+                <ChevronRight size={24}/>
+            </button>
         </div>
-    </div>
+    </section>
   );
 };
 
