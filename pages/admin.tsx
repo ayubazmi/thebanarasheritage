@@ -172,6 +172,14 @@ export const AdminSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
   const [localConfig, setLocalConfig] = useState(config);
   
+  // Fix: Sync local state when config loads from backend
+  useEffect(() => {
+    if (config && Object.keys(config).length > 0) {
+      setLocalConfig(prev => ({...config, ...prev})); // Merge but prioritize config from backend initially or vice versa depending on logic. Here we just take config.
+      setLocalConfig(config);
+    }
+  }, [config]);
+
   const handleSave = () => {
     updateConfig(localConfig);
     alert('Settings saved successfully!');
@@ -259,6 +267,43 @@ export const AdminSettings: React.FC = () => {
                 <Upload size={16}/> Choose Logo
                 <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
               </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Configuration (Moved to Top for Visibility) */}
+        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-blue-500">
+          <h3 className="font-bold text-lg mb-4 flex items-center text-blue-800"><Footprints className="mr-2" size={20}/> Footer Configuration (Shop & Contact)</h3>
+          
+          <div className="space-y-6">
+            {/* Shop Links */}
+            <div>
+                <Input label="Footer Shop Section Title" value={localConfig.footerShopTitle || 'SHOP'} placeholder="SHOP" onChange={e => setLocalConfig({...localConfig, footerShopTitle: e.target.value})} />
+                
+                <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-4 rounded">
+                    <p className="col-span-2 text-xs font-bold text-gray-500 uppercase">Footer Links (Title & URL)</p>
+                    <Input label="Link 1 Text" value={localConfig.footerLink1Label || ''} placeholder="New Arrivals" onChange={e => setLocalConfig({...localConfig, footerLink1Label: e.target.value})} />
+                    <Input label="Link 1 URL" value={localConfig.footerLink1Url || ''} placeholder="/shop?cat=new" onChange={e => setLocalConfig({...localConfig, footerLink1Url: e.target.value})} />
+                    
+                    <Input label="Link 2 Text" value={localConfig.footerLink2Label || ''} placeholder="Kurtis" onChange={e => setLocalConfig({...localConfig, footerLink2Label: e.target.value})} />
+                    <Input label="Link 2 URL" value={localConfig.footerLink2Url || ''} placeholder="/shop?cat=kurtis" onChange={e => setLocalConfig({...localConfig, footerLink2Url: e.target.value})} />
+
+                    <Input label="Link 3 Text" value={localConfig.footerLink3Label || ''} placeholder="Dresses" onChange={e => setLocalConfig({...localConfig, footerLink3Label: e.target.value})} />
+                    <Input label="Link 3 URL" value={localConfig.footerLink3Url || ''} placeholder="/shop?cat=dresses" onChange={e => setLocalConfig({...localConfig, footerLink3Url: e.target.value})} />
+
+                    <Input label="Link 4 Text" value={localConfig.footerLink4Label || ''} placeholder="Sale" onChange={e => setLocalConfig({...localConfig, footerLink4Label: e.target.value})} />
+                    <Input label="Link 4 URL" value={localConfig.footerLink4Url || ''} placeholder="/shop?cat=sale" onChange={e => setLocalConfig({...localConfig, footerLink4Url: e.target.value})} />
+                </div>
+            </div>
+
+            {/* Newsletter */}
+            <div className="pt-4 border-t">
+                <h4 className="font-bold text-sm mb-2 text-gray-600 uppercase">Newsletter Section (Stay in Touch)</h4>
+                <div className="grid md:grid-cols-3 gap-4">
+                    <Input label="Section Title" value={localConfig.footerNewsletterTitle || ''} placeholder="STAY IN TOUCH" onChange={e => setLocalConfig({...localConfig, footerNewsletterTitle: e.target.value})} />
+                    <Input label="Input Placeholder" value={localConfig.footerNewsletterPlaceholder || ''} placeholder="Your email" onChange={e => setLocalConfig({...localConfig, footerNewsletterPlaceholder: e.target.value})} />
+                    <Input label="Button Text" value={localConfig.footerNewsletterButtonText || ''} placeholder="JOIN" onChange={e => setLocalConfig({...localConfig, footerNewsletterButtonText: e.target.value})} />
+                </div>
             </div>
           </div>
         </div>
@@ -442,41 +487,6 @@ export const AdminSettings: React.FC = () => {
                <Input label="Instagram URL" value={localConfig.socialInstagram || ''} placeholder="https://instagram.com/..." onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} />
                <Input label="Facebook URL" value={localConfig.socialFacebook || ''} placeholder="https://facebook.com/..." onChange={e => setLocalConfig({...localConfig, socialFacebook: e.target.value})} />
                <Input label="WhatsApp URL" value={localConfig.socialWhatsapp || ''} placeholder="https://wa.me/..." onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} />
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Configuration (New) */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Footprints className="mr-2" size={20}/> Footer Configuration</h3>
-          
-          <div className="space-y-6">
-            {/* Shop Links */}
-            <div>
-                <Input label="Shop Section Title" value={localConfig.footerShopTitle || ''} onChange={e => setLocalConfig({...localConfig, footerShopTitle: e.target.value})} />
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                    <Input label="Link 1 Label" value={localConfig.footerLink1Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink1Label: e.target.value})} />
-                    <Input label="Link 1 URL" value={localConfig.footerLink1Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink1Url: e.target.value})} />
-                    
-                    <Input label="Link 2 Label" value={localConfig.footerLink2Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink2Label: e.target.value})} />
-                    <Input label="Link 2 URL" value={localConfig.footerLink2Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink2Url: e.target.value})} />
-
-                    <Input label="Link 3 Label" value={localConfig.footerLink3Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink3Label: e.target.value})} />
-                    <Input label="Link 3 URL" value={localConfig.footerLink3Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink3Url: e.target.value})} />
-
-                    <Input label="Link 4 Label" value={localConfig.footerLink4Label || ''} onChange={e => setLocalConfig({...localConfig, footerLink4Label: e.target.value})} />
-                    <Input label="Link 4 URL" value={localConfig.footerLink4Url || ''} onChange={e => setLocalConfig({...localConfig, footerLink4Url: e.target.value})} />
-                </div>
-            </div>
-
-            {/* Newsletter */}
-            <div className="pt-4 border-t">
-                <h4 className="font-bold text-sm mb-2 text-gray-600 uppercase">Newsletter Section</h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                    <Input label="Section Title" value={localConfig.footerNewsletterTitle || ''} onChange={e => setLocalConfig({...localConfig, footerNewsletterTitle: e.target.value})} />
-                    <Input label="Input Placeholder" value={localConfig.footerNewsletterPlaceholder || ''} onChange={e => setLocalConfig({...localConfig, footerNewsletterPlaceholder: e.target.value})} />
-                    <Input label="Button Text" value={localConfig.footerNewsletterButtonText || ''} onChange={e => setLocalConfig({...localConfig, footerNewsletterButtonText: e.target.value})} />
-                </div>
             </div>
           </div>
         </div>
