@@ -76,6 +76,8 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   announcementEnabled: { type: Boolean, default: false },
   announcementText: String,
   announcementLink: String,
+  announcementBgColor: { type: String, default: '#2C251F' }, // Default Brand 900
+  announcementTextColor: { type: String, default: '#FFFFFF' },
 
   // Developer Settings (Theme)
   theme: {
@@ -163,6 +165,8 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   footerNewsletterTitle: { type: String, default: 'STAY IN TOUCH' },
   footerNewsletterPlaceholder: { type: String, default: 'Your email' },
   footerNewsletterButtonText: { type: String, default: 'JOIN' },
+  footerBgColor: { type: String, default: '#2C251F' },
+  footerTextColor: { type: String, default: '#D5CDC0' }, // Default Brand 200/300ish
   
   // Settings
   currency: String,

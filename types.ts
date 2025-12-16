@@ -83,6 +83,8 @@ export interface SiteConfig {
   announcementEnabled?: boolean;
   announcementText?: string;
   announcementLink?: string;
+  announcementBgColor?: string; // New
+  announcementTextColor?: string; // New
 
   // Developer Settings (Theme & Layout)
   theme?: ThemeConfig;
@@ -151,6 +153,8 @@ export interface SiteConfig {
   footerNewsletterTitle?: string;
   footerNewsletterPlaceholder?: string;
   footerNewsletterButtonText?: string;
+  footerBgColor?: string; // New
+  footerTextColor?: string; // New
 
   // Settings
   currency: string;
