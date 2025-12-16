@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader } from '../components/ui';
-import { Product, Category, User, SiteConfig } from '../types';
+import { Product, Category, User, SiteConfig, HeroSlide } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, Layers
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -313,7 +313,8 @@ export const AdminSettings: React.FC = () => {
 
         {/* Hero Section */}
         <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner</h3>
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner (Single/Static)</h3>
+          <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-2 border-l-4 border-gray-400">Use "Developer Settings" for advanced Carousel configuration.</p>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <Input label="Hero Tagline (Top Text)" value={localConfig.heroTagline || ''} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} placeholder="e.g. New Collection" />
@@ -506,13 +507,17 @@ export const AdminSettings: React.FC = () => {
 export const AdminDeveloperSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
   const [localConfig, setLocalConfig] = useState(config);
+  const [newSlide, setNewSlide] = useState<Partial<HeroSlide>>({
+    title: '', subtitle: '', tagline: '', buttonText: 'SHOP NOW', buttonLink: '/shop', textAlignment: 'center', textColor: 'white'
+  });
+  const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
+  const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
   
   // Sync logic
   useEffect(() => {
     if (config && Object.keys(config).length > 0) {
       setLocalConfig({
         ...config,
-        // Ensure defaults exist if config is incomplete from DB
         theme: {
           primaryColor: '#2C251F',
           secondaryColor: '#D5CDC0',
@@ -522,7 +527,9 @@ export const AdminDeveloperSettings: React.FC = () => {
           borderRadius: '0px',
           ...config.theme
         },
-        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust']
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroMode: config.heroMode || 'static',
+        heroSlides: config.heroSlides || []
       });
     }
   }, [config]);
@@ -544,11 +551,65 @@ export const AdminDeveloperSettings: React.FC = () => {
           fontFamilySerif: 'Cormorant Garamond',
           borderRadius: '0px'
         },
-        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust']
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroMode: 'static',
+        heroSlides: []
       }));
     }
   };
 
+  // --- Slide Management ---
+  const openSlideModal = (index?: number) => {
+    if (index !== undefined && localConfig.heroSlides) {
+      setEditingSlideIndex(index);
+      setNewSlide({ ...localConfig.heroSlides[index] });
+    } else {
+      setEditingSlideIndex(null);
+      setNewSlide({ title: '', subtitle: '', tagline: '', buttonText: 'SHOP NOW', buttonLink: '/shop', textAlignment: 'center', textColor: 'white', image: '' });
+    }
+    setIsSlideModalOpen(true);
+  };
+
+  const saveSlide = () => {
+    const slides = [...(localConfig.heroSlides || [])];
+    const slideData = { 
+      ...newSlide, 
+      id: newSlide.id || Date.now().toString() 
+    } as HeroSlide;
+
+    if (!slideData.image && !slideData.video) {
+       alert("Please upload an image or video for the slide.");
+       return;
+    }
+
+    if (editingSlideIndex !== null) {
+      slides[editingSlideIndex] = slideData;
+    } else {
+      slides.push(slideData);
+    }
+    
+    setLocalConfig({ ...localConfig, heroSlides: slides });
+    setIsSlideModalOpen(false);
+  };
+
+  const deleteSlide = (index: number) => {
+    const slides = [...(localConfig.heroSlides || [])];
+    slides.splice(index, 1);
+    setLocalConfig({ ...localConfig, heroSlides: slides });
+  };
+
+  const handleSlideImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewSlide(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // --- Layout Management ---
   const moveSection = (index: number, direction: 'up' | 'down') => {
     const newSections = [...(localConfig.homepageSections || [])];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -582,7 +643,7 @@ export const AdminDeveloperSettings: React.FC = () => {
     <div className="max-w-4xl pb-20">
       <div className="mb-8">
         <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
-        <p className="text-gray-500">Advanced customization for theme and layout.</p>
+        <p className="text-gray-500">Advanced customization for theme, carousel, and layout.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -688,9 +749,66 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Hero Carousel Config */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+            <h3 className="font-bold text-lg mb-6 flex items-center"><MonitorPlay className="mr-2" size={20}/> Hero Section Mode</h3>
+            <div className="flex gap-4 mb-6">
+                <button 
+                  onClick={() => setLocalConfig({...localConfig, heroMode: 'static'})}
+                  className={`flex-1 p-4 border rounded-lg text-center font-medium transition ${localConfig.heroMode === 'static' ? 'bg-brand-100 border-brand-500 text-brand-900' : 'bg-white hover:bg-gray-50'}`}
+                >
+                    Static Image/Video
+                </button>
+                <button 
+                  onClick={() => setLocalConfig({...localConfig, heroMode: 'carousel'})}
+                  className={`flex-1 p-4 border rounded-lg text-center font-medium transition ${localConfig.heroMode === 'carousel' ? 'bg-brand-100 border-brand-500 text-brand-900' : 'bg-white hover:bg-gray-50'}`}
+                >
+                    Carousel Slider
+                </button>
+            </div>
+
+            {localConfig.heroMode === 'carousel' && (
+                <div className="mt-6 border-t pt-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-bold text-gray-700">Carousel Slides</h4>
+                        <Button onClick={() => openSlideModal()} size="sm"><Plus size={16} className="mr-2"/> Add Slide</Button>
+                    </div>
+
+                    <div className="space-y-3">
+                        {localConfig.heroSlides?.map((slide, idx) => (
+                            <div key={idx} className="flex items-center gap-4 p-3 border rounded bg-gray-50 group">
+                                <div className="w-16 h-10 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                                    {slide.image && <img src={slide.image} alt="" className="w-full h-full object-cover"/>}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-medium truncate">{slide.title || 'Untitled Slide'}</div>
+                                    <div className="text-xs text-gray-500 truncate">{slide.subtitle}</div>
+                                </div>
+                                <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => openSlideModal(idx)} className="p-2 hover:bg-gray-200 rounded text-blue-600"><Edit size={16}/></button>
+                                    <button onClick={() => deleteSlide(idx)} className="p-2 hover:bg-gray-200 rounded text-rose-600"><Trash size={16}/></button>
+                                </div>
+                            </div>
+                        ))}
+                        {(!localConfig.heroSlides || localConfig.heroSlides.length === 0) && (
+                            <div className="text-center py-8 text-gray-400 bg-gray-50 border border-dashed rounded">
+                                No slides added. The homepage will fallback to the default static hero if no slides are present.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            
+            {localConfig.heroMode === 'static' && (
+                <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded">
+                    You are currently using the "Static" mode. Go to the "Content & Settings" tab to configure the single Hero Image and Text.
+                </div>
+            )}
+        </div>
+
         {/* Section Reordering */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Layers className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
           <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
           
           <div className="space-y-2 max-w-lg">
@@ -726,6 +844,73 @@ export const AdminDeveloperSettings: React.FC = () => {
          </Button>
          <Button onClick={handleSave} size="lg">Save Configuration</Button>
       </div>
+
+      {/* Slide Modal */}
+      {isSlideModalOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center p-6 border-b">
+                      <h3 className="font-bold text-xl">{editingSlideIndex !== null ? 'Edit Slide' : 'Add New Slide'}</h3>
+                      <button onClick={() => setIsSlideModalOpen(false)}><X size={20}/></button>
+                  </div>
+                  <div className="p-6 space-y-4">
+                      {/* Image Upload */}
+                      <div>
+                          <label className="block text-sm font-medium mb-1">Slide Image</label>
+                          <div className="flex items-center gap-4">
+                             <div className="w-24 h-16 bg-gray-100 border rounded flex items-center justify-center overflow-hidden">
+                                 {newSlide.image ? <img src={newSlide.image} className="w-full h-full object-cover" /> : <span className="text-xs text-gray-400">No Img</span>}
+                             </div>
+                             <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded text-sm font-medium">
+                                 Upload Image
+                                 <input type="file" className="hidden" accept="image/*" onChange={handleSlideImageUpload} />
+                             </label>
+                          </div>
+                      </div>
+
+                      <Input label="Title (Main Heading)" value={newSlide.title} onChange={e => setNewSlide({...newSlide, title: e.target.value})} />
+                      <Input label="Subtitle (Description)" value={newSlide.subtitle} onChange={e => setNewSlide({...newSlide, subtitle: e.target.value})} />
+                      <Input label="Tagline (Small Top Text)" value={newSlide.tagline || ''} onChange={e => setNewSlide({...newSlide, tagline: e.target.value})} />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                          <Input label="Button Text" value={newSlide.buttonText || ''} onChange={e => setNewSlide({...newSlide, buttonText: e.target.value})} />
+                          <Input label="Button Link" value={newSlide.buttonLink || ''} onChange={e => setNewSlide({...newSlide, buttonLink: e.target.value})} />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                              <label className="block text-sm font-medium mb-1">Text Alignment</label>
+                              <select 
+                                  className="w-full border p-2 rounded text-sm"
+                                  value={newSlide.textAlignment}
+                                  onChange={e => setNewSlide({...newSlide, textAlignment: e.target.value as any})}
+                              >
+                                  <option value="left">Left</option>
+                                  <option value="center">Center</option>
+                                  <option value="right">Right</option>
+                              </select>
+                          </div>
+                          <div>
+                              <label className="block text-sm font-medium mb-1">Text Color</label>
+                              <select 
+                                  className="w-full border p-2 rounded text-sm"
+                                  value={newSlide.textColor}
+                                  onChange={e => setNewSlide({...newSlide, textColor: e.target.value as any})}
+                              >
+                                  <option value="white">White</option>
+                                  <option value="black">Black</option>
+                                  <option value="brand">Brand Primary</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+                  <div className="p-6 border-t bg-gray-50 flex justify-end gap-2">
+                      <Button variant="secondary" onClick={() => setIsSlideModalOpen(false)}>Cancel</Button>
+                      <Button onClick={saveSlide}>Save Slide</Button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

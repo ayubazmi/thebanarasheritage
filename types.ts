@@ -59,6 +59,19 @@ export interface ThemeConfig {
   borderRadius: string;   // '0px', '4px', '8px', '99px'
 }
 
+export interface HeroSlide {
+  id: string;
+  image: string;
+  video?: string;
+  title: string;
+  subtitle: string;
+  tagline?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  textAlignment?: 'left' | 'center' | 'right';
+  textColor?: 'white' | 'black' | 'brand';
+}
+
 export interface SiteConfig {
   // Brand
   siteName?: string;
@@ -68,7 +81,11 @@ export interface SiteConfig {
   theme?: ThemeConfig;
   homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust']
 
-  // Hero
+  // Hero Configuration
+  heroMode?: 'static' | 'carousel';
+  heroSlides?: HeroSlide[];
+
+  // Hero (Static Fallback)
   heroImage: string;
   heroVideo?: string; // Optional URL or base64 video
   heroTagline?: string;

@@ -87,7 +87,22 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     default: ['hero', 'categories', 'featured', 'promo', 'trust'] 
   },
 
-  // Hero Section
+  // Hero Configuration
+  heroMode: { type: String, default: 'static' }, // 'static' or 'carousel'
+  heroSlides: [{
+    id: String,
+    image: String,
+    video: String,
+    title: String,
+    subtitle: String,
+    tagline: String,
+    buttonText: String,
+    buttonLink: String,
+    textAlignment: { type: String, default: 'center' },
+    textColor: { type: String, default: 'white' }
+  }],
+
+  // Hero Section (Static Fallback)
   heroImage: String,
   heroVideo: String,
   heroTagline: { type: String, default: 'New Collection' }, 
@@ -250,6 +265,8 @@ app.get('/api/config', async (req, res) => {
           borderRadius: '0px'
         },
         homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroMode: 'static',
+        heroSlides: [],
         heroImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000',
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',

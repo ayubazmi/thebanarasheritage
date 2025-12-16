@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
 import { Product } from '../types';
@@ -35,6 +35,81 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
   </Link>
 );
 
+const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
+    const [current, setCurrent] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrent(prev => (prev === slides.length - 1 ? 0 : prev + 1));
+        }, 5000);
+        return () => clearInterval(timer);
+    }, [slides.length]);
+
+    const nextSlide = () => setCurrent(prev => (prev === slides.length - 1 ? 0 : prev + 1));
+    const prevSlide = () => setCurrent(prev => (prev === 0 ? slides.length - 1 : prev - 1));
+
+    if (!slides || slides.length === 0) return null;
+
+    return (
+        <div className="relative h-[85vh] w-full bg-brand-200 overflow-hidden group">
+            {slides.map((slide, idx) => (
+                <div 
+                    key={idx} 
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                >
+                    <img src={slide.image} className="absolute inset-0 w-full h-full object-cover" alt={slide.title} />
+                    <div className="absolute inset-0 bg-black/30" />
+                    <div className={`absolute inset-0 flex items-center justify-center p-6 ${slide.textAlignment === 'left' ? 'text-left items-center justify-start container mx-auto' : slide.textAlignment === 'right' ? 'text-right items-center justify-end container mx-auto' : 'text-center'}`}>
+                        <div className={`max-w-2xl ${slide.textAlignment === 'left' || slide.textAlignment === 'right' ? 'px-8' : 'px-6'} ${slide.textColor === 'black' ? 'text-brand-900' : slide.textColor === 'brand' ? 'text-brand-500' : 'text-white'}`}>
+                            {slide.tagline && (
+                                <span className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
+                                    {slide.tagline}
+                                </span>
+                            )}
+                            <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6 leading-tight drop-shadow-lg">
+                                {slide.title}
+                            </h1>
+                            <p className="text-lg mb-8 font-light max-w-lg drop-shadow-md opacity-90 block">
+                                {slide.subtitle}
+                            </p>
+                            {slide.buttonText && (
+                                <Link to={slide.buttonLink || '/shop'}>
+                                    <button className={`px-10 py-4 font-medium tracking-wide transition-colors shadow-lg ${slide.textColor === 'black' ? 'bg-brand-900 text-white hover:bg-black' : 'bg-white text-brand-900 hover:bg-brand-50'}`}>
+                                        {slide.buttonText}
+                                    </button>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ))}
+            
+            {/* Navigation Arrows */}
+            {slides.length > 1 && (
+                <>
+                    <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100">
+                        <ChevronLeft size={24} />
+                    </button>
+                    <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition opacity-0 group-hover:opacity-100">
+                        <ChevronRight size={24} />
+                    </button>
+
+                    {/* Indicators */}
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
+                        {slides.map((_, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => setCurrent(idx)}
+                                className={`w-2.5 h-2.5 rounded-full transition-all ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'}`}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
 // --- Home Page ---
 export const HomePage: React.FC = () => {
   const { products, categories, config } = useStore();
@@ -44,41 +119,48 @@ export const HomePage: React.FC = () => {
   const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
   // Section Renders
-  const renderHero = () => (
-    <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden">
-        {config.heroVideo ? (
-          <video 
-            src={config.heroVideo} 
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-          />
-        ) : (
-          <img 
-            src={heroImage} 
-            className="absolute inset-0 w-full h-full object-cover"
-            alt="Fashion Banner"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 flex items-center justify-center text-center">
-          <div className="max-w-2xl px-6">
-            <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
-              {config.heroTagline || 'New Collection'}
-            </span>
-            <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
-            <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
-            <Link to="/shop">
-              <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
-                SHOP NOW
-              </button>
-            </Link>
-          </div>
-        </div>
-    </section>
-  );
+  const renderHero = () => {
+      if (config.heroMode === 'carousel' && config.heroSlides && config.heroSlides.length > 0) {
+          return <section key="hero"><HeroCarousel slides={config.heroSlides} /></section>;
+      }
+
+      // Static Fallback
+      return (
+        <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden">
+            {config.heroVideo ? (
+            <video 
+                src={config.heroVideo} 
+                className="absolute inset-0 w-full h-full object-cover"
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+            />
+            ) : (
+            <img 
+                src={heroImage} 
+                className="absolute inset-0 w-full h-full object-cover"
+                alt="Fashion Banner"
+            />
+            )}
+            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 flex items-center justify-center text-center">
+            <div className="max-w-2xl px-6">
+                <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
+                {config.heroTagline || 'New Collection'}
+                </span>
+                <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
+                <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
+                <Link to="/shop">
+                <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
+                    SHOP NOW
+                </button>
+                </Link>
+            </div>
+            </div>
+        </section>
+      );
+  };
 
   const renderCategories = () => (
     <section key="categories" className="py-20 container mx-auto px-4">
