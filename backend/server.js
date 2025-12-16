@@ -73,6 +73,20 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   siteName: { type: String, default: 'LUMIÈRE' },
   logo: String,
 
+  // Developer Settings (Theme)
+  theme: {
+    primaryColor: { type: String, default: '#2C251F' },
+    secondaryColor: { type: String, default: '#D5CDC0' },
+    backgroundColor: { type: String, default: '#F9F8F6' },
+    fontFamilySans: { type: String, default: 'Inter' },
+    fontFamilySerif: { type: String, default: 'Cormorant Garamond' },
+    borderRadius: { type: String, default: '0px' }
+  },
+  homepageSections: { 
+    type: [String], 
+    default: ['hero', 'categories', 'featured', 'promo', 'trust'] 
+  },
+
   // Hero Section
   heroImage: String,
   heroVideo: String,
@@ -227,6 +241,15 @@ app.get('/api/config', async (req, res) => {
     if (!config) {
       config = new Config({
         siteName: 'LUMIÈRE',
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px'
+        },
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
         heroImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000',
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',

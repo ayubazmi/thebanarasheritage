@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader } from '../components/ui';
-import { Product, Category, User } from '../types';
+import { Product, Category, User, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -167,15 +167,14 @@ export const AdminLogs: React.FC = () => {
   );
 };
 
-// --- Settings Manager (Expanded) ---
+// --- Settings Manager (Content & Basic Settings) ---
 export const AdminSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
   const [localConfig, setLocalConfig] = useState(config);
   
-  // Fix: Sync local state when config loads from backend
   useEffect(() => {
     if (config && Object.keys(config).length > 0) {
-      setLocalConfig(prev => ({...config, ...prev})); // Merge but prioritize config from backend initially or vice versa depending on logic. Here we just take config.
+      setLocalConfig(prev => ({...config, ...prev})); 
       setLocalConfig(config);
     }
   }, [config]);
@@ -201,7 +200,7 @@ export const AdminSettings: React.FC = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); // Clear video if image set
+        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); 
       };
       reader.readAsDataURL(file);
     }
@@ -503,9 +502,216 @@ export const AdminSettings: React.FC = () => {
   );
 };
 
-// ... [AdminUsers, AdminCategories can remain same] ...
+// --- Developer Settings (New Feature) ---
+export const AdminDeveloperSettings: React.FC = () => {
+  const { config, updateConfig } = useStore();
+  const [localConfig, setLocalConfig] = useState(config);
+  
+  // Sync logic
+  useEffect(() => {
+    if (config && Object.keys(config).length > 0) {
+      setLocalConfig({
+        ...config,
+        // Ensure defaults exist if config is incomplete from DB
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px',
+          ...config.theme
+        },
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust']
+      });
+    }
+  }, [config]);
 
-// --- User Management (New) ---
+  const handleSave = () => {
+    updateConfig(localConfig);
+    alert('Developer settings updated successfully!');
+  };
+
+  const moveSection = (index: number, direction: 'up' | 'down') => {
+    const newSections = [...(localConfig.homepageSections || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newSections.length) {
+      [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
+      setLocalConfig({ ...localConfig, homepageSections: newSections });
+    }
+  };
+
+  const fonts = [
+    { name: 'Inter (Modern Sans)', value: 'Inter' },
+    { name: 'Lato (Friendly Sans)', value: 'Lato' },
+    { name: 'Montserrat (Geometric Sans)', value: 'Montserrat' },
+    { name: 'Open Sans (Neutral Sans)', value: 'Open Sans' },
+    { name: 'Cormorant Garamond (Elegant Serif)', value: 'Cormorant Garamond' },
+    { name: 'Playfair Display (Display Serif)', value: 'Playfair Display' },
+  ];
+
+  const sectionNames: Record<string, string> = {
+    hero: 'Hero Banner',
+    categories: 'Categories Grid',
+    featured: 'Featured Products',
+    promo: 'Promotional Banner',
+    trust: 'Trust Badges'
+  };
+
+  if (!localConfig.theme) return <div>Loading...</div>;
+
+  return (
+    <div className="max-w-4xl pb-20">
+      <div className="mb-8">
+        <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
+        <p className="text-gray-500">Advanced customization for theme and layout.</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        
+        {/* Color Palette */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2" size={20}/> Color Palette</h3>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">Primary Color (Text & Dark BG)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.primaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.primaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})} 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Secondary / Accent Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.secondaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.secondaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})} 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Page Background Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.backgroundColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.backgroundColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})} 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Typography & Style */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Type className="mr-2" size={20}/> Typography & Style</h3>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-1">Heading Font (Serif)</label>
+              <select 
+                className="w-full border p-2 rounded"
+                value={localConfig.theme.fontFamilySerif}
+                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySerif: e.target.value}})}
+              >
+                {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Body Font (Sans)</label>
+              <select 
+                className="w-full border p-2 rounded"
+                value={localConfig.theme.fontFamilySans}
+                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySans: e.target.value}})}
+              >
+                {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Border Radius Style</label>
+              <div className="grid grid-cols-4 gap-2">
+                {['0px', '4px', '8px', '99px'].map(r => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setLocalConfig({...localConfig, theme: {...localConfig.theme!, borderRadius: r}})}
+                    className={`border p-2 text-center text-xs ${localConfig.theme?.borderRadius === r ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}`}
+                    style={{ borderRadius: r }}
+                  >
+                    {r === '0px' ? 'Square' : r === '99px' ? 'Round' : r}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Reordering */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
+          <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
+          
+          <div className="space-y-2 max-w-lg">
+            {localConfig.homepageSections?.map((sectionId, index) => (
+              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition">
+                <span className="font-medium capitalize">{sectionNames[sectionId] || sectionId}</span>
+                <div className="flex gap-1">
+                  <button 
+                    onClick={() => moveSection(index, 'up')}
+                    disabled={index === 0}
+                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                  >
+                    <ArrowUp size={16}/>
+                  </button>
+                  <button 
+                    onClick={() => moveSection(index, 'down')}
+                    disabled={index === (localConfig.homepageSections?.length || 0) - 1}
+                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                  >
+                    <ArrowDown size={16}/>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      <div className="mt-8 pt-4 border-t flex justify-end">
+         <Button onClick={handleSave} size="lg">Save Configuration</Button>
+      </div>
+    </div>
+  );
+};
+
+
+// --- User Management ---
 export const AdminUsers: React.FC = () => {
   const { users, addUser, deleteUser, changeUserPassword } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);

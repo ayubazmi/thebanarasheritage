@@ -8,7 +8,7 @@ import { Product } from '../types';
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
   <Link to={`/product/${product.id}`} className="group block">
-    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
+    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4 rounded-sm">
       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
       {product.discountPrice && (
         <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1">
@@ -43,10 +43,9 @@ export const HomePage: React.FC = () => {
   const heroImage = config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
   const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
-  return (
-    <>
-      {/* Hero */}
-      <section className="relative h-[85vh] w-full bg-stone-200 overflow-hidden">
+  // Section Renders
+  const renderHero = () => (
+    <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden">
         {config.heroVideo ? (
           <video 
             src={config.heroVideo} 
@@ -72,17 +71,17 @@ export const HomePage: React.FC = () => {
             <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
             <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
             <Link to="/shop">
-              {/* Force visible button with distinct style */}
               <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
                 SHOP NOW
               </button>
             </Link>
           </div>
         </div>
-      </section>
+    </section>
+  );
 
-      {/* Categories */}
-      <section className="py-20 container mx-auto px-4">
+  const renderCategories = () => (
+    <section key="categories" className="py-20 container mx-auto px-4">
         <SectionHeader title={config.categoryTitle || 'Shop by Category'} center />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {categories.map(cat => (
@@ -95,10 +94,11 @@ export const HomePage: React.FC = () => {
             </Link>
           ))}
         </div>
-      </section>
+    </section>
+  );
 
-      {/* Featured */}
-      <section className="py-20 bg-white">
+  const renderFeatured = () => (
+    <section key="featured" className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <SectionHeader 
             title={config.featuredTitle || 'New Arrivals'} 
@@ -114,10 +114,11 @@ export const HomePage: React.FC = () => {
             </Link>
           </div>
         </div>
-      </section>
+    </section>
+  );
 
-      {/* Promo (Dynamic) */}
-      <section className="py-20 bg-brand-200">
+  const renderPromo = () => (
+    <section key="promo" className="py-20 bg-brand-200">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
           <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
             <h2 className="text-4xl font-serif text-brand-900 mb-4">{config.promoTitle || 'Summer Sale is Live'}</h2>
@@ -130,10 +131,11 @@ export const HomePage: React.FC = () => {
             <img src={promoImage} alt="Sale" className="w-full h-80 object-cover shadow-xl rounded-sm" />
           </div>
         </div>
-      </section>
+    </section>
+  );
 
-      {/* Trust Badges */}
-      <section className="py-16 container mx-auto px-4 border-t border-brand-200">
+  const renderTrust = () => (
+    <section key="trust" className="py-16 container mx-auto px-4 border-t border-brand-200">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="flex flex-col items-center">
             <BadgeCheck className="w-10 h-10 text-brand-800 mb-4" />
@@ -151,7 +153,24 @@ export const HomePage: React.FC = () => {
             <p className="text-sm text-gray-600">{config.trustBadge3Text || 'Shipping within 3-5 business days.'}</p>
           </div>
         </div>
-      </section>
+    </section>
+  );
+
+  // Map IDs to Render Functions
+  const sectionMap: Record<string, () => React.ReactNode> = {
+    hero: renderHero,
+    categories: renderCategories,
+    featured: renderFeatured,
+    promo: renderPromo,
+    trust: renderTrust
+  };
+
+  // Default Order if none in config
+  const order = config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'];
+
+  return (
+    <>
+      {order.map(sectionId => sectionMap[sectionId] ? sectionMap[sectionId]() : null)}
     </>
   );
 };
@@ -254,12 +273,12 @@ export const ProductDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Images */}
         <div className="space-y-4">
-          <div className="aspect-[3/4] bg-gray-100 overflow-hidden">
+          <div className="aspect-[3/4] bg-gray-100 overflow-hidden rounded-sm">
              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
           </div>
           <div className="grid grid-cols-4 gap-4">
              {product.images.map((img, idx) => (
-               <div key={idx} className="aspect-square bg-gray-100 cursor-pointer border hover:border-black">
+               <div key={idx} className="aspect-square bg-gray-100 cursor-pointer border hover:border-black rounded-sm overflow-hidden">
                  <img src={img} alt="" className="w-full h-full object-cover" />
                </div>
              ))}
@@ -286,7 +305,7 @@ export const ProductDetailPage: React.FC = () => {
                      <button 
                       key={c} 
                       onClick={() => setSelectedColor(c)}
-                      className={`px-4 py-2 border text-sm transition-all ${selectedColor === c ? 'border-black bg-black text-white' : 'border-gray-200 hover:border-gray-400'}`}
+                      className={`px-4 py-2 border text-sm transition-all rounded-sm ${selectedColor === c ? 'border-brand-900 bg-brand-900 text-white' : 'border-gray-200 hover:border-gray-400'}`}
                      >
                       {c}
                      </button>
@@ -303,7 +322,7 @@ export const ProductDetailPage: React.FC = () => {
                      <button 
                       key={s} 
                       onClick={() => setSelectedSize(s)}
-                      className={`w-12 h-12 flex items-center justify-center border text-sm transition-all ${selectedSize === s ? 'border-black bg-black text-white' : 'border-gray-200 hover:border-gray-400'}`}
+                      className={`w-12 h-12 flex items-center justify-center border text-sm transition-all rounded-sm ${selectedSize === s ? 'border-brand-900 bg-brand-900 text-white' : 'border-gray-200 hover:border-gray-400'}`}
                      >
                       {s}
                      </button>
@@ -318,7 +337,7 @@ export const ProductDetailPage: React.FC = () => {
              <Button size="lg" className="flex-1" onClick={handleAdd}>Add to Cart</Button>
              <button 
                onClick={() => toggleWishlist(product.id)}
-               className={`p-3 border rounded transition-colors ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}
+               className={`p-3 border rounded-sm transition-colors ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}
              >
                <Heart fill={isWishlisted ? "currentColor" : "none"} />
              </button>
@@ -355,7 +374,7 @@ export const CartPage: React.FC = () => {
         <div className="lg:w-2/3 space-y-6">
           {cart.map(item => (
             <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4 border-b pb-6">
-              <div className="w-24 h-32 bg-gray-100 flex-shrink-0">
+              <div className="w-24 h-32 bg-gray-100 flex-shrink-0 rounded-sm overflow-hidden">
                 <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
@@ -365,7 +384,7 @@ export const CartPage: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-500 mb-4">{item.selectedColor} / {item.selectedSize}</p>
                 <div className="flex justify-between items-center">
-                   <div className="flex items-center border border-gray-300">
+                   <div className="flex items-center border border-gray-300 rounded-sm">
                      <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, -1)}>-</button>
                      <span className="px-3 py-1 text-sm">{item.quantity}</span>
                      <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, 1)}>+</button>
@@ -377,7 +396,7 @@ export const CartPage: React.FC = () => {
           ))}
         </div>
         <div className="lg:w-1/3">
-          <div className="bg-gray-50 p-6 rounded-sm">
+          <div className="bg-brand-50 p-6 rounded-sm">
             <h3 className="font-serif text-xl mb-4">Order Summary</h3>
             <div className="space-y-3 mb-6 border-b pb-6 text-sm">
                <div className="flex justify-between"><span>Subtotal</span><span>${cartTotal}</span></div>
@@ -428,7 +447,7 @@ export const CheckoutPage: React.FC = () => {
             <Button type="submit" className="w-full" size="lg">Place Order - ${cartTotal}</Button>
           </form>
           
-          <div className="bg-gray-50 p-6 h-fit">
+          <div className="bg-brand-50 p-6 h-fit rounded-sm">
             <h3 className="font-bold mb-4">In Your Bag</h3>
             <div className="flex justify-between font-bold text-lg border-t pt-4">
                <span>Total to Pay</span>
@@ -450,7 +469,7 @@ export const AboutPage: React.FC = () => {
       <p className="text-lg text-gray-600 leading-relaxed mb-8 whitespace-pre-line">
         {config.aboutContent}
       </p>
-      <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200" className="w-full h-64 object-cover mb-8" alt="Studio" />
+      <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200" className="w-full h-64 object-cover mb-8 rounded-sm shadow-sm" alt="Studio" />
       <div className="grid md:grid-cols-3 gap-8 text-left mt-12">
          <div><h4 className="font-bold mb-2">Vision</h4><p className="text-sm text-gray-500">To be the global leader in sustainable luxury fashion.</p></div>
          <div><h4 className="font-bold mb-2">Mission</h4><p className="text-sm text-gray-500">Creating timeless pieces that last beyond seasons.</p></div>
@@ -471,15 +490,15 @@ export const ContactPage: React.FC = () => {
           <h3 className="text-xl font-bold mb-6">Contact Information</h3>
           <div className="space-y-6 text-gray-600">
             <div>
-              <h4 className="font-bold text-black mb-1">Email</h4>
+              <h4 className="font-bold text-brand-900 mb-1">Email</h4>
               <p>{config.contactEmail || 'support@lumiere.com'}</p>
             </div>
             <div>
-              <h4 className="font-bold text-black mb-1">Phone</h4>
+              <h4 className="font-bold text-brand-900 mb-1">Phone</h4>
               <p>{config.contactPhone || '+1 (555) 123-4567'}</p>
             </div>
             <div>
-              <h4 className="font-bold text-black mb-1">Address</h4>
+              <h4 className="font-bold text-brand-900 mb-1">Address</h4>
               <p>{config.contactAddress || '123 Fashion Ave, New York, NY'}</p>
             </div>
           </div>
@@ -490,7 +509,7 @@ export const ContactPage: React.FC = () => {
           <Input label="Email" type="email" placeholder="hello@example.com" />
           <div>
             <label className="block text-sm font-medium mb-1">Message</label>
-            <textarea className="w-full border p-3 text-sm h-32 focus:outline-none focus:ring-1 focus:ring-black" placeholder="How can we help?"></textarea>
+            <textarea className="w-full border p-3 text-sm h-32 focus:outline-none focus:ring-1 focus:ring-black rounded-sm" placeholder="How can we help?"></textarea>
           </div>
           <Button className="w-full">Send Message</Button>
         </form>

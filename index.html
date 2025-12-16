@@ -8,24 +8,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;600&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              serif: ['Cormorant Garamond', 'serif'],
+              sans: ['var(--font-sans)', 'sans-serif'],
+              serif: ['var(--font-serif)', 'serif'],
             },
             colors: {
               brand: {
-                50: '#F9F8F6',
-                100: '#F2EFE9',
-                200: '#E6E0D6',
-                300: '#D5CDC0',
-                800: '#4A4036',
-                900: '#2C251F',
+                50: 'var(--color-bg)',
+                100: 'var(--color-secondary-100)', // lighter secondary
+                200: 'var(--color-secondary)',
+                300: 'var(--color-secondary-300)', // darker secondary
+                800: 'var(--color-primary-800)', // lighter primary
+                900: 'var(--color-primary)',
               }
+            },
+            borderRadius: {
+              DEFAULT: 'var(--border-radius)',
+              'sm': 'var(--border-radius)',
+              'md': 'var(--border-radius)',
+              'lg': 'var(--border-radius)',
             }
           }
         }

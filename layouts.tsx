@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText, Code2 } from 'lucide-react';
 import { useStore } from './store';
 
 // --- Public Navbar ---
@@ -158,6 +158,7 @@ export const AdminLayout: React.FC = () => {
           <NavItem to="/admin/users" icon={Users} label="User Management" perm="users" />
           <NavItem to="/admin/logs" icon={FileText} label="Visitor Logs" perm="users" />
           <NavItem to="/admin/settings" icon={Settings} label="Content & Settings" perm="settings" />
+          <NavItem to="/admin/developer" icon={Code2} label="Developer Settings" perm="settings" />
         </nav>
         <div className="p-4 border-t border-gray-100">
           <button onClick={() => { logout(); navigate('/'); }} className="flex items-center space-x-3 px-4 py-3 w-full text-rose-600 hover:bg-rose-50 rounded-lg transition">

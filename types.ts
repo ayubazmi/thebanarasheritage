@@ -50,10 +50,23 @@ export interface User {
   permissions: string[]; // e.g., ['products', 'orders', 'settings', 'users']
 }
 
+export interface ThemeConfig {
+  primaryColor: string;   // Brand 900 (Dark text/bg)
+  secondaryColor: string; // Brand 200/300 (Accents)
+  backgroundColor: string;// Brand 50 (Page BG)
+  fontFamilySans: string;
+  fontFamilySerif: string;
+  borderRadius: string;   // '0px', '4px', '8px', '99px'
+}
+
 export interface SiteConfig {
   // Brand
   siteName?: string;
   logo?: string;
+
+  // Developer Settings (Theme & Layout)
+  theme?: ThemeConfig;
+  homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust']
 
   // Hero
   heroImage: string;
