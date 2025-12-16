@@ -184,47 +184,6 @@ export const AdminSettings: React.FC = () => {
     alert('Settings saved successfully!');
   };
 
-  const handleReset = () => {
-    if(confirm("Are you sure you want to reset all content settings to default? This action cannot be undone.")) {
-      setLocalConfig(prev => ({
-        ...prev,
-        siteName: 'LUMIÈRE',
-        announcementEnabled: false,
-        announcementText: 'Free Shipping on all orders!',
-        announcementLink: '/shop',
-        announcementBgColor: '#2C251F',
-        announcementTextColor: '#FFFFFF',
-        footerBgColor: '#2C251F',
-        footerTextColor: '#D5CDC0',
-        heroTitle: 'Elegance in Every Stitch',
-        heroSubtitle: 'Discover our latest arrivals designed for the modern woman.',
-        heroTagline: 'New Collection',
-        heroImage: DEFAULT_HERO_IMAGE,
-        heroVideo: '',
-        categoryTitle: 'Shop by Category',
-        featuredTitle: 'New Arrivals',
-        featuredSubtitle: 'Fresh styles just added to our collection.',
-        promoTitle: 'Summer Sale is Live',
-        promoText: 'Get up to 50% off on selected dresses and kurtis. Limited time offer.',
-        promoButtonText: 'Explore Sale',
-        promoButtonLink: '/shop',
-        promoImage: DEFAULT_PROMO_IMAGE,
-        aboutTitle: 'About Us',
-        aboutContent: 'LUMIÈRE was born from a desire to blend traditional craftsmanship with contemporary silhouettes.',
-        contactEmail: 'support@lumiere.com',
-        contactPhone: '+1 (555) 123-4567',
-        contactAddress: '123 Fashion Ave, NY',
-        footerShopTitle: 'SHOP',
-        footerNewsletterTitle: 'STAY IN TOUCH',
-        footerNewsletterPlaceholder: 'Your email',
-        footerNewsletterButtonText: 'JOIN',
-        socialInstagram: '',
-        socialFacebook: '',
-        socialWhatsapp: ''
-      }));
-    }
-  };
-
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -589,10 +548,7 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end gap-4">
-           <Button variant="outline" onClick={handleReset} className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
-             <RotateCcw size={16} className="mr-2"/> Reset Defaults
-           </Button>
+        <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end">
            <Button onClick={handleSave} size="lg">Save All Changes</Button>
         </div>
       </div>
