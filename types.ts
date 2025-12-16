@@ -100,6 +100,7 @@ export interface SiteConfig {
   heroSubtitle: string;
   
   // Standalone Image Slider Section (New Feature)
+  sliderTitle?: string;
   sliderImages?: SliderImage[];
 
   // Section Headers

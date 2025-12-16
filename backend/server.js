@@ -110,6 +110,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   heroSubtitle: String,
   
   // Standalone Slider
+  sliderTitle: { type: String, default: 'Lookbook' },
   sliderImages: [{
     id: String,
     url: String,

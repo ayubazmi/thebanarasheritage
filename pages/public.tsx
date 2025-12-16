@@ -103,6 +103,7 @@ const HeroCarousel: React.FC<{ slides: any[] }> = ({ slides }) => {
 
 // --- Gallery Slideshow Component ---
 const GallerySlideshow: React.FC<{ images: SliderImage[] }> = ({ images }) => {
+  const { config } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -143,7 +144,7 @@ const GallerySlideshow: React.FC<{ images: SliderImage[] }> = ({ images }) => {
             <div className="mb-10 text-center">
                 <h2 className="text-3xl font-serif text-brand-900 mb-2 flex items-center justify-center gap-2">
                     <Instagram size={28} className="text-brand-800"/> 
-                    Lookbook
+                    {config.sliderTitle || 'Lookbook'}
                 </h2>
                 <div className="h-0.5 w-16 bg-brand-200 mx-auto" />
             </div>

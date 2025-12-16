@@ -806,6 +806,9 @@ export const AdminDeveloperSettings: React.FC = () => {
         {/* Standalone Gallery Config */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
             <h3 className="font-bold text-lg mb-6 flex items-center"><Images className="mr-2" size={20}/> Standalone Image Slider / Gallery</h3>
+            <div className="mb-6">
+                <Input label="Section Title" value={localConfig.sliderTitle || ''} placeholder="Lookbook" onChange={e => setLocalConfig({...localConfig, sliderTitle: e.target.value})} />
+            </div>
             <p className="text-sm text-gray-500 mb-4">Upload multiple images to create an automatic scrolling gallery on your homepage.</p>
             
             <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-6">
