@@ -87,6 +87,7 @@ export interface SiteConfig {
   // Developer Settings (Theme & Layout)
   theme?: ThemeConfig;
   homepageSections?: string[]; // IDs: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider']
+  hiddenSections?: string[]; // IDs of sections to hide
 
   // Hero Configuration (New Feature)
   heroMode?: 'static' | 'carousel';

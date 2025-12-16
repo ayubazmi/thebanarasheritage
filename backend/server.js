@@ -88,8 +88,9 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   },
   homepageSections: { 
     type: [String], 
-    default: ['hero', 'categories', 'featured', 'promo', 'trust'] 
+    default: ['hero', 'categories', 'featured', 'promo', 'trust', 'slider'] 
   },
+  hiddenSections: { type: [String], default: [] },
 
   // Hero Configuration
   heroMode: { type: String, default: 'static' },
