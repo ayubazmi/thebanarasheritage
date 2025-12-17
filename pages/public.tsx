@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
 import { Product } from '../types';
@@ -45,78 +45,107 @@ export const HomePage: React.FC = () => {
   const isSlideshow = config.heroMode === 'slideshow';
   const heroImages = config.heroImages || [];
 
+  const nextSlide = () => setCurrentSlide(prev => (prev + 1) % heroImages.length);
+  const prevSlide = () => setCurrentSlide(prev => (prev - 1 + heroImages.length) % heroImages.length);
+
   useEffect(() => {
     if (!isSlideshow || heroImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % heroImages.length);
-    }, 5000); // 5 seconds slide duration
+    const interval = setInterval(nextSlide, 5000); // 5 seconds slide duration
     return () => clearInterval(interval);
-  }, [isSlideshow, heroImages.length]);
+  }, [isSlideshow, heroImages.length, currentSlide]); // Reset timer on interaction
 
   const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
   // Section Renders
   const renderHero = () => (
-    <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden group">
-        {(!isSlideshow && config.heroVideo) ? (
-          <video 
-            src={config.heroVideo} 
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-          />
-        ) : isSlideshow && heroImages.length > 0 ? (
-          <>
-            {heroImages.map((img, index) => (
-              <div 
-                key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
-              >
-                 <img 
-                   src={img} 
-                   className="w-full h-full object-cover"
-                   alt="Fashion Banner"
-                 />
-              </div>
-            ))}
+    <section key="hero" className={`relative h-[85vh] w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-6 md:py-8' : ''}`}>
+        
+        {/* Container for Slideshow (adds padding) or Full Width for Static */}
+        <div className={`relative w-full h-full ${isSlideshow ? 'px-4 md:px-12 max-w-[1800px] mx-auto' : ''}`}>
             
-            {/* Slide Indicators (only if multiple images) */}
-            {heroImages.length > 1 && (
-               <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                 {heroImages.map((_, idx) => (
-                   <button 
-                     key={idx}
-                     onClick={() => setCurrentSlide(idx)}
-                     className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'}`}
-                   />
-                 ))}
-               </div>
-            )}
-          </>
-        ) : (
-           <img 
-             src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'} 
-             className="w-full h-full object-cover"
-             alt="Fashion Banner"
-           />
-        )}
+            {/* Inner Content Wrapper (Rounded corners for slideshow) */}
+            <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
+                
+                {(!isSlideshow && config.heroVideo) ? (
+                  <video 
+                    src={config.heroVideo} 
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline
+                  />
+                ) : isSlideshow && heroImages.length > 0 ? (
+                  <>
+                    {heroImages.map((img, index) => (
+                      <div 
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+                      >
+                         <img 
+                           src={img} 
+                           className="w-full h-full object-cover"
+                           alt={`Slide ${index + 1}`}
+                         />
+                      </div>
+                    ))}
+                    
+                    {/* Navigation Buttons */}
+                    {heroImages.length > 1 && (
+                       <>
+                         <button 
+                           onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                           className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                         >
+                           <ChevronLeft size={32} />
+                         </button>
+                         <button 
+                           onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                           className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                         >
+                           <ChevronRight size={32} />
+                         </button>
+                       </>
+                    )}
 
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 flex items-center justify-center text-center">
-          <div className="max-w-2xl px-6">
-            <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
-              {config.heroTagline || 'New Collection'}
-            </span>
-            <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
-            <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
-            <Link to="/shop">
-              <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg">
-                SHOP NOW
-              </button>
-            </Link>
-          </div>
+                    {/* Slide Indicators */}
+                    {heroImages.length > 1 && (
+                       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                         {heroImages.map((_, idx) => (
+                           <button 
+                             key={idx}
+                             onClick={() => setCurrentSlide(idx)}
+                             className={`h-2 rounded-full transition-all duration-300 shadow-sm ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
+                           />
+                         ))}
+                       </div>
+                    )}
+                  </>
+                ) : (
+                   <img 
+                     src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'} 
+                     className="w-full h-full object-cover"
+                     alt="Fashion Banner"
+                   />
+                )}
+
+                {/* Overlay & Text Content */}
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="absolute inset-0 flex items-center justify-center text-center z-10">
+                  <div className="max-w-2xl px-6">
+                    <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
+                      {config.heroTagline || 'New Collection'}
+                    </span>
+                    <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
+                    <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
+                    <Link to="/shop">
+                      <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
+                        SHOP NOW
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+            </div>
         </div>
     </section>
   );
