@@ -115,14 +115,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   secondarySlideshows: [{
     id: String,
     title: String,
-    images: [String], // Kept for backward compatibility
-    slides: [{
-      image: String,
-      title: String,
-      subtitle: String,
-      buttonText: String,
-      buttonLink: String
-    }],
+    images: [String],
     textColor: String,
     textAlign: { type: String, default: 'center' },
     fontSize: { type: String, default: 'md' }
