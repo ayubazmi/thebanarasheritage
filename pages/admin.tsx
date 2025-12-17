@@ -838,6 +838,8 @@ export const AdminDeveloperSettings: React.FC = () => {
     if (window.confirm("Are you sure you want to reset all developer settings to default?")) {
       setLocalConfig(prev => ({
         ...prev,
+        siteTitle: 'LUMIÈRE | Modern Fashion',
+        favicon: 'https://files.catbox.moe/kfvz5y.jpg',
         theme: {
           primaryColor: '#2C251F',
           secondaryColor: '#D5CDC0',
