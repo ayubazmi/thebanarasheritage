@@ -6,41 +6,50 @@ import { Button, Input, SectionHeader, Badge } from '../components/ui';
 import { Product, SlideshowSection, VerticalCarouselSection } from '../types';
 
 // --- Components Helpers ---
-const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
-  <Link to={`/product/${product.id}`} className="group block">
-    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4 rounded-sm">
-      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-      {product.discountPrice && (
-        <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1">
-          SALE
+const ProductCard: React.FC<{ product: Product; variant?: 'default' | 'featured' }> = ({ product, variant = 'default' }) => {
+  const { config } = useStore();
+  const isFeatured = variant === 'featured';
+
+  return (
+    <Link to={`/product/${product.id}`} className="group block h-full">
+      <div className={`relative overflow-hidden mb-4 ${isFeatured ? 'p-3 bg-white rounded-xl lg:rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300' : 'bg-gray-100 rounded-sm'}`}>
+        <div className={`relative aspect-[3/4] overflow-hidden ${isFeatured ? 'rounded-lg lg:rounded-2xl' : ''}`}>
+          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          {product.discountPrice && (
+            <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 z-10">
+              SALE
+            </div>
+          )}
+          {product.newArrival && (
+            <div className="absolute top-2 left-2 bg-white text-brand-900 text-xs font-bold px-2 py-1 tracking-widest z-10">
+              NEW
+            </div>
+          )}
         </div>
-      )}
-      {product.newArrival && (
-        <div className="absolute top-2 left-2 bg-white text-brand-900 text-xs font-bold px-2 py-1 tracking-widest">
-          NEW
+      </div>
+      <div className={isFeatured ? 'px-2' : ''}>
+        <h3 className="text-brand-900 font-medium mb-1 group-hover:text-brand-600 transition">{product.name}</h3>
+        <div className="flex items-center space-x-2 text-sm">
+          {product.discountPrice ? (
+            <>
+              <span className="text-rose-500 font-semibold">{config.currency || '₹'}{product.discountPrice}</span>
+              <span className="text-gray-400 line-through">{config.currency || '₹'}{product.price}</span>
+            </>
+          ) : (
+            <span className="text-brand-900">{config.currency || '₹'}{product.price}</span>
+          )}
         </div>
-      )}
-    </div>
-    <h3 className="text-brand-900 font-medium mb-1 group-hover:text-brand-600 transition">{product.name}</h3>
-    <div className="flex items-center space-x-2 text-sm">
-      {product.discountPrice ? (
-        <>
-          <span className="text-rose-500 font-semibold">${product.discountPrice}</span>
-          <span className="text-gray-400 line-through">${product.price}</span>
-        </>
-      ) : (
-        <span className="text-brand-900">${product.price}</span>
-      )}
-    </div>
-  </Link>
-);
+      </div>
+    </Link>
+  );
+};
 
 const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   const [current, setCurrent] = useState(0);
-  
+
   // Backwards compatibility: use slides if available, otherwise map images to slides
-  const slides = (data.slides && data.slides.length > 0) 
-    ? data.slides 
+  const slides = (data.slides && data.slides.length > 0)
+    ? data.slides
     : (data.images || []).map(img => ({ image: img, title: '', subtitle: '' }));
 
   const next = () => setCurrent(prev => (prev + 1) % slides.length);
@@ -57,7 +66,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   // Styling Helpers
   const textAlignClass = data.textAlign === 'left' ? 'text-left' : data.textAlign === 'right' ? 'text-right' : 'text-center';
   const alignItemsClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
-  
+
   const paddingClass = data.textAlign === 'left' ? 'pl-10 md:pl-20 pr-10' : data.textAlign === 'right' ? 'pr-10 md:pr-20 pl-10' : 'px-4';
 
   const fontSizeClassTitle = data.fontSize === 'lg' ? 'text-4xl md:text-6xl' : data.fontSize === 'sm' ? 'text-2xl md:text-4xl' : 'text-3xl md:text-5xl';
@@ -65,75 +74,75 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
 
   return (
     <section className="py-8 md:py-12 w-full bg-white group">
-       <div className="px-4 md:px-12 max-w-[1800px] mx-auto">
-          {data.title && (
-            <div className={`mb-6 flex flex-col items-center text-center`}>
-               <h2 className="text-3xl font-serif text-brand-900">{data.title}</h2>
-               <div className="h-0.5 w-16 bg-brand-800/20 mt-2" />
-            </div>
-          )}
-          
-          <div className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden rounded-2xl shadow-lg">
-             {slides.map((slide, idx) => (
-               <div 
-                 key={idx}
-                 className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-               >
-                 <img src={slide.image} className="w-full h-full object-cover" alt={slide.title || ""} />
-                 <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for readability */}
-                 
-                 {/* Text Overlay */}
-                 {(slide.title || slide.subtitle) && (
-                    <div className={`absolute inset-0 flex flex-col justify-center ${alignItemsClass} ${textAlignClass} ${paddingClass}`}>
-                       {slide.title && (
-                         <h3 
-                           className={`${fontSizeClassTitle} font-serif font-bold mb-4 drop-shadow-lg animate-fade-in-up`}
-                           style={{ color: slide.textColor || data.textColor || '#FFFFFF' }}
-                         >
-                           {slide.title}
-                         </h3>
-                       )}
-                       {slide.subtitle && (
-                         <p 
-                           className={`${fontSizeClassSub} max-w-2xl drop-shadow-md animate-fade-in-up delay-100`}
-                           style={{ color: slide.textColor || data.textColor || '#FFFFFF', opacity: 0.9 }}
-                         >
-                           {slide.subtitle}
-                         </p>
-                       )}
-                    </div>
-                 )}
-               </div>
-             ))}
-
-             {slides.length > 1 && (
-                <>
-                  <button 
-                    onClick={(e) => { e.preventDefault(); prev(); }}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                  <button 
-                    onClick={(e) => { e.preventDefault(); next(); }}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-
-                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
-                    {slides.map((_, idx) => (
-                      <button 
-                        key={idx}
-                        onClick={() => setCurrent(idx)}
-                        className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
-                      />
-                    ))}
-                  </div>
-                </>
-             )}
+      <div className="px-4 md:px-12 max-w-[1800px] mx-auto">
+        {data.title && (
+          <div className={`mb-6 flex flex-col items-center text-center`}>
+            <h2 className="text-3xl font-serif text-brand-900">{data.title}</h2>
+            <div className="h-0.5 w-16 bg-brand-800/20 mt-2" />
           </div>
-       </div>
+        )}
+
+        <div className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden rounded-2xl shadow-lg">
+          {slides.map((slide, idx) => (
+            <div
+              key={idx}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+            >
+              <img src={slide.image} className="w-full h-full object-cover" alt={slide.title || ""} />
+              <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for readability */}
+
+              {/* Text Overlay */}
+              {(slide.title || slide.subtitle) && (
+                <div className={`absolute inset-0 flex flex-col justify-center ${alignItemsClass} ${textAlignClass} ${paddingClass}`}>
+                  {slide.title && (
+                    <h3
+                      className={`${fontSizeClassTitle} font-serif font-bold mb-4 drop-shadow-lg animate-fade-in-up`}
+                      style={{ color: slide.textColor || data.textColor || '#FFFFFF' }}
+                    >
+                      {slide.title}
+                    </h3>
+                  )}
+                  {slide.subtitle && (
+                    <p
+                      className={`${fontSizeClassSub} max-w-2xl drop-shadow-md animate-fade-in-up delay-100`}
+                      style={{ color: slide.textColor || data.textColor || '#FFFFFF', opacity: 0.9 }}
+                    >
+                      {slide.subtitle}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {slides.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.preventDefault(); prev(); }}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); next(); }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
+              >
+                <ChevronRight size={24} />
+              </button>
+
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrent(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </section>
   );
 };
@@ -145,7 +154,8 @@ const VerticalCarousel: React.FC<{ data: VerticalCarouselSection }> = ({ data })
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const { current } = scrollRef;
-      const scrollAmount = direction === 'left' ? -300 : 300;
+      const scrollWidth = current.clientWidth;
+      const scrollAmount = direction === 'left' ? -scrollWidth : scrollWidth;
       current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
@@ -154,73 +164,73 @@ const VerticalCarousel: React.FC<{ data: VerticalCarouselSection }> = ({ data })
 
   return (
     <section className="py-16 w-full bg-white relative group/section">
-       <div className="container mx-auto px-4 md:px-8">
-          {/* Title */}
-          {data.title && (
-            <div className="mb-10 flex flex-col items-center text-center">
-               <h2 className="text-3xl md:text-4xl font-serif text-brand-900 tracking-wide">{data.title}</h2>
-               <div className="h-0.5 w-16 bg-brand-200 mt-3" />
-            </div>
-          )}
-          
-          <div className="relative">
-             {/* Scroll Buttons (Desktop) */}
-             <button 
-               onClick={() => scroll('left')}
-               className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 bg-white/90 backdrop-blur shadow-lg rounded-full p-3 text-brand-900 hover:bg-brand-900 hover:text-white transition-all opacity-0 group-hover/section:opacity-100 hidden md:flex items-center justify-center border border-gray-100"
-             >
-               <ChevronLeft size={24} />
-             </button>
-             <button 
-               onClick={() => scroll('right')}
-               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 bg-white/90 backdrop-blur shadow-lg rounded-full p-3 text-brand-900 hover:bg-brand-900 hover:text-white transition-all opacity-0 group-hover/section:opacity-100 hidden md:flex items-center justify-center border border-gray-100"
-             >
-               <ChevronRight size={24} />
-             </button>
-
-             {/* Slider Container */}
-             <div 
-               ref={scrollRef}
-               className="flex overflow-x-auto gap-4 md:gap-6 pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
-               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-             >
-                {data.slides.map((slide, idx) => (
-                   <div key={idx} className="flex-shrink-0 w-[240px] md:w-[280px] snap-center">
-                      <div className="px-1 h-full"> 
-                        <div className="overflow-hidden block rounded-xl lg:rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 h-full bg-gray-50">
-                           <div className="relative overflow-hidden w-full aspect-[254/351] group cursor-pointer">
-                              <img 
-                                src={slide.image} 
-                                alt={slide.title || ''} 
-                                loading="lazy"
-                                className="object-cover w-full h-full absolute inset-0 object-top transition-transform duration-700 group-hover:scale-110"
-                              />
-                              <div className="absolute bottom-0 w-full left-0 flex flex-col min-h-24 lg:min-h-36 bg-gradient-to-b from-transparent to-black/60 justify-end pb-6 space-y-1 pointer-events-none">
-                                 {slide.title && (
-                                   <h3 
-                                     className="text-white tracking-normal text-sm font-medium text-center lg:text-lg px-2 font-serif"
-                                     style={slide.textColor ? { color: slide.textColor } : {}}
-                                   >
-                                     {slide.title}
-                                   </h3>
-                                 )}
-                                 {slide.subtitle && (
-                                   <p 
-                                     className="text-white/90 tracking-normal text-xs text-center lg:text-sm px-2 font-sans"
-                                     style={slide.textColor ? { color: slide.textColor, opacity: 0.9 } : {}}
-                                   >
-                                     {slide.subtitle}
-                                   </p>
-                                 )}
-                              </div>
-                           </div>
-                        </div>
-                      </div>
-                   </div>
-                ))}
-             </div>
+      <div className="container mx-auto px-4 md:px-8">
+        {/* Title */}
+        {data.title && (
+          <div className="mb-10 flex flex-col items-center text-center">
+            <h2 className="text-3xl md:text-4xl font-serif text-brand-900 tracking-wide">{data.title}</h2>
+            <div className="h-0.5 w-16 bg-brand-200 mt-3" />
           </div>
-       </div>
+        )}
+
+        <div className="relative">
+          {/* Scroll Buttons (Desktop) */}
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 bg-white/90 backdrop-blur shadow-lg rounded-full p-3 text-brand-900 hover:bg-brand-900 hover:text-white transition-all opacity-0 group-hover/section:opacity-100 hidden md:flex items-center justify-center border border-gray-100"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 bg-white/90 backdrop-blur shadow-lg rounded-full p-3 text-brand-900 hover:bg-brand-900 hover:text-white transition-all opacity-0 group-hover/section:opacity-100 hidden md:flex items-center justify-center border border-gray-100"
+          >
+            <ChevronRight size={24} />
+          </button>
+
+          {/* Slider Container */}
+          <div
+            ref={scrollRef}
+            className="flex overflow-x-auto gap-4 md:gap-6 pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {data.slides.map((slide, idx) => (
+              <div key={idx} className="flex-shrink-0 w-[calc(50%-8px)] md:w-[calc(20%-20px)] snap-center">
+                <div className="px-1 h-full">
+                  <div className="overflow-hidden block rounded-xl lg:rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 h-full bg-gray-50">
+                    <div className="relative overflow-hidden w-full aspect-[3/4] group cursor-pointer">
+                      <img
+                        src={slide.image}
+                        alt={slide.title || ''}
+                        loading="lazy"
+                        className="object-cover w-full h-full absolute inset-0 object-top transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute bottom-0 w-full left-0 flex flex-col min-h-24 lg:min-h-36 bg-gradient-to-b from-transparent to-black/60 justify-end pb-6 space-y-1 pointer-events-none">
+                        {slide.title && (
+                          <h3
+                            className="text-white tracking-normal text-sm font-medium text-center lg:text-lg px-2 font-serif"
+                            style={slide.textColor ? { color: slide.textColor } : {}}
+                          >
+                            {slide.title}
+                          </h3>
+                        )}
+                        {slide.subtitle && (
+                          <p
+                            className="text-white/90 tracking-normal text-xs text-center lg:text-sm px-2 font-sans"
+                            style={slide.textColor ? { color: slide.textColor, opacity: 0.9 } : {}}
+                          >
+                            {slide.subtitle}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
@@ -265,10 +275,10 @@ export const DynamicPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
       <SectionHeader title={page.title} center={page.textAlign === 'center'} />
-      <div 
+      <div
         className={`prose ${textSizeClass} max-w-none prose-headings:font-serif prose-headings:text-brand-900 prose-a:text-brand-800 ${alignClass}`}
         style={customStyle as React.CSSProperties}
-        dangerouslySetInnerHTML={{ __html: page.content }} 
+        dangerouslySetInnerHTML={{ __html: page.content }}
       />
     </div>
   );
@@ -278,7 +288,7 @@ export const DynamicPage: React.FC = () => {
 export const HomePage: React.FC = () => {
   const { products, categories, config } = useStore();
   const featured = products.filter(p => p.newArrival).slice(0, 4);
-  
+
   // Slideshow Logic (Hero)
   const [currentSlide, setCurrentSlide] = useState(0);
   const isSlideshow = config.heroMode === 'slideshow';
@@ -298,200 +308,200 @@ export const HomePage: React.FC = () => {
   // Section Renders
   const renderHero = () => {
     // Dynamic Styles for Hero
-    const alignClass = config.heroTextAlign === 'left' 
-      ? 'justify-start md:pl-24 text-left' 
-      : config.heroTextAlign === 'right' 
-        ? 'justify-end md:pr-24 text-right' 
+    const alignClass = config.heroTextAlign === 'left'
+      ? 'justify-start md:pl-24 text-left'
+      : config.heroTextAlign === 'right'
+        ? 'justify-end md:pr-24 text-right'
         : 'justify-center text-center';
-        
-    const titleSizeClass = config.heroFontSize === 'sm' 
-      ? 'text-4xl md:text-5xl' 
-      : config.heroFontSize === 'lg' 
-        ? 'text-6xl md:text-8xl' 
+
+    const titleSizeClass = config.heroFontSize === 'sm'
+      ? 'text-4xl md:text-5xl'
+      : config.heroFontSize === 'lg'
+        ? 'text-6xl md:text-8xl'
         : 'text-5xl md:text-7xl';
 
     const subTitleSizeClass = config.heroFontSize === 'sm' ? 'text-base' : config.heroFontSize === 'lg' ? 'text-xl' : 'text-lg';
 
     return (
       <section key="hero" className={`relative w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-8 md:py-12' : ''}`}>
-          
-          {/* Container for Slideshow (adds padding) or Full Width for Static */}
-          <div className={`relative w-full ${isSlideshow ? 'h-[60vh] md:h-[80vh] px-4 md:px-12 max-w-[1800px] mx-auto' : 'h-[85vh]'}`}>
-              
-              {/* Inner Content Wrapper (Rounded corners for slideshow) */}
-              <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
-                  
-                  {(!isSlideshow && config.heroVideo) ? (
-                    <video 
-                      src={config.heroVideo} 
-                      className="absolute inset-0 w-full h-full object-cover"
-                      autoPlay 
-                      muted 
-                      loop 
-                      playsInline
+
+        {/* Container for Slideshow (adds padding) or Full Width for Static */}
+        <div className={`relative w-full ${isSlideshow ? 'h-[60vh] md:h-[80vh] px-4 md:px-12 max-w-[1800px] mx-auto' : 'h-[85vh]'}`}>
+
+          {/* Inner Content Wrapper (Rounded corners for slideshow) */}
+          <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
+
+            {(!isSlideshow && config.heroVideo) ? (
+              <video
+                src={config.heroVideo}
+                className="absolute inset-0 w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : isSlideshow && heroImages.length > 0 ? (
+              <>
+                {heroImages.map((img, index) => (
+                  <div
+                    key={index}
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+                  >
+                    <img
+                      src={img}
+                      className="w-full h-full object-cover"
+                      alt={`Slide ${index + 1}`}
                     />
-                  ) : isSlideshow && heroImages.length > 0 ? (
-                    <>
-                      {heroImages.map((img, index) => (
-                        <div 
-                          key={index}
-                          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
-                        >
-                           <img 
-                             src={img} 
-                             className="w-full h-full object-cover"
-                             alt={`Slide ${index + 1}`}
-                           />
-                        </div>
-                      ))}
-                      
-                      {/* Navigation Buttons */}
-                      {heroImages.length > 1 && (
-                         <>
-                           <button 
-                             onClick={(e) => { e.preventDefault(); prevSlide(); }}
-                             className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
-                           >
-                             <ChevronLeft size={32} />
-                           </button>
-                           <button 
-                             onClick={(e) => { e.preventDefault(); nextSlide(); }}
-                             className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
-                           >
-                             <ChevronRight size={32} />
-                           </button>
-                         </>
-                      )}
-
-                      {/* Slide Indicators */}
-                      {heroImages.length > 1 && (
-                         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                           {heroImages.map((_, idx) => (
-                             <button 
-                               key={idx}
-                               onClick={() => setCurrentSlide(idx)}
-                               className={`h-2 rounded-full transition-all duration-300 shadow-sm ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
-                             />
-                           ))}
-                         </div>
-                      )}
-                    </>
-                  ) : (
-                     <img 
-                       src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'} 
-                       className="w-full h-full object-cover"
-                       alt="Fashion Banner"
-                     />
-                  )}
-
-                  {/* Overlay & Text Content */}
-                  <div className="absolute inset-0 bg-black/20" />
-                  <div className={`absolute inset-0 flex items-center z-10 transition-all duration-500 px-6 ${alignClass}`}>
-                    <div className="max-w-2xl" style={{ color: config.heroTextColor || '#FFFFFF' }}>
-                      <span 
-                        className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up" 
-                        style={{ color: 'inherit', opacity: 0.9 }}
-                      >
-                        {config.heroTagline || 'New Collection'}
-                      </span>
-                      <h1 
-                        className={`${titleSizeClass} font-serif font-bold mb-6 leading-tight drop-shadow-lg`} 
-                        style={{ color: 'inherit' }}
-                      >
-                        {config.heroTitle}
-                      </h1>
-                      <p 
-                        className={`${subTitleSizeClass} mb-8 font-light max-w-lg drop-shadow-md ${config.heroTextAlign === 'center' ? 'mx-auto' : config.heroTextAlign === 'right' ? 'ml-auto mr-0' : 'mr-auto ml-0'}`} 
-                        style={{ color: 'inherit', opacity: 0.9 }}
-                      >
-                        {config.heroSubtitle}
-                      </p>
-                      <Link to="/shop">
-                        <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
-                          SHOP NOW
-                        </button>
-                      </Link>
-                    </div>
                   </div>
+                ))}
+
+                {/* Navigation Buttons */}
+                {heroImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                    >
+                      <ChevronLeft size={32} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                    >
+                      <ChevronRight size={32} />
+                    </button>
+                  </>
+                )}
+
+                {/* Slide Indicators */}
+                {heroImages.length > 1 && (
+                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                    {heroImages.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentSlide(idx)}
+                        className={`h-2 rounded-full transition-all duration-300 shadow-sm ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <img
+                src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'}
+                className="w-full h-full object-cover"
+                alt="Fashion Banner"
+              />
+            )}
+
+            {/* Overlay & Text Content */}
+            <div className="absolute inset-0 bg-black/20" />
+            <div className={`absolute inset-0 flex items-center z-10 transition-all duration-500 px-6 ${alignClass}`}>
+              <div className="max-w-2xl" style={{ color: config.heroTextColor || '#FFFFFF' }}>
+                <span
+                  className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up"
+                  style={{ color: 'inherit', opacity: 0.9 }}
+                >
+                  {config.heroTagline || 'New Collection'}
+                </span>
+                <h1
+                  className={`${titleSizeClass} font-serif font-bold mb-6 leading-tight drop-shadow-lg`}
+                  style={{ color: 'inherit' }}
+                >
+                  {config.heroTitle}
+                </h1>
+                <p
+                  className={`${subTitleSizeClass} mb-8 font-light max-w-lg drop-shadow-md ${config.heroTextAlign === 'center' ? 'mx-auto' : config.heroTextAlign === 'right' ? 'ml-auto mr-0' : 'mr-auto ml-0'}`}
+                  style={{ color: 'inherit', opacity: 0.9 }}
+                >
+                  {config.heroSubtitle}
+                </p>
+                <Link to="/shop">
+                  <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
+                    SHOP NOW
+                  </button>
+                </Link>
               </div>
+            </div>
           </div>
+        </div>
       </section>
     );
   };
 
   const renderCategories = () => (
     <section key="categories" className="py-20 container mx-auto px-4">
-        <SectionHeader title={config.categoryTitle || 'Shop by Category'} center />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-          {categories.map(cat => (
-            <Link key={cat.id} to={`/shop?category=${cat.name}`} className="group relative aspect-[3/4] overflow-hidden rounded-sm">
-              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition" />
-              <div className="absolute bottom-6 left-0 right-0 text-center">
-                <span className="text-white text-xl font-serif font-medium tracking-wide">{cat.name}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+      <SectionHeader title={config.categoryTitle || 'Shop by Category'} center />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+        {categories.map(cat => (
+          <Link key={cat.id} to={`/shop?category=${cat.name}`} className="group relative aspect-[3/4] overflow-hidden rounded-sm">
+            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition" />
+            <div className="absolute bottom-6 left-0 right-0 text-center">
+              <span className="text-white text-xl font-serif font-medium tracking-wide">{cat.name}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </section>
   );
 
   const renderFeatured = () => (
     <section key="featured" className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <SectionHeader 
-            title={config.featuredTitle || 'New Arrivals'} 
-            subtitle={config.featuredSubtitle || 'Fresh styles just added to our collection.'} 
-            center 
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featured.map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-          <div className="mt-12 text-center">
-            <Link to="/shop">
-              <Button variant="outline" size="lg">View All Products</Button>
-            </Link>
-          </div>
+      <div className="container mx-auto px-4">
+        <SectionHeader
+          title={config.featuredTitle || 'New Arrivals'}
+          subtitle={config.featuredSubtitle || 'Fresh styles just added to our collection.'}
+          center
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {featured.map(p => <ProductCard key={p.id} product={p} variant="featured" />)}
         </div>
+        <div className="mt-12 text-center">
+          <Link to="/shop">
+            <Button variant="outline" size="lg">View All Products</Button>
+          </Link>
+        </div>
+      </div>
     </section>
   );
 
   const renderPromo = () => (
     <section key="promo" className="py-20 bg-brand-200">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-          <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
-            <h2 className="text-4xl font-serif text-brand-900 mb-4">{config.promoTitle || 'Summer Sale is Live'}</h2>
-            <p className="text-brand-800 mb-8 text-lg">{config.promoText || 'Get up to 50% off on selected dresses and kurtis. Limited time offer.'}</p>
-            <Link to={config.promoButtonLink || "/shop"}>
-              <Button>{config.promoButtonText || "Explore Sale"}</Button>
-            </Link>
-          </div>
-          <div className="md:w-1/2">
-            <img src={promoImage} alt="Sale" className="w-full h-80 object-cover shadow-xl rounded-sm" />
-          </div>
+      <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+        <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
+          <h2 className="text-4xl font-serif text-brand-900 mb-4">{config.promoTitle || 'Summer Sale is Live'}</h2>
+          <p className="text-brand-800 mb-8 text-lg">{config.promoText || 'Get up to 50% off on selected dresses and kurtis. Limited time offer.'}</p>
+          <Link to={config.promoButtonLink || "/shop"}>
+            <Button>{config.promoButtonText || "Explore Sale"}</Button>
+          </Link>
         </div>
+        <div className="md:w-1/2">
+          <img src={promoImage} alt="Sale" className="w-full h-80 object-cover shadow-xl rounded-sm" />
+        </div>
+      </div>
     </section>
   );
 
   const renderTrust = () => (
     <section key="trust" className="py-16 container mx-auto px-4 border-t border-brand-200">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div className="flex flex-col items-center">
-            <BadgeCheck className="w-10 h-10 text-brand-800 mb-4" />
-            <h4 className="font-semibold mb-2">{config.trustBadge1Title || 'Premium Quality'}</h4>
-            <p className="text-sm text-gray-600">{config.trustBadge1Text || 'Hand-picked fabrics and finest stitching.'}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <ShieldCheck className="w-10 h-10 text-brand-800 mb-4" />
-            <h4 className="font-semibold mb-2">{config.trustBadge2Title || 'Secure Payment'}</h4>
-            <p className="text-sm text-gray-600">{config.trustBadge2Text || '100% secure checkout process.'}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <Truck className="w-10 h-10 text-brand-800 mb-4" />
-            <h4 className="font-semibold mb-2">{config.trustBadge3Title || 'Fast Delivery'}</h4>
-            <p className="text-sm text-gray-600">{config.trustBadge3Text || 'Shipping within 3-5 business days.'}</p>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div className="flex flex-col items-center">
+          <BadgeCheck className="w-10 h-10 text-brand-800 mb-4" />
+          <h4 className="font-semibold mb-2">{config.trustBadge1Title || 'Premium Quality'}</h4>
+          <p className="text-sm text-gray-600">{config.trustBadge1Text || 'Hand-picked fabrics and finest stitching.'}</p>
         </div>
+        <div className="flex flex-col items-center">
+          <ShieldCheck className="w-10 h-10 text-brand-800 mb-4" />
+          <h4 className="font-semibold mb-2">{config.trustBadge2Title || 'Secure Payment'}</h4>
+          <p className="text-sm text-gray-600">{config.trustBadge2Text || '100% secure checkout process.'}</p>
+        </div>
+        <div className="flex flex-col items-center">
+          <Truck className="w-10 h-10 text-brand-800 mb-4" />
+          <h4 className="font-semibold mb-2">{config.trustBadge3Title || 'Fast Delivery'}</h4>
+          <p className="text-sm text-gray-600">{config.trustBadge3Text || 'Shipping within 3-5 business days.'}</p>
+        </div>
+      </div>
     </section>
   );
 
@@ -568,11 +578,11 @@ export const ShopPage: React.FC = () => {
               </select>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-             {filtered.map(p => <ProductCard key={p.id} product={p} />)}
+            {filtered.map(p => <ProductCard key={p.id} product={p} />)}
           </div>
-          
+
           {filtered.length === 0 && (
             <div className="py-20 text-center text-gray-500">
               No products found in this category.
@@ -587,32 +597,38 @@ export const ShopPage: React.FC = () => {
 // --- Product Detail Page ---
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { products, addToCart, wishlist, toggleWishlist } = useStore();
+  const { products, addToCart, wishlist, toggleWishlist, config } = useStore();
   const product = products.find(p => p.id === id);
-  
+
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
 
   if (!product) return <div className="py-20 text-center">Product not found</div>;
 
+
   const isWishlisted = wishlist.includes(product.id);
+  const [selectedImage, setSelectedImage] = useState<string>(product.images[0]);
+
+  useEffect(() => {
+    setSelectedImage(product.images[0]);
+  }, [product.id]);
 
   const handleAdd = () => {
     // If product has sizes, require selection. If product has colors, require selection.
-    if(product.sizes.length > 0 && !selectedSize) {
+    if (product.sizes.length > 0 && !selectedSize) {
       alert("Please select a size.");
       return;
     }
-    if(product.colors.length > 0 && !selectedColor) {
+    if (product.colors.length > 0 && !selectedColor) {
       alert("Please select a color.");
       return;
     }
 
-    addToCart({ 
-      ...product, 
-      selectedSize: selectedSize || 'N/A', 
-      selectedColor: selectedColor || 'N/A', 
-      quantity: 1 
+    addToCart({
+      ...product,
+      selectedSize: selectedSize || 'N/A',
+      selectedColor: selectedColor || 'N/A',
+      quantity: 1
     });
     alert("Added to cart!");
   };
@@ -621,81 +637,101 @@ export const ProductDetailPage: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Images */}
-        <div className="space-y-4">
-          <div className="aspect-[3/4] bg-gray-100 overflow-hidden rounded-sm">
-             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Thumbnails (Left on Desktop, Bottom on Mobile) */}
+          <div className="flex md:flex-col order-2 md:order-1 gap-4 overflow-x-auto md:overflow-visible scrollbar-hide">
+            {product.images.map((img, idx) => (
+              <div
+                key={idx}
+                onClick={() => setSelectedImage(img)}
+                className={`w-20 md:w-24 aspect-[3/4] p-1 bg-white cursor-pointer border-2 rounded-xl shadow-sm overflow-hidden flex-shrink-0 transition-all ${selectedImage === img ? 'border-brand-900 opacity-100 ring-1 ring-brand-900' : 'border-transparent opacity-70 hover:opacity-100'}`}
+              >
+                <div className="w-full h-full rounded-lg overflow-hidden">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            ))}
+            {product.videos?.map((vid, idx) => (
+              <div
+                key={`vid-${idx}`}
+                onClick={() => setSelectedImage(vid)} // Handle video selection if we wanted to play it in main view, strictly speaking user asked for images but let's be safe. Actually, better to just show images for now to match current behavior unless main view supports video. Implementation plan said stick to images for main view change.
+                className="hidden" // Hiding videos from thumbnail list for now as main viewer is an <img> tag.
+              />
+            ))}
           </div>
-          <div className="grid grid-cols-4 gap-4">
-             {product.images.map((img, idx) => (
-               <div key={idx} className="aspect-square bg-gray-100 cursor-pointer border hover:border-black rounded-sm overflow-hidden">
-                 <img src={img} alt="" className="w-full h-full object-cover" />
-               </div>
-             ))}
+
+          {/* Main Image (Right on Desktop, Top on Mobile) */}
+          <div className="flex-1 order-1 md:order-2">
+            <div className="aspect-[3/4] p-2 bg-white rounded-xl lg:rounded-3xl shadow-sm relative group overflow-hidden">
+              <div className="w-full h-full rounded-lg lg:rounded-2xl overflow-hidden bg-gray-100">
+                <img src={selectedImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Info */}
         <div className="md:sticky md:top-24 h-fit">
-           <h1 className="text-3xl font-serif text-brand-900 mb-2">{product.name}</h1>
-           <div className="flex items-center space-x-4 mb-6">
-             <span className="text-2xl font-medium">${product.discountPrice || product.price}</span>
-             {product.discountPrice && <span className="text-lg text-gray-400 line-through">${product.price}</span>}
-             {product.stock < 10 && <span className="text-xs text-rose-500 font-bold">Only {product.stock} left!</span>}
-           </div>
+          <h1 className="text-3xl font-serif text-brand-900 mb-2">{product.name}</h1>
+          <div className="flex items-center space-x-4 mb-6">
+            <span className="text-2xl font-medium">{config.currency || '₹'}{product.discountPrice || product.price}</span>
+            {product.discountPrice && <span className="text-lg text-gray-400 line-through">{config.currency || '₹'}{product.price}</span>}
+            {product.stock < 10 && <span className="text-xs text-rose-500 font-bold">Only {product.stock} left!</span>}
+          </div>
 
-           <p className="text-gray-600 mb-8 leading-relaxed">{product.description}</p>
+          <p className="text-gray-600 mb-8 leading-relaxed">{product.description}</p>
 
-           <div className="space-y-6 mb-8">
-             {product.colors.length > 0 && (
-               <div>
-                 <label className="block text-sm font-bold mb-2">Color</label>
-                 <div className="flex space-x-3">
-                   {product.colors.map(c => (
-                     <button 
-                      key={c} 
+          <div className="space-y-6 mb-8">
+            {product.colors.length > 0 && (
+              <div>
+                <label className="block text-sm font-bold mb-2">Color</label>
+                <div className="flex space-x-3">
+                  {product.colors.map(c => (
+                    <button
+                      key={c}
                       onClick={() => setSelectedColor(c)}
                       className={`px-4 py-2 border text-sm transition-all rounded-sm ${selectedColor === c ? 'border-brand-900 bg-brand-900 text-white' : 'border-gray-200 hover:border-gray-400'}`}
-                     >
+                    >
                       {c}
-                     </button>
-                   ))}
-                 </div>
-               </div>
-             )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-             {product.sizes.length > 0 && (
-               <div>
-                 <label className="block text-sm font-bold mb-2">Size</label>
-                 <div className="flex space-x-3">
-                   {product.sizes.map(s => (
-                     <button 
-                      key={s} 
+            {product.sizes.length > 0 && (
+              <div>
+                <label className="block text-sm font-bold mb-2">Size</label>
+                <div className="flex space-x-3">
+                  {product.sizes.map(s => (
+                    <button
+                      key={s}
                       onClick={() => setSelectedSize(s)}
                       className={`w-12 h-12 flex items-center justify-center border text-sm transition-all rounded-sm ${selectedSize === s ? 'border-brand-900 bg-brand-900 text-white' : 'border-gray-200 hover:border-gray-400'}`}
-                     >
+                    >
                       {s}
-                     </button>
-                   ))}
-                 </div>
-                 <button className="text-xs text-gray-500 underline mt-2">Size Guide</button>
-               </div>
-             )}
-           </div>
+                    </button>
+                  ))}
+                </div>
+                <button className="text-xs text-gray-500 underline mt-2">Size Guide</button>
+              </div>
+            )}
+          </div>
 
-           <div className="flex space-x-4">
-             <Button size="lg" className="flex-1" onClick={handleAdd}>Add to Cart</Button>
-             <button 
-               onClick={() => toggleWishlist(product.id)}
-               className={`p-3 border rounded-sm transition-colors ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}
-             >
-               <Heart fill={isWishlisted ? "currentColor" : "none"} />
-             </button>
-           </div>
-           
-           <div className="mt-8 pt-8 border-t space-y-3 text-sm text-gray-500">
-             <div className="flex items-center gap-2"><Truck size={16}/> Free shipping on orders over $100</div>
-             <div className="flex items-center gap-2"><ShieldCheck size={16}/> 30-day return policy</div>
-           </div>
+          <div className="flex space-x-4">
+            <Button size="lg" className="flex-1" onClick={handleAdd}>Add to Cart</Button>
+            <button
+              onClick={() => toggleWishlist(product.id)}
+              className={`p-3 border rounded-sm transition-colors ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-gray-200 hover:bg-gray-50 text-gray-600'}`}
+            >
+              <Heart fill={isWishlisted ? "currentColor" : "none"} />
+            </button>
+          </div>
+
+          <div className="mt-8 pt-8 border-t space-y-3 text-sm text-gray-500">
+            <div className="flex items-center gap-2"><Truck size={16} /> Free shipping on orders over $100</div>
+            <div className="flex items-center gap-2"><ShieldCheck size={16} /> 30-day return policy</div>
+          </div>
         </div>
       </div>
     </div>
@@ -704,7 +740,7 @@ export const ProductDetailPage: React.FC = () => {
 
 // --- Cart Page ---
 export const CartPage: React.FC = () => {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal } = useStore();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, config } = useStore();
   const navigate = useNavigate();
 
   if (cart.length === 0) {
@@ -733,12 +769,12 @@ export const CartPage: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-500 mb-4">{item.selectedColor} / {item.selectedSize}</p>
                 <div className="flex justify-between items-center">
-                   <div className="flex items-center border border-gray-300 rounded-sm">
-                     <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, -1)}>-</button>
-                     <span className="px-3 py-1 text-sm">{item.quantity}</span>
-                     <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, 1)}>+</button>
-                   </div>
-                   <p className="font-medium">${(item.discountPrice || item.price) * item.quantity}</p>
+                  <div className="flex items-center border border-gray-300 rounded-sm">
+                    <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, -1)}>-</button>
+                    <span className="px-3 py-1 text-sm">{item.quantity}</span>
+                    <button className="px-3 py-1 hover:bg-gray-100" onClick={() => updateCartQuantity(item.id, item.selectedSize, item.selectedColor, 1)}>+</button>
+                  </div>
+                  <p className="font-medium">{config.currency || '₹'}{(item.discountPrice || item.price) * item.quantity}</p>
                 </div>
               </div>
             </div>
@@ -748,10 +784,10 @@ export const CartPage: React.FC = () => {
           <div className="bg-brand-50 p-6 rounded-sm">
             <h3 className="font-serif text-xl mb-4">Order Summary</h3>
             <div className="space-y-3 mb-6 border-b pb-6 text-sm">
-               <div className="flex justify-between"><span>Subtotal</span><span>${cartTotal}</span></div>
-               <div className="flex justify-between"><span>Shipping</span><span>Free</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>{config.currency || '₹'}{cartTotal}</span></div>
+              <div className="flex justify-between"><span>Shipping</span><span>Free</span></div>
             </div>
-            <div className="flex justify-between font-bold text-lg mb-6"><span>Total</span><span>${cartTotal}</span></div>
+            <div className="flex justify-between font-bold text-lg mb-6"><span>Total</span><span>{config.currency || '₹'}{cartTotal}</span></div>
             <Button className="w-full" onClick={() => navigate('/checkout')}>Proceed to Checkout</Button>
           </div>
         </div>
@@ -762,7 +798,7 @@ export const CartPage: React.FC = () => {
 
 // --- Checkout Page ---
 export const CheckoutPage: React.FC = () => {
-  const { cartTotal, placeOrder } = useStore();
+  const { cartTotal, placeOrder, config } = useStore();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', address: '', city: '', zip: '' });
 
@@ -781,26 +817,26 @@ export const CheckoutPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <h3 className="font-bold text-lg">Shipping Details</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Input label="First Name" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2" />
-              <Input label="Email" type="email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2" />
-              <Input label="Address" required value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="col-span-2" />
-              <Input label="City" required value={form.city} onChange={e => setForm({...form, city: e.target.value})} />
-              <Input label="Zip Code" required value={form.zip} onChange={e => setForm({...form, zip: e.target.value})} />
+              <Input label="First Name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="col-span-2" />
+              <Input label="Email" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="col-span-2" />
+              <Input label="Address" required value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="col-span-2" />
+              <Input label="City" required value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
+              <Input label="Zip Code" required value={form.zip} onChange={e => setForm({ ...form, zip: e.target.value })} />
             </div>
-            
+
             <h3 className="font-bold text-lg pt-4">Payment</h3>
             <div className="p-4 border rounded bg-gray-50 text-sm text-gray-600">
               Payment Gateway integration would go here. For this demo, it's Cash on Delivery.
             </div>
 
-            <Button type="submit" className="w-full" size="lg">Place Order - ${cartTotal}</Button>
+            <Button type="submit" className="w-full" size="lg">Place Order - {config.currency || '₹'}{cartTotal}</Button>
           </form>
-          
+
           <div className="bg-brand-50 p-6 h-fit rounded-sm">
             <h3 className="font-bold mb-4">In Your Bag</h3>
             <div className="flex justify-between font-bold text-lg border-t pt-4">
-               <span>Total to Pay</span>
-               <span>${cartTotal}</span>
+              <span>Total to Pay</span>
+              <span>${cartTotal}</span>
             </div>
           </div>
         </div>
@@ -820,9 +856,9 @@ export const AboutPage: React.FC = () => {
       </p>
       <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200" className="w-full h-64 object-cover mb-8 rounded-sm shadow-sm" alt="Studio" />
       <div className="grid md:grid-cols-3 gap-8 text-left mt-12">
-         <div><h4 className="font-bold mb-2">Vision</h4><p className="text-sm text-gray-500">To be the global leader in sustainable luxury fashion.</p></div>
-         <div><h4 className="font-bold mb-2">Mission</h4><p className="text-sm text-gray-500">Creating timeless pieces that last beyond seasons.</p></div>
-         <div><h4 className="font-bold mb-2">Values</h4><p className="text-sm text-gray-500">Quality, Integrity, and Inclusivity.</p></div>
+        <div><h4 className="font-bold mb-2">Vision</h4><p className="text-sm text-gray-500">To be the global leader in sustainable luxury fashion.</p></div>
+        <div><h4 className="font-bold mb-2">Mission</h4><p className="text-sm text-gray-500">Creating timeless pieces that last beyond seasons.</p></div>
+        <div><h4 className="font-bold mb-2">Values</h4><p className="text-sm text-gray-500">Quality, Integrity, and Inclusivity.</p></div>
       </div>
     </div>
   );
@@ -833,7 +869,7 @@ export const ContactPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
       <SectionHeader title="Get in Touch" center />
-      
+
       <div className="grid md:grid-cols-2 gap-12 mt-12">
         <div>
           <h3 className="text-xl font-bold mb-6">Contact Information</h3>

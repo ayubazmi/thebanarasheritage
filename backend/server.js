@@ -8,7 +8,7 @@ const PORT = 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); 
+app.use(express.json({ limit: '50mb' }));
 
 // Request Logging
 app.use((req, res, next) => {
@@ -42,6 +42,7 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   discountPrice: Number,
   category: String,
   images: [String],
+  videos: [String],
   sizes: [String],
   colors: [String],
   newArrival: { type: Boolean, default: false },
@@ -82,9 +83,9 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     fontFamilySerif: { type: String, default: 'Cormorant Garamond' },
     borderRadius: { type: String, default: '0px' }
   },
-  homepageSections: { 
-    type: [String], 
-    default: ['hero', 'categories', 'featured', 'promo', 'trust'] 
+  homepageSections: {
+    type: [String],
+    default: ['hero', 'categories', 'featured', 'promo', 'trust']
   },
 
   // Announcement Bar
@@ -104,13 +105,13 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   heroImage: String,
   heroImages: [String], // Array for slideshow
   heroVideo: String,
-  heroTagline: { type: String, default: 'New Collection' }, 
+  heroTagline: { type: String, default: 'New Collection' },
   heroTitle: String,
   heroSubtitle: String,
   heroTextColor: { type: String, default: '#FFFFFF' },
   heroTextAlign: { type: String, default: 'center' }, // left, center, right
   heroFontSize: { type: String, default: 'md' }, // sm, md, lg
-  
+
   // Secondary Slideshows
   secondarySlideshows: [{
     id: String,
@@ -184,7 +185,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   footerNewsletterTitle: { type: String, default: 'STAY IN TOUCH' },
   footerNewsletterPlaceholder: { type: String, default: 'Your email' },
   footerNewsletterButtonText: { type: String, default: 'JOIN' },
-  
+
   // Settings
   currency: String,
   isDefault: { type: Boolean, default: true }
@@ -226,15 +227,15 @@ app.get('/', (req, res) => res.send('API is running'));
 
 // Products
 app.get('/api/products', async (req, res) => {
-  try { res.json(await Product.find().sort({ _id: -1 })); } 
+  try { res.json(await Product.find().sort({ _id: -1 })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.post('/api/products', async (req, res) => {
-  try { const { id, ...data } = req.body; res.json(await new Product(data).save()); } 
+  try { const { id, ...data } = req.body; res.json(await new Product(data).save()); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.put('/api/products/:id', async (req, res) => {
-  try { res.json(await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })); } 
+  try { res.json(await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 // Toggle Like Endpoint
@@ -256,39 +257,39 @@ app.post('/api/products/:id/like', async (req, res) => {
 });
 
 app.delete('/api/products/:id', async (req, res) => {
-  try { await Product.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
+  try { await Product.findByIdAndDelete(req.params.id); res.json({ success: true }); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Categories
 app.get('/api/categories', async (req, res) => {
-  try { res.json(await Category.find()); } 
+  try { res.json(await Category.find()); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.post('/api/categories', async (req, res) => {
-  try { const { id, ...data } = req.body; res.json(await new Category(data).save()); } 
+  try { const { id, ...data } = req.body; res.json(await new Category(data).save()); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.put('/api/categories/:id', async (req, res) => {
-  try { res.json(await Category.findByIdAndUpdate(req.params.id, req.body, { new: true })); } 
+  try { res.json(await Category.findByIdAndUpdate(req.params.id, req.body, { new: true })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.delete('/api/categories/:id', async (req, res) => {
-  try { await Category.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
+  try { await Category.findByIdAndDelete(req.params.id); res.json({ success: true }); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Orders
 app.get('/api/orders', async (req, res) => {
-  try { res.json(await Order.find().sort({ _id: -1 })); } 
+  try { res.json(await Order.find().sort({ _id: -1 })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.post('/api/orders', async (req, res) => {
-  try { const { id, ...data } = req.body; res.json(await new Order(data).save()); } 
+  try { const { id, ...data } = req.body; res.json(await new Order(data).save()); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.put('/api/orders/:id', async (req, res) => {
-  try { res.json(await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true })); } 
+  try { res.json(await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -329,7 +330,7 @@ app.get('/api/config', async (req, res) => {
         contactEmail: 'support@lumiere.com',
         contactPhone: '+1 (555) 123-4567',
         contactAddress: '123 Fashion Ave, New York, NY',
-        currency: '$',
+        currency: '₹',
         footerBgColor: '#2C251F',
         footerTextColor: '#F3F4F6',
         heroImages: [],
@@ -344,7 +345,7 @@ app.get('/api/config', async (req, res) => {
 app.post('/api/config', async (req, res) => {
   try {
     let config = await Config.findOne();
-    if (config) { config.set(req.body); await config.save(); } 
+    if (config) { config.set(req.body); await config.save(); }
     else { config = new Config(req.body); await config.save(); }
     res.json(config);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -361,19 +362,19 @@ app.post('/api/logs/visit', async (req, res) => {
     const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || req.ip;
     const port = req.socket.remotePort || 0;
     const userAgent = req.headers['user-agent'] || 'Unknown';
-    
+
     // Attempt Reverse DNS to get Hostname
     let hostname = 'Unknown';
     try {
-        if (ip && ip !== '::1' && ip !== '127.0.0.1') {
-           const hostnames = await dns.reverse(ip);
-           if (hostnames && hostnames.length > 0) hostname = hostnames[0];
-        } else {
-           hostname = 'localhost';
-        }
+      if (ip && ip !== '::1' && ip !== '127.0.0.1') {
+        const hostnames = await dns.reverse(ip);
+        if (hostnames && hostnames.length > 0) hostname = hostnames[0];
+      } else {
+        hostname = 'localhost';
+      }
     } catch (e) {
-        // Fallback to IP if reverse DNS fails
-        hostname = ip;
+      // Fallback to IP if reverse DNS fails
+      hostname = ip;
     }
 
     await new AccessLog({ ip, port, hostname, userAgent }).save();
@@ -383,19 +384,19 @@ app.post('/api/logs/visit', async (req, res) => {
 
 // Pages Routes (New Feature)
 app.get('/api/pages', async (req, res) => {
-  try { res.json(await Page.find()); } 
+  try { res.json(await Page.find()); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.post('/api/pages', async (req, res) => {
-  try { const { id, ...data } = req.body; res.json(await new Page(data).save()); } 
+  try { const { id, ...data } = req.body; res.json(await new Page(data).save()); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.put('/api/pages/:id', async (req, res) => {
-  try { res.json(await Page.findByIdAndUpdate(req.params.id, req.body, { new: true })); } 
+  try { res.json(await Page.findByIdAndUpdate(req.params.id, req.body, { new: true })); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 app.delete('/api/pages/:id', async (req, res) => {
-  try { await Page.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
+  try { await Page.findByIdAndDelete(req.params.id); res.json({ success: true }); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -426,7 +427,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 app.delete('/api/users/:id', async (req, res) => {
-  try { await User.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
+  try { await User.findByIdAndDelete(req.params.id); res.json({ success: true }); }
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -442,15 +443,15 @@ app.put('/api/users/:id/password', async (req, res) => {
   try {
     const admin = await User.findOne({ username: 'admin' });
     if (!admin) {
-      await new User({ 
-        username: 'admin', 
-        password: 'admin', 
-        role: 'admin', 
-        permissions: ['products', 'orders', 'categories', 'settings', 'users'] 
+      await new User({
+        username: 'admin',
+        password: 'admin',
+        role: 'admin',
+        permissions: ['products', 'orders', 'categories', 'settings', 'users']
       }).save();
       console.log("✅ Default admin user created (admin/admin)");
     }
-  } catch(e) { console.error("Error seeding admin", e); }
+  } catch (e) { console.error("Error seeding admin", e); }
 })();
 
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on http://0.0.0.0:${PORT}`));

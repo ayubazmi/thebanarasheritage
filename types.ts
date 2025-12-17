@@ -8,6 +8,7 @@ export interface Product {
   discountPrice?: number;
   category: string;
   images: string[];
+  videos: string[];
   sizes: string[];
   colors: string[];
   newArrival: boolean;
@@ -126,12 +127,12 @@ export interface SiteConfig {
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
-  
+
   // Hero Styling (New)
   heroTextColor?: string;
   heroTextAlign?: 'left' | 'center' | 'right';
   heroFontSize?: 'sm' | 'md' | 'lg';
-  
+
   // Secondary Slideshows (New Feature)
   secondarySlideshows?: SlideshowSection[];
 
@@ -149,16 +150,16 @@ export interface SiteConfig {
   promoImage?: string;
   promoButtonText?: string;
   promoButtonLink?: string;
-  
+
   // Content
   aboutTitle: string;
   aboutContent: string;
-  
+
   // Contact
   contactEmail: string;
   contactPhone: string;
   contactAddress: string;
-  
+
   // Socials
   socialInstagram?: string;
   socialFacebook?: string;
