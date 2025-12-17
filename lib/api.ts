@@ -1,4 +1,4 @@
-import { Product, Category, Order, SiteConfig, User } from '../types';
+import { Product, Category, Order, SiteConfig, User, Page } from '../types';
 
 const PROXY_URL = '/api';
 const DIRECT_URL = 'http://localhost:5000/api';
@@ -69,6 +69,12 @@ export const api = {
     create: (data: Partial<User> & { password: string }) => fetchJson('/users', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id: string) => fetchJson(`/users/${id}`, { method: 'DELETE' }),
     updatePassword: (id: string, password: string) => fetchJson(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+  },
+  pages: {
+    list: () => fetchJson('/pages'),
+    create: (data: Page) => fetchJson('/pages', { method: 'POST', body: JSON.stringify(data) }),
+    update: (data: Page) => fetchJson(`/pages/${data.id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJson(`/pages/${id}`, { method: 'DELETE' }),
   },
   logs: {
     list: () => fetchJson('/logs'),

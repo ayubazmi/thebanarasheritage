@@ -127,6 +127,18 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     fontSize: { type: String, default: 'md' }
   }],
 
+  // Vertical Carousels (New Isolated Feature)
+  verticalCarousels: [{
+    id: String,
+    title: String,
+    slides: [{
+      image: String,
+      title: String,
+      subtitle: String,
+      textColor: String
+    }]
+  }],
+
   // Section Headers
   categoryTitle: { type: String, default: 'Shop by Category' },
   featuredTitle: { type: String, default: 'New Arrivals' },
@@ -186,7 +198,16 @@ const User = mongoose.model('User', new mongoose.Schema({
   permissions: [String]
 }, { toJSON: toJSONConfig }));
 
-// 6. Access Log
+// 6. Custom Pages (New Feature)
+const Page = mongoose.model('Page', new mongoose.Schema({
+  title: { type: String, required: true },
+  slug: { type: String, required: true, unique: true },
+  content: { type: String, required: true },
+  showInNav: { type: Boolean, default: false },
+  showInFooter: { type: Boolean, default: false },
+}, { toJSON: toJSONConfig }));
+
+// 7. Access Log
 const AccessLog = mongoose.model('AccessLog', new mongoose.Schema({
   ip: String,
   port: Number,
@@ -308,7 +329,8 @@ app.get('/api/config', async (req, res) => {
         footerBgColor: '#2C251F',
         footerTextColor: '#F3F4F6',
         heroImages: [],
-        secondarySlideshows: []
+        secondarySlideshows: [],
+        verticalCarousels: []
       });
       await config.save();
     }
@@ -353,6 +375,24 @@ app.post('/api/logs/visit', async (req, res) => {
     await new AccessLog({ ip, port, hostname, userAgent }).save();
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Pages Routes (New Feature)
+app.get('/api/pages', async (req, res) => {
+  try { res.json(await Page.find()); } 
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+app.post('/api/pages', async (req, res) => {
+  try { const { id, ...data } = req.body; res.json(await new Page(data).save()); } 
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+app.put('/api/pages/:id', async (req, res) => {
+  try { res.json(await Page.findByIdAndUpdate(req.params.id, req.body, { new: true })); } 
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+app.delete('/api/pages/:id', async (req, res) => {
+  try { await Page.findByIdAndDelete(req.params.id); res.json({ success: true }); } 
+  catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Auth & Users

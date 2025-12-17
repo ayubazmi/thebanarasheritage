@@ -3,9 +3,9 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import { StoreProvider, useStore } from './store';
 import { PublicLayout, AdminLayout } from './layouts';
 import { 
-  HomePage, ShopPage, ProductDetailPage, CartPage, CheckoutPage, AboutPage, ContactPage 
+  HomePage, ShopPage, ProductDetailPage, CartPage, CheckoutPage, AboutPage, ContactPage, DynamicPage 
 } from './pages/public';
-import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers, AdminLogs, AdminDeveloperSettings } from './pages/admin';
+import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers, AdminLogs, AdminDeveloperSettings, AdminPages } from './pages/admin';
 import { Button } from './components/ui';
 import { AlertTriangle } from 'lucide-react';
 import { SiteConfig } from './types';
@@ -111,6 +111,7 @@ const MainContent: React.FC = () => {
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="contact" element={<ContactPage />} />
+          <Route path="pages/:slug" element={<DynamicPage />} />
           <Route path="admin/login" element={<AdminLogin />} />
         </Route>
 
@@ -120,6 +121,7 @@ const MainContent: React.FC = () => {
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="categories" element={<AdminCategories />} />
+          <Route path="pages" element={<AdminPages />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="developer" element={<AdminDeveloperSettings />} />
           <Route path="users" element={<AdminUsers />} />

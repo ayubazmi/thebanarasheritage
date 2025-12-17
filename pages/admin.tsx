@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, Category, User, SiteConfig } from '../types';
+import { Product, Category, User, SiteConfig, Page } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight, PanelTop, File
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -163,6 +163,172 @@ export const AdminLogs: React.FC = () => {
           </table>
         </div>
       </div>
+    </div>
+  );
+};
+
+// --- Pages Manager (New Feature) ---
+export const AdminPages: React.FC = () => {
+  const { pages, addPage, updatePage, deletePage } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const [pageForm, setPageForm] = useState<Partial<Page>>({
+    title: '', slug: '', content: '', showInNav: false, showInFooter: false
+  });
+
+  const openAddModal = () => {
+    setEditingId(null);
+    setPageForm({ title: '', slug: '', content: '', showInNav: false, showInFooter: false });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (page: Page) => {
+    setEditingId(page.id);
+    setPageForm({ ...page });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload: Page = {
+        id: editingId || Date.now().toString(),
+        title: pageForm.title!,
+        slug: pageForm.slug!,
+        content: pageForm.content || '',
+        showInNav: pageForm.showInNav || false,
+        showInFooter: pageForm.showInFooter || false
+      };
+
+      if (editingId) {
+        await updatePage(payload);
+      } else {
+        await addPage(payload);
+      }
+      setIsModalOpen(false);
+    } catch (e: any) {
+      alert("Error saving page: " + e.message);
+    }
+  };
+
+  const handleSlugGen = () => {
+    if (pageForm.title) {
+      setPageForm(prev => ({
+        ...prev,
+        slug: prev.title?.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+      }));
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Custom Content Pages</h1>
+        <Button onClick={openAddModal}><Plus size={16} className="mr-2" /> Create New Page</Button>
+      </div>
+
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-700 uppercase">
+            <tr>
+              <th className="px-6 py-4">Title</th>
+              <th className="px-6 py-4">URL Slug</th>
+              <th className="px-6 py-4">Visibility</th>
+              <th className="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pages.map(page => (
+              <tr key={page.id} className="border-b hover:bg-gray-50">
+                <td className="px-6 py-4 font-medium flex items-center gap-2">
+                  <File size={16} className="text-gray-400" />
+                  {page.title}
+                </td>
+                <td className="px-6 py-4 text-gray-500 font-mono text-xs">/pages/{page.slug}</td>
+                <td className="px-6 py-4">
+                  <div className="flex gap-2">
+                    {page.showInNav && <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Nav</span>}
+                    {page.showInFooter && <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Footer</span>}
+                    {!page.showInNav && !page.showInFooter && <span className="text-gray-400 text-xs italic">Hidden</span>}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  <button onClick={() => openEditModal(page)} className="text-blue-600 hover:text-blue-800 underline">Edit</button>
+                  <button onClick={() => { if(window.confirm('Delete this page?')) deletePage(page.id) }} className="text-rose-600 hover:text-rose-800 underline">Delete</button>
+                </td>
+              </tr>
+            ))}
+            {pages.length === 0 && (
+              <tr><td colSpan={4} className="text-center py-8 text-gray-500">No custom pages found.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold font-serif">{editingId ? 'Edit Page' : 'Create New Page'}</h2>
+              <button onClick={() => setIsModalOpen(false)}><X className="text-gray-400 hover:text-black" /></button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <Input 
+                  label="Page Title" 
+                  required 
+                  value={pageForm.title} 
+                  onChange={e => setPageForm({...pageForm, title: e.target.value})} 
+                  onBlur={handleSlugGen}
+                />
+                <Input 
+                  label="URL Slug (e.g., store-list)" 
+                  required 
+                  value={pageForm.slug} 
+                  onChange={e => setPageForm({...pageForm, slug: e.target.value})} 
+                />
+                
+                <div className="md:col-span-2 flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer border px-4 py-2 rounded hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      checked={pageForm.showInNav} 
+                      onChange={e => setPageForm({...pageForm, showInNav: e.target.checked})} 
+                    />
+                    <span className="text-sm font-medium">Show in Header Navigation</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer border px-4 py-2 rounded hover:bg-gray-50">
+                    <input 
+                      type="checkbox" 
+                      checked={pageForm.showInFooter} 
+                      onChange={e => setPageForm({...pageForm, showInFooter: e.target.checked})} 
+                    />
+                    <span className="text-sm font-medium">Show in Footer Links</span>
+                  </label>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-2">Page Content (HTML Allowed)</label>
+                  <p className="text-xs text-gray-500 mb-2">You can use basic HTML tags for formatting (e.g., &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;).</p>
+                  <textarea 
+                    className="w-full border border-gray-200 p-4 text-sm min-h-[400px] font-mono rounded" 
+                    value={pageForm.content} 
+                    onChange={e => setPageForm({...pageForm, content: e.target.value})}
+                    placeholder="<h1>Our Stores</h1><p>Store content goes here...</p>"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit">{editingId ? 'Update Page' : 'Create Page'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -536,8 +702,10 @@ export const AdminDeveloperSettings: React.FC = () => {
           ...s,
           slides: (s.slides && s.slides.length > 0) 
             ? s.slides 
-            : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }))
+            : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' })),
+          direction: s.direction || 'horizontal'
         })),
+        verticalCarousels: config.verticalCarousels || [],
         heroTextColor: config.heroTextColor || '#FFFFFF',
         heroTextAlign: config.heroTextAlign || 'center',
         heroFontSize: config.heroFontSize || 'md',
@@ -577,7 +745,8 @@ export const AdminDeveloperSettings: React.FC = () => {
         heroTextColor: '#FFFFFF',
         heroTextAlign: 'center',
         heroFontSize: 'md',
-        secondarySlideshows: []
+        secondarySlideshows: [],
+        verticalCarousels: []
       }));
     }
   };
@@ -614,7 +783,7 @@ export const AdminDeveloperSettings: React.FC = () => {
     }));
   };
 
-  // --- Secondary Slideshow Handlers (New) ---
+  // --- Secondary Slideshow Handlers ---
   const addSecondarySlideshow = () => {
      const newId = `slideshow_${Date.now()}`;
      const newSlideshow = { 
@@ -624,7 +793,8 @@ export const AdminDeveloperSettings: React.FC = () => {
        slides: [], // Initialize empty slides array
        textColor: '#2C251F', // Default dark
        textAlign: 'center' as const,
-       fontSize: 'md' as const
+       fontSize: 'md' as const,
+       direction: 'horizontal' as const
      };
      
      setLocalConfig(prev => ({
@@ -693,6 +863,73 @@ export const AdminDeveloperSettings: React.FC = () => {
     }));
   };
 
+  // --- Vertical Carousel Handlers (NEW) ---
+  const addVerticalCarousel = () => {
+     const newId = `vcarousel_${Date.now()}`;
+     const newCarousel = { 
+       id: newId, 
+       title: `New Vertical Carousel`, 
+       slides: []
+     };
+     
+     setLocalConfig(prev => ({
+        ...prev,
+        verticalCarousels: [...(prev.verticalCarousels || []), newCarousel],
+        homepageSections: [...(prev.homepageSections || []), newId]
+     }));
+  };
+
+  const removeVerticalCarousel = (id: string) => {
+    if(window.confirm("Delete this vertical carousel section?")) {
+      setLocalConfig(prev => ({
+          ...prev,
+          verticalCarousels: prev.verticalCarousels?.filter(c => c.id !== id),
+          homepageSections: prev.homepageSections?.filter(sid => sid !== id)
+      }));
+    }
+  };
+
+  const updateVerticalCarouselTitle = (id: string, title: string) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { ...c, title } : c)
+    }));
+  };
+
+  const addSlideToVerticalCarousel = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+         setLocalConfig(prev => ({
+            ...prev,
+            verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { 
+                ...c, 
+                slides: [...(c.slides || []), { image: reader.result as string, title: '', subtitle: '', textColor: '' }] 
+            } : c)
+         }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeSlideFromVerticalCarousel = (id: string, slideIndex: number) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { ...c, slides: c.slides.filter((_, i) => i !== slideIndex) } : c)
+    }));
+  };
+
+  const updateVerticalSlideField = (id: string, slideIndex: number, field: string, value: string) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { 
+          ...c, 
+          slides: c.slides.map((slide, i) => i === slideIndex ? { ...slide, [field]: value } : slide)
+       } : c)
+    }));
+  };
+
   const fonts = [
     { name: 'Inter (Modern Sans)', value: 'Inter' },
     { name: 'Lato (Friendly Sans)', value: 'Lato' },
@@ -713,8 +950,13 @@ export const AdminDeveloperSettings: React.FC = () => {
   // Helper to get display name for sections
   const getSectionName = (id: string) => {
      if(sectionNames[id]) return sectionNames[id];
+     
      const slideshow = localConfig.secondarySlideshows?.find(s => s.id === id);
      if(slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
+
+     const vcarousel = localConfig.verticalCarousels?.find(v => v.id === id);
+     if(vcarousel) return `Vertical Carousel: ${vcarousel.title || 'Untitled'}`;
+
      return id; // Fallback
   };
 
@@ -1036,14 +1278,14 @@ export const AdminDeveloperSettings: React.FC = () => {
           )}
         </div>
 
-        {/* Additional Slideshows (New Feature) */}
+        {/* Additional Slideshows (Horizontal) */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-indigo-500">
           <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg flex items-center"><MonitorPlay className="mr-2" size={20}/> Additional Slideshow Sections</h3>
-              <Button onClick={addSecondarySlideshow} size="sm"><Plus size={16} className="mr-1"/> Add New Slideshow</Button>
+              <h3 className="font-bold text-lg flex items-center"><MonitorPlay className="mr-2" size={20}/> Additional Slideshow Sections (Horizontal)</h3>
+              <Button onClick={addSecondarySlideshow} size="sm"><Plus size={16} className="mr-1"/> Add Horizontal Slideshow</Button>
           </div>
           <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">
-             Create standalone slideshows for specific collections or campaigns. You can add text overlays to each slide.
+             Create standalone slideshows for specific collections or campaigns.
           </p>
           
           <div className="space-y-8">
@@ -1133,6 +1375,89 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Vertical Carousels (New Feature) */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-orange-500">
+          <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg flex items-center text-orange-900"><PanelTop className="mr-2" size={20}/> Vertical Image Carousels</h3>
+              <Button onClick={addVerticalCarousel} size="sm" className="bg-orange-600 hover:bg-orange-700"><Plus size={16} className="mr-1"/> Add Vertical Carousel</Button>
+          </div>
+          <p className="text-sm text-gray-500 mb-6 bg-orange-50 p-3 rounded text-orange-900">
+             Create specialized vertical scrolling carousels. Ideal for lookbooks or storytelling sequences.
+          </p>
+          
+          <div className="space-y-8">
+             {localConfig.verticalCarousels?.map((carousel, index) => (
+               <div key={carousel.id} className="border p-6 rounded relative bg-orange-50/30">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                     <div className="flex-1 w-full md:w-auto">
+                        <Input 
+                          label="Carousel Title" 
+                          value={carousel.title || ''} 
+                          onChange={(e) => updateVerticalCarouselTitle(carousel.id, e.target.value)} 
+                          placeholder="e.g. Winter Lookbook"
+                        />
+                     </div>
+                     <button onClick={() => removeVerticalCarousel(carousel.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {carousel.slides?.map((slide, slideIdx) => (
+                      <div key={slideIdx} className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded border shadow-sm items-start">
+                        <div className="w-full md:w-32 aspect-[3/4] bg-gray-200 rounded overflow-hidden relative flex-shrink-0">
+                           <img src={slide.image} className="w-full h-full object-cover" alt="" />
+                           <button 
+                              onClick={() => removeSlideFromVerticalCarousel(carousel.id, slideIdx)}
+                              className="absolute top-2 right-2 bg-white text-rose-500 p-1 rounded-full shadow hover:bg-rose-50"
+                              title="Delete Slide"
+                            >
+                              <Trash size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+                           <div className="col-span-2">
+                              <Input 
+                                placeholder="Title (e.g. The Coat)" 
+                                value={slide.title || ''} 
+                                onChange={(e) => updateVerticalSlideField(carousel.id, slideIdx, 'title', e.target.value)} 
+                              />
+                           </div>
+                           <div className="col-span-2">
+                              <Input 
+                                placeholder="Subtitle (e.g. Pure Wool)" 
+                                value={slide.subtitle || ''} 
+                                onChange={(e) => updateVerticalSlideField(carousel.id, slideIdx, 'subtitle', e.target.value)} 
+                              />
+                           </div>
+                           <div>
+                              <label className="text-xs font-bold text-gray-400 block mb-1">Text Color</label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="color" 
+                                  value={slide.textColor || '#FFFFFF'} 
+                                  onChange={(e) => updateVerticalSlideField(carousel.id, slideIdx, 'textColor', e.target.value)}
+                                  className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                                />
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <label className="border-2 border-dashed border-orange-200 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-orange-500 transition-colors">
+                       <Plus className="text-orange-400 mb-2" size={24}/>
+                       <span className="text-sm text-orange-500 font-medium">Add Vertical Slide</span>
+                       <span className="text-xs text-gray-400 mt-1">Rec: Portrait Images</span>
+                       <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToVerticalCarousel(carousel.id, e)} />
+                    </label>
+                  </div>
+               </div>
+             ))}
+             {(!localConfig.verticalCarousels || localConfig.verticalCarousels.length === 0) && (
+               <p className="text-center text-gray-400 italic">No vertical carousels added yet.</p>
+             )}
+          </div>
+        </div>
+
         {/* Section Reordering */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
@@ -1177,7 +1502,6 @@ export const AdminDeveloperSettings: React.FC = () => {
     </div>
   );
 };
-
 
 // --- User Management ---
 export const AdminUsers: React.FC = () => {

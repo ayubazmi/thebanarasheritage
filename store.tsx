@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Order, CartItem, Category, SiteConfig, User, AccessLog } from './types';
+import { Product, Order, CartItem, Category, SiteConfig, User, AccessLog, Page } from './types';
 import { api } from './lib/api';
 
 interface StoreContextType {
@@ -10,6 +10,7 @@ interface StoreContextType {
   config: SiteConfig;
   users: User[]; // Admin only
   logs: AccessLog[];
+  pages: Page[];
   isLoading: boolean;
   error: string | null;
   
@@ -29,6 +30,11 @@ interface StoreContextType {
   addUser: (data: Partial<User> & { password: string }) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
   changeUserPassword: (id: string, pass: string) => Promise<void>;
+
+  // Pages Management
+  addPage: (page: Page) => Promise<void>;
+  updatePage: (page: Page) => Promise<void>;
+  deletePage: (id: string) => Promise<void>;
 
   // Logs
   fetchLogs: () => Promise<void>;
@@ -62,6 +68,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [cart, setCart] = useState<CartItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<AccessLog[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   
   // Initialize user from local storage to persist session on refresh
@@ -99,16 +106,18 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       setIsLoading(true);
       setError(null);
-      const [prods, cats, ords, conf] = await Promise.all([
+      const [prods, cats, ords, conf, pgs] = await Promise.all([
         api.products.list(),
         api.categories.list(),
         api.orders.list(),
-        api.config.get()
+        api.config.get(),
+        api.pages.list()
       ]);
       setProducts(prods);
       setCategories(cats);
       setOrders(ords);
       setConfig(conf);
+      setPages(pgs);
     } catch (error: any) {
       console.error("❌ Backend Connection Failed:", error);
       setError(error.message || "Failed to connect to the server.");
@@ -165,6 +174,22 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const updateOrderStatus = async (id: string, status: Order['status']) => {
     const saved = await api.orders.updateStatus(id, status);
     setOrders(prev => prev.map(o => o.id === saved.id ? saved : o));
+  };
+
+  // --- Pages ---
+  const addPage = async (page: Page) => {
+    const saved = await api.pages.create(page);
+    setPages(prev => [...prev, saved]);
+  };
+
+  const updatePage = async (page: Page) => {
+    const saved = await api.pages.update(page);
+    setPages(prev => prev.map(p => p.id === saved.id ? saved : p));
+  };
+
+  const deletePage = async (id: string) => {
+    await api.pages.delete(id);
+    setPages(prev => prev.filter(p => p.id !== id));
   };
 
   // --- Users ---
@@ -263,11 +288,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <StoreContext.Provider value={{
-      products, categories, orders, config, users, logs, isLoading, error,
+      products, categories, orders, config, users, logs, pages, isLoading, error,
       addProduct, updateProduct, deleteProduct,
       addCategory, updateCategory, deleteCategory,
       updateConfig, updateOrderStatus,
       addUser, deleteUser, changeUserPassword,
+      addPage, updatePage, deletePage,
       fetchLogs,
       cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal, placeOrder,
       wishlist, toggleWishlist,

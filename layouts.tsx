@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText, Code2 } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, Search, LayoutDashboard, Package, ShoppingCart, LogOut, Settings, List, Users, FileText, Code2, File } from 'lucide-react';
 import { useStore } from './store';
 
 // --- Public Navbar ---
 export const Navbar: React.FC = () => {
-  const { cart, config } = useStore();
+  const { cart, config, pages } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -20,6 +20,9 @@ export const Navbar: React.FC = () => {
   useEffect(() => setIsOpen(false), [location]);
 
   const hasAnnouncement = config.announcementEnabled && config.announcementText;
+
+  // Filter custom pages for nav
+  const navPages = pages.filter(p => p.showInNav);
 
   return (
     <>
@@ -56,6 +59,9 @@ export const Navbar: React.FC = () => {
             <div className="hidden md:flex items-center space-x-8 text-sm font-medium tracking-wide text-brand-900">
               <Link to="/" className="hover:text-brand-800/70 transition">HOME</Link>
               <Link to="/shop" className="hover:text-brand-800/70 transition">SHOP</Link>
+              {navPages.map(page => (
+                <Link key={page.id} to={`/pages/${page.slug}`} className="hover:text-brand-800/70 transition uppercase">{page.title}</Link>
+              ))}
               <Link to="/about" className="hover:text-brand-800/70 transition">ABOUT</Link>
               <Link to="/contact" className="hover:text-brand-800/70 transition">CONTACT</Link>
             </div>
@@ -75,6 +81,9 @@ export const Navbar: React.FC = () => {
       <div className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col items-center justify-center space-y-8 text-xl font-serif ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <Link to="/" className="hover:text-brand-600">Home</Link>
         <Link to="/shop" className="hover:text-brand-600">Shop</Link>
+        {navPages.map(page => (
+          <Link key={page.id} to={`/pages/${page.slug}`} className="hover:text-brand-600">{page.title}</Link>
+        ))}
         <Link to="/about" className="hover:text-brand-600">About</Link>
         <Link to="/contact" className="hover:text-brand-600">Contact</Link>
       </div>
@@ -84,13 +93,16 @@ export const Navbar: React.FC = () => {
 
 // --- Footer ---
 export const Footer: React.FC = () => {
-  const { config } = useStore();
+  const { config, pages } = useStore();
   
   // Dynamic styles from config
   const footerStyle = {
     backgroundColor: config.footerBgColor || '#2C251F',
     color: config.footerTextColor || '#F3F4F6'
   };
+
+  // Filter custom pages for footer
+  const footerPages = pages.filter(p => p.showInFooter);
 
   return (
     <footer style={footerStyle} className="pt-16 pb-8 transition-colors duration-300">
@@ -112,11 +124,15 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-6 tracking-wide">CONTACT</h4>
+            <h4 className="font-semibold mb-6 tracking-wide">CONTACT & LINKS</h4>
             <ul className="space-y-3 text-sm opacity-80">
               <li>{config.contactAddress || '123 Fashion Ave, NY'}</li>
               <li>{config.contactPhone || '+1 (555) 123-4567'}</li>
               <li>{config.contactEmail || 'support@lumiere.com'}</li>
+              {/* Dynamic Footer Links */}
+              {footerPages.map(page => (
+                <li key={page.id}><Link to={`/pages/${page.slug}`} className="hover:underline text-brand-200">{page.title}</Link></li>
+              ))}
             </ul>
           </div>
           <div>
@@ -199,6 +215,7 @@ export const AdminLayout: React.FC = () => {
           <NavItem to="/admin/products" icon={Package} label="Products" perm="products" />
           <NavItem to="/admin/orders" icon={ShoppingCart} label="Orders" perm="orders" />
           <NavItem to="/admin/categories" icon={List} label="Categories" perm="categories" />
+          <NavItem to="/admin/pages" icon={File} label="Pages" perm="settings" />
           <NavItem to="/admin/users" icon={Users} label="User Management" perm="users" />
           <NavItem to="/admin/logs" icon={FileText} label="Visitor Logs" perm="users" />
           <NavItem to="/admin/settings" icon={Settings} label="Content & Settings" perm="settings" />
