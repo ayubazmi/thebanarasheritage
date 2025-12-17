@@ -60,12 +60,6 @@ export interface ThemeConfig {
   borderRadius: string;   // '0px', '4px', '8px', '99px'
 }
 
-export interface SlideshowSection {
-  id: string;
-  title?: string;
-  images: string[];
-}
-
 export interface SiteConfig {
   // Brand
   siteName?: string;
@@ -73,7 +67,7 @@ export interface SiteConfig {
 
   // Developer Settings (Theme & Layout)
   theme?: ThemeConfig;
-  homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust', 'slideshow_123']
+  homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust']
 
   // Announcement Bar
   announcementEnabled?: boolean;
@@ -96,9 +90,6 @@ export interface SiteConfig {
   heroTitle: string;
   heroSubtitle: string;
   
-  // Secondary Slideshows
-  secondarySlideshows?: SlideshowSection[];
-
   // Section Headers
   categoryTitle?: string;
   featuredTitle?: string;

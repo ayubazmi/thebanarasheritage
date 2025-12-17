@@ -108,13 +108,6 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   heroTitle: String,
   heroSubtitle: String,
   
-  // Secondary Slideshows
-  secondarySlideshows: [{
-    id: String,
-    title: String,
-    images: [String]
-  }],
-
   // Section Headers
   categoryTitle: { type: String, default: 'Shop by Category' },
   featuredTitle: { type: String, default: 'New Arrivals' },
@@ -292,8 +285,7 @@ app.get('/api/config', async (req, res) => {
         currency: '$',
         footerBgColor: '#2C251F',
         footerTextColor: '#F3F4F6',
-        heroImages: [],
-        secondarySlideshows: []
+        heroImages: []
       });
       await config.save();
     }
