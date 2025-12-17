@@ -55,8 +55,8 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   if (slides.length === 0) return null;
 
   // Styling Helpers
-  // Changed right alignment to use text-center for better aesthetics as requested ("right side but in center")
-  const textAlignClass = data.textAlign === 'left' ? 'text-left' : 'text-center';
+  // Correctly mapping text alignment: Left->Left, Right->Right, Center->Center
+  const textAlignClass = data.textAlign === 'left' ? 'text-left' : data.textAlign === 'right' ? 'text-right' : 'text-center';
   const alignItemsClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
   
   // Padding based on alignment to prevent text hitting edges
@@ -164,11 +164,11 @@ export const HomePage: React.FC = () => {
   // Section Renders
   const renderHero = () => {
     // Dynamic Styles for Hero
-    // Changed right alignment to center text as well for consistency
+    // Consistent text alignment logic for Hero as well
     const alignClass = config.heroTextAlign === 'left' 
       ? 'justify-start md:pl-24 text-left' 
       : config.heroTextAlign === 'right' 
-        ? 'justify-end md:pr-24 text-center' 
+        ? 'justify-end md:pr-24 text-right' 
         : 'justify-center text-center';
         
     const titleSizeClass = config.heroFontSize === 'sm' 
