@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { StoreProvider, useStore } from './store';
 import { PublicLayout, AdminLayout } from './layouts';
-import { 
-  HomePage, ShopPage, ProductDetailPage, CartPage, CheckoutPage, AboutPage, ContactPage, DynamicPage 
+import {
+  HomePage, ShopPage, ProductDetailPage, CartPage, CheckoutPage, AboutPage, ContactPage, DynamicPage
 } from './pages/public';
 import { AdminLogin, AdminDashboard, AdminProducts, AdminOrders, AdminSettings, AdminCategories, AdminUsers, AdminLogs, AdminDeveloperSettings, AdminPages } from './pages/admin';
 import { Button } from './components/ui';
@@ -17,7 +17,7 @@ const applyTheme = (config: SiteConfig) => {
   if (!config.theme) return;
 
   const root = document.documentElement;
-  
+
   // Colors
   root.style.setProperty('--color-primary', config.theme.primaryColor); // 900
   root.style.setProperty('--color-primary-800', adjustBrightness(config.theme.primaryColor, 20)); // Simulated 800
@@ -27,7 +27,7 @@ const applyTheme = (config: SiteConfig) => {
   root.style.setProperty('--color-secondary-100', adjustBrightness(config.theme.secondaryColor, 20)); // 100
 
   root.style.setProperty('--color-bg', config.theme.backgroundColor); // 50
-  
+
   // Fonts
   root.style.setProperty('--font-sans', config.theme.fontFamilySans);
   root.style.setProperty('--font-serif', config.theme.fontFamilySerif);
@@ -60,10 +60,23 @@ function adjustBrightness(col: string, amt: number) {
 const MainContent: React.FC = () => {
   const { isLoading, error, config } = useStore();
 
-  // Dynamic Browser Title & Theme
+  // Dynamic Browser Title & Theme & Favicon
   useEffect(() => {
     if (config) {
-      if (config.siteName) document.title = `${config.siteName} | Modern Fashion`;
+      // Title
+      document.title = config.siteTitle || 'LUMIÈRE | Modern Fashion';
+
+      // Favicon
+      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = config.favicon || 'https://files.catbox.moe/kfvz5y.jpg';
+      } else {
+        const newLink = document.createElement('link');
+        newLink.rel = 'icon';
+        newLink.href = config.favicon || 'https://files.catbox.moe/kfvz5y.jpg';
+        document.head.appendChild(newLink);
+      }
+
       applyTheme(config);
     }
   }, [config]);
@@ -87,11 +100,11 @@ const MainContent: React.FC = () => {
         <p className="text-brand-800/70 mb-8 max-w-md leading-relaxed">
           We couldn't connect to the backend server. Please ensure the backend is running and your database connection is valid.
         </p>
-        
+
         <div className="bg-white border border-rose-200 p-4 rounded-md text-xs text-left font-mono text-rose-700 mb-8 max-w-lg w-full overflow-auto shadow-sm">
           Error: {error}
         </div>
-        
+
         <Button onClick={() => window.location.reload()} size="lg">
           Retry Connection
         </Button>

@@ -102,6 +102,8 @@ export interface SiteConfig {
   // Brand
   siteName?: string;
   logo?: string;
+  siteTitle?: string;
+  favicon?: string;
 
   // Developer Settings (Theme & Layout)
   theme?: ThemeConfig;

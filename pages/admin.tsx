@@ -6,7 +6,7 @@ import { Product, Category, User, SiteConfig, Page } from '../types';
 import {
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp,
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight, PanelTop, File
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight, PanelTop, File, Eye, EyeOff
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -1007,25 +1007,55 @@ export const AdminDeveloperSettings: React.FC = () => {
     { name: 'Playfair Display (Display Serif)', value: 'Playfair Display' },
   ];
 
-  const sectionNames: Record<string, string> = {
-    hero: 'Hero Banner',
-    categories: 'Categories Grid',
-    featured: 'Featured Products',
-    promo: 'Promotional Banner',
-    trust: 'Trust Badges'
-  };
-
-  // Helper to get display name for sections
   const getSectionName = (id: string) => {
-    if (sectionNames[id]) return sectionNames[id];
+    if (id === 'hero') return 'Hero Section';
+    if (id === 'categories') return 'Categories Grid';
+    if (id === 'featured') return 'New Arrivals';
+    if (id === 'promo') return 'Promo Banner';
+    if (id === 'trust') return 'Trust Signals';
 
+    // Check dynamic sections
     const slideshow = localConfig.secondarySlideshows?.find(s => s.id === id);
     if (slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
 
-    const vcarousel = localConfig.verticalCarousels?.find(v => v.id === id);
-    if (vcarousel) return `Vertical Carousel: ${vcarousel.title || 'Untitled'}`;
+    const vertical = localConfig.verticalCarousels?.find(v => v.id === id);
+    if (vertical) return `Vertical Carousel: ${vertical.title || 'Untitled'}`;
 
-    return id; // Fallback
+    return id;
+  };
+
+  const STANDARD_SECTIONS = ['hero', 'categories', 'featured', 'promo', 'trust'];
+  const allSectionIds = [
+    ...STANDARD_SECTIONS,
+    ...(localConfig.secondarySlideshows?.map(s => s.id) || []),
+    ...(localConfig.verticalCarousels?.map(v => v.id) || [])
+  ];
+
+  const activeSectionIds = localConfig.homepageSections || [];
+  const hiddenSectionIds = allSectionIds.filter(id => !activeSectionIds.includes(id));
+
+  const toggleSectionVisibility = (id: string, isHidden: boolean) => {
+    let newSections = [...(localConfig.homepageSections || [])];
+
+    if (isHidden) {
+      // Unhide: Add to end
+      newSections.push(id);
+    } else {
+      // Hide: Remove from list
+      newSections = newSections.filter(sid => sid !== id);
+    }
+    setLocalConfig({ ...localConfig, homepageSections: newSections });
+  };
+
+  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig({ ...localConfig, favicon: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Reusable Styling Controls Component
@@ -1065,6 +1095,37 @@ export const AdminDeveloperSettings: React.FC = () => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
+
+        {/* General Site Identity */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-brand-900">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Layout className="mr-2" size={20} /> Site Identity</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input
+              label="Site Title (Browser Tab Name)"
+              value={localConfig.siteTitle || ''}
+              placeholder="e.g. My Awesome Store"
+              onChange={(e) => setLocalConfig({ ...localConfig, siteTitle: e.target.value })}
+            />
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Favicon</label>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden border">
+                  {localConfig.favicon ? (
+                    <img src={localConfig.favicon} className="w-full h-full object-cover" alt="Favicon" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">?</div>
+                  )}
+                </div>
+                <label className="cursor-pointer bg-white border px-3 py-2 rounded text-sm hover:bg-gray-50 flex items-center gap-2">
+                  <Upload size={14} /> Upload Icon
+                  <input type="file" className="hidden" onChange={handleFaviconUpload} accept="image/*" />
+                </label>
+                <p className="text-xs text-gray-500">Rec: 32x32px or 16x16px (PNG/ICO)</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Color Palette */}
         <div className="bg-white p-8 rounded shadow-sm">
@@ -1531,31 +1592,73 @@ export const AdminDeveloperSettings: React.FC = () => {
           <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20} /> Homepage Layout (Drag & Drop)</h3>
           <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
 
-          <div className="space-y-2 max-w-lg">
-            {localConfig.homepageSections?.map((sectionId, index) => (
-              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition group">
-                <span className="font-medium capitalize flex items-center">
-                  <div className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs mr-3 font-bold text-gray-600">{index + 1}</div>
-                  {getSectionName(sectionId)}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => moveSection(index, 'up')}
-                    disabled={index === 0}
-                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                  >
-                    <ArrowUp size={16} />
-                  </button>
-                  <button
-                    onClick={() => moveSection(index, 'down')}
-                    disabled={index === (localConfig.homepageSections?.length || 0) - 1}
-                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                  >
-                    <ArrowDown size={16} />
-                  </button>
+          <div className="space-y-4">
+            {/* Active Sections */}
+            <div>
+              <h4 className="font-bold text-sm text-gray-700 mb-2">Active Sections</h4>
+              <div className="space-y-2 max-w-lg">
+                {activeSectionIds.map((sectionId, index) => (
+                  <div key={sectionId} className="flex items-center justify-between p-3 bg-white border rounded shadow-sm hover:border-brand-900 transition group">
+                    <span className="font-medium capitalize flex items-center">
+                      <div className="w-6 h-6 flex items-center justify-center bg-brand-100 rounded-full text-xs mr-3 font-bold text-brand-900">{index + 1}</div>
+                      {getSectionName(sectionId)}
+                    </span>
+                    <div className="flex gap-1 items-center">
+                      <button
+                        onClick={() => toggleSectionVisibility(sectionId, false)}
+                        className="p-1.5 hover:bg-rose-50 text-gray-400 hover:text-rose-500 rounded transition-colors mr-2"
+                        title="Hide Section"
+                      >
+                        <EyeOff size={16} />
+                      </button>
+                      <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                      <button
+                        onClick={() => moveSection(index, 'up')}
+                        disabled={index === 0}
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 text-gray-600"
+                        title="Move Up"
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        onClick={() => moveSection(index, 'down')}
+                        disabled={index === activeSectionIds.length - 1}
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 text-gray-600"
+                        title="Move Down"
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {activeSectionIds.length === 0 && (
+                  <div className="text-sm text-gray-500 italic p-2 border border-dashed rounded text-center">No active sections. Homepage will be empty.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Hidden Sections */}
+            {hiddenSectionIds.length > 0 && (
+              <div className="pt-4 border-t">
+                <h4 className="font-bold text-sm text-gray-500 mb-2 flex items-center"><EyeOff size={14} className="mr-2" /> Hidden Sections</h4>
+                <div className="space-y-2 max-w-lg">
+                  {hiddenSectionIds.map((sectionId) => (
+                    <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border border-dashed rounded opacity-70 hover:opacity-100 transition">
+                      <span className="font-medium capitalize text-gray-500">
+                        {getSectionName(sectionId)}
+                      </span>
+                      <button
+                        onClick={() => toggleSectionVisibility(sectionId, true)}
+                        className="p-1.5 hover:bg-green-50 text-gray-400 hover:text-green-600 rounded transition-colors flex items-center gap-1 text-xs font-bold"
+                        title="Show Section"
+                      >
+                        <Eye size={14} /> Show
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
 

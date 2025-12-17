@@ -140,6 +140,10 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     }]
   }],
 
+  // Site Identity
+  siteTitle: { type: String, default: 'LUMIÈRE | Modern Fashion' },
+  favicon: { type: String, default: 'https://files.catbox.moe/kfvz5y.jpg' },
+
   // Section Headers
   categoryTitle: { type: String, default: 'Shop by Category' },
   featuredTitle: { type: String, default: 'New Arrivals' },
