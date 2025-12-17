@@ -82,7 +82,6 @@ export interface SiteConfig {
   footerTextColor?: string;
 
   // Hero
-  heroMode?: 'static' | 'slideshow'; // New field
   heroImage: string;
   heroImages?: string[]; // Array of images for slideshow
   heroVideo?: string; // Optional URL or base64 video
