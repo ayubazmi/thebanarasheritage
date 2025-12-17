@@ -76,6 +76,7 @@ export interface SlideshowSection {
   textColor?: string;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'md' | 'lg';
+  direction?: 'horizontal' | 'vertical';
 }
 
 export interface SiteConfig {
