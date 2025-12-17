@@ -1,5 +1,4 @@
 
-
 export interface Product {
   id: string;
   name: string;
@@ -61,18 +60,10 @@ export interface ThemeConfig {
   borderRadius: string;   // '0px', '4px', '8px', '99px'
 }
 
-export interface Slide {
-  image: string;
-  title?: string;
-  subtitle?: string;
-  textColor?: string;
-}
-
 export interface SlideshowSection {
   id: string;
   title?: string;
-  images?: string[]; // Deprecated
-  slides: Slide[];   // New structured slides
+  images: string[];
   textColor?: string;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'md' | 'lg';
