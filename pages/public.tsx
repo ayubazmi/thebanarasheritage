@@ -41,7 +41,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   // Backwards compatibility: use slides if available, otherwise map images to slides
   const slides = (data.slides && data.slides.length > 0) 
     ? data.slides 
-    : (data.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }));
+    : (data.images || []).map(img => ({ image: img, title: '', subtitle: '' }));
 
   const next = () => setCurrent(prev => (prev + 1) % slides.length);
   const prev = () => setCurrent(prev => (prev - 1 + slides.length) % slides.length);
@@ -90,7 +90,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                        {slide.title && (
                          <h3 
                            className={`${fontSizeClassTitle} font-serif font-bold mb-4 drop-shadow-lg animate-fade-in-up`}
-                           style={{ color: slide.textColor || data.textColor || '#FFFFFF' }}
+                           style={{ color: data.textColor || '#FFFFFF' }}
                          >
                            {slide.title}
                          </h3>
@@ -98,7 +98,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                        {slide.subtitle && (
                          <p 
                            className={`${fontSizeClassSub} max-w-2xl drop-shadow-md animate-fade-in-up delay-100`}
-                           style={{ color: slide.textColor || data.textColor || '#FFFFFF', opacity: 0.9 }}
+                           style={{ color: data.textColor || '#FFFFFF', opacity: 0.9 }}
                          >
                            {slide.subtitle}
                          </p>
