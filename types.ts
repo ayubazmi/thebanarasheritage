@@ -60,10 +60,19 @@ export interface ThemeConfig {
   borderRadius: string;   // '0px', '4px', '8px', '99px'
 }
 
+export interface Slide {
+  image: string;
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonLink?: string;
+}
+
 export interface SlideshowSection {
   id: string;
   title?: string;
-  images: string[];
+  slides: Slide[];
+  images?: string[]; // Deprecated, kept for migration
   textColor?: string;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'md' | 'lg';
