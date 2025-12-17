@@ -124,8 +124,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     }],
     textColor: String,
     textAlign: { type: String, default: 'center' },
-    fontSize: { type: String, default: 'md' },
-    direction: { type: String, default: 'horizontal' } // 'horizontal', 'vertical'
+    fontSize: { type: String, default: 'md' }
   }],
 
   // Section Headers
