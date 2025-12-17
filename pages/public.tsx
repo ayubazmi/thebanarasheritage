@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { useStore } from '../store';
@@ -138,77 +138,86 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   );
 };
 
-// --- New Feature: Vertical Carousel ---
+// --- New Feature: Vertical Carousel (Styled Cards) ---
 const VerticalCarousel: React.FC<{ data: VerticalCarouselSection }> = ({ data }) => {
-  const [current, setCurrent] = useState(0);
-  const slides = data.slides || [];
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const next = () => setCurrent(prev => (prev + 1) % slides.length);
-  const prev = () => setCurrent(prev => (prev - 1 + slides.length) % slides.length);
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { current } = scrollRef;
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const interval = setInterval(next, 6000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
-
-  if (slides.length === 0) return null;
+  if (!data.slides || data.slides.length === 0) return null;
 
   return (
-    <section className="py-12 w-full bg-white group">
-       <div className="container mx-auto px-4">
+    <section className="py-16 w-full bg-white relative group/section">
+       <div className="container mx-auto px-4 md:px-8">
+          {/* Title */}
           {data.title && (
-            <div className="mb-8 flex flex-col items-center text-center">
-               <h2 className="text-3xl font-serif text-brand-900 tracking-wide">{data.title}</h2>
-               <div className="h-0.5 w-12 bg-brand-900 mt-2" />
+            <div className="mb-10 flex flex-col items-center text-center">
+               <h2 className="text-3xl md:text-4xl font-serif text-brand-900 tracking-wide">{data.title}</h2>
+               <div className="h-0.5 w-16 bg-brand-200 mt-3" />
             </div>
           )}
           
-          <div className="relative w-full h-[70vh] md:h-[85vh] overflow-hidden rounded-sm shadow-2xl flex flex-col md:flex-row bg-gray-900">
-             
-             {/* Text Content (Left Side - Overlay on mobile, Side on desktop) */}
-             <div className="absolute inset-0 md:static md:w-1/3 z-20 flex flex-col justify-center p-8 md:p-12 bg-black/40 md:bg-brand-900 text-white pointer-events-none md:pointer-events-auto">
-                <div key={current} className="animate-fade-in-up">
-                   <h3 
-                     className="text-4xl md:text-5xl font-serif font-bold mb-4 leading-tight drop-shadow-md"
-                     style={{ color: slides[current].textColor || '#FFFFFF' }}
-                   >
-                     {slides[current].title}
-                   </h3>
-                   <p 
-                     className="text-lg md:text-xl font-light opacity-90 drop-shadow-sm"
-                     style={{ color: slides[current].textColor || '#FFFFFF' }}
-                   >
-                     {slides[current].subtitle}
-                   </p>
-                </div>
-                
-                {/* Navigation Controls (Desktop) */}
-                <div className="hidden md:flex gap-4 mt-12 pointer-events-auto">
-                   <button onClick={prev} className="p-3 border border-white/30 rounded-full hover:bg-white hover:text-brand-900 transition"><ChevronUp size={24}/></button>
-                   <button onClick={next} className="p-3 border border-white/30 rounded-full hover:bg-white hover:text-brand-900 transition"><ChevronDown size={24}/></button>
-                </div>
-             </div>
+          <div className="relative">
+             {/* Scroll Buttons (Desktop) */}
+             <button 
+               onClick={() => scroll('left')}
+               className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 bg-white/90 backdrop-blur shadow-lg rounded-full p-3 text-brand-900 hover:bg-brand-900 hover:text-white transition-all opacity-0 group-hover/section:opacity-100 hidden md:flex items-center justify-center border border-gray-100"
+             >
+               <ChevronLeft size={24} />
+             </button>
+             <button 
+               onClick={() => scroll('right')}
+               className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 bg-white/90 backdrop-blur shadow-lg rounded-full p-3 text-brand-900 hover:bg-brand-900 hover:text-white transition-all opacity-0 group-hover/section:opacity-100 hidden md:flex items-center justify-center border border-gray-100"
+             >
+               <ChevronRight size={24} />
+             </button>
 
-             {/* Image Slider (Vertical) */}
-             <div className="relative w-full md:w-2/3 h-full overflow-hidden">
-                <div 
-                  className="absolute inset-0 w-full h-full flex flex-col transition-transform duration-700 ease-in-out"
-                  style={{ transform: `translateY(-${current * 100}%)` }}
-                >
-                   {slides.map((slide, idx) => (
-                     <div key={idx} className="w-full h-full flex-shrink-0 relative">
-                        <img src={slide.image} className="w-full h-full object-cover" alt="" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
-                     </div>
-                   ))}
-                </div>
-
-                {/* Mobile Navigation Controls */}
-                <div className="absolute right-4 bottom-4 flex flex-col gap-2 md:hidden z-30">
-                   <button onClick={prev} className="p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white/40"><ChevronUp size={20}/></button>
-                   <button onClick={next} className="p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white/40"><ChevronDown size={20}/></button>
-                </div>
+             {/* Slider Container */}
+             <div 
+               ref={scrollRef}
+               className="flex overflow-x-auto gap-4 md:gap-6 pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
+               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+             >
+                {data.slides.map((slide, idx) => (
+                   <div key={idx} className="flex-shrink-0 w-[240px] md:w-[280px] snap-center">
+                      <div className="px-1 h-full"> 
+                        <div className="overflow-hidden block rounded-xl lg:rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 h-full bg-gray-50">
+                           <div className="relative overflow-hidden w-full aspect-[254/351] group cursor-pointer">
+                              <img 
+                                src={slide.image} 
+                                alt={slide.title || ''} 
+                                loading="lazy"
+                                className="object-cover w-full h-full absolute inset-0 object-top transition-transform duration-700 group-hover:scale-110"
+                              />
+                              <div className="absolute bottom-0 w-full left-0 flex flex-col min-h-24 lg:min-h-36 bg-gradient-to-b from-transparent to-black/60 justify-end pb-6 space-y-1 pointer-events-none">
+                                 {slide.title && (
+                                   <h3 
+                                     className="text-white tracking-normal text-sm font-medium text-center lg:text-lg px-2 font-serif"
+                                     style={slide.textColor ? { color: slide.textColor } : {}}
+                                   >
+                                     {slide.title}
+                                   </h3>
+                                 )}
+                                 {slide.subtitle && (
+                                   <p 
+                                     className="text-white/90 tracking-normal text-xs text-center lg:text-sm px-2 font-sans"
+                                     style={slide.textColor ? { color: slide.textColor, opacity: 0.9 } : {}}
+                                   >
+                                     {slide.subtitle}
+                                   </p>
+                                 )}
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+                   </div>
+                ))}
              </div>
           </div>
        </div>
