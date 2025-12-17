@@ -1,5 +1,4 @@
 
-
 export interface Product {
   id: string;
   name: string;
@@ -63,11 +62,9 @@ export interface ThemeConfig {
 
 export interface Slide {
   image: string;
-  tagline?: string;
   title?: string;
   subtitle?: string;
   textColor?: string; // Per-slide text color override
-  textAlign?: 'left' | 'center' | 'right'; // Per-slide alignment
   buttonText?: string;
   buttonLink?: string;
 }
@@ -106,22 +103,17 @@ export interface SiteConfig {
   // Hero
   heroMode?: 'static' | 'slideshow';
   heroImage: string;
-  heroImages?: string[]; // Deprecated Array for slideshow
+  heroImages?: string[]; // Array of images for slideshow
   heroVideo?: string; // Optional URL or base64 video
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
-  heroButtonText?: string;
-  heroButtonLink?: string;
   
   // Hero Styling (New)
   heroTextColor?: string;
   heroTextAlign?: 'left' | 'center' | 'right';
   heroFontSize?: 'sm' | 'md' | 'lg';
   
-  // Hero Slides (New)
-  heroSlides?: Slide[];
-
   // Secondary Slideshows (New Feature)
   secondarySlideshows?: SlideshowSection[];
 

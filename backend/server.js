@@ -103,29 +103,15 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   // Hero Section
   heroMode: { type: String, default: 'static' }, // static | slideshow
   heroImage: String,
-  heroImages: [String], // Legacy Array for slideshow
+  heroImages: [String], // Array for slideshow
   heroVideo: String,
   heroTagline: { type: String, default: 'New Collection' }, 
   heroTitle: String,
   heroSubtitle: String,
-  heroButtonText: { type: String, default: 'SHOP NOW' },
-  heroButtonLink: { type: String, default: '/shop' },
   heroTextColor: { type: String, default: '#FFFFFF' },
   heroTextAlign: { type: String, default: 'center' }, // left, center, right
   heroFontSize: { type: String, default: 'md' }, // sm, md, lg
   
-  // Hero Slides (New structured array)
-  heroSlides: [{
-    image: String,
-    tagline: String,
-    title: String,
-    subtitle: String,
-    textColor: String,
-    textAlign: String,
-    buttonText: String,
-    buttonLink: String
-  }],
-
   // Secondary Slideshows
   secondarySlideshows: [{
     id: String,
@@ -305,8 +291,6 @@ app.get('/api/config', async (req, res) => {
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',
         heroSubtitle: 'Discover our latest arrivals designed for the modern woman.',
-        heroButtonText: 'SHOP NOW',
-        heroButtonLink: '/shop',
         heroTextColor: '#FFFFFF',
         heroTextAlign: 'center',
         heroFontSize: 'md',
@@ -327,7 +311,6 @@ app.get('/api/config', async (req, res) => {
         footerBgColor: '#2C251F',
         footerTextColor: '#F3F4F6',
         heroImages: [],
-        heroSlides: [],
         secondarySlideshows: []
       });
       await config.save();
