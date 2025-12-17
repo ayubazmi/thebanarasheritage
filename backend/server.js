@@ -101,6 +101,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
 
   // Hero Section
   heroImage: String,
+  heroImages: [String], // Array for slideshow
   heroVideo: String,
   heroTagline: { type: String, default: 'New Collection' }, 
   heroTitle: String,
@@ -281,7 +282,8 @@ app.get('/api/config', async (req, res) => {
         contactAddress: '123 Fashion Ave, New York, NY',
         currency: '$',
         footerBgColor: '#2C251F',
-        footerTextColor: '#F3F4F6'
+        footerTextColor: '#F3F4F6',
+        heroImages: []
       });
       await config.save();
     }
