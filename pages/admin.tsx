@@ -2,15 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, Category, User, SiteConfig, Page } from '../types';
+import { Product, Category, User, SiteConfig, Page, ThemeConfig, Slide, VerticalCarouselSection, SlideshowSection } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight, PanelTop, File
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight, PanelTop, File, Trash2, Save, AlertCircle, Check, Eye, LayoutDashboard
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
 const DEFAULT_PROMO_IMAGE = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
+
+// Helper for image upload
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
 
 // --- Login ---
 export const AdminLogin: React.FC = () => {
@@ -57,26 +67,31 @@ export const AdminLogin: React.FC = () => {
 
 // --- Dashboard Overview ---
 export const AdminDashboard: React.FC = () => {
-  const { products, orders } = useStore();
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const { orders, products, users } = useStore();
+  
+  const totalSales = orders.reduce((sum, o) => sum + o.total, 0);
+  const pendingOrders = orders.filter(o => o.status === 'Pending').length;
 
   const StatCard = ({ title, value, icon: Icon, color }: any) => (
-    <div className="bg-white p-6 rounded shadow-sm flex items-center space-x-4">
-      <div className={`p-3 rounded-full ${color} text-white`}><Icon size={24} /></div>
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
       <div>
-        <p className="text-sm text-gray-500 font-medium">{title}</p>
-        <p className="text-2xl font-bold text-brand-900">{value}</p>
+        <p className="text-sm text-gray-500 mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-brand-900">{value}</h3>
+      </div>
+      <div className={`p-3 rounded-full ${color}`}>
+        <Icon size={24} className="text-white" />
       </div>
     </div>
   );
 
   return (
     <div>
-      <h1 className="text-2xl font-serif font-bold mb-8">Dashboard Overview</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Revenue" value={`$${totalRevenue}`} icon={DollarSign} color="bg-emerald-500" />
-        <StatCard title="Total Orders" value={orders.length} icon={ShoppingCart} color="bg-blue-500" />
-        <StatCard title="Products" value={products.length} icon={Package} color="bg-indigo-500" />
+      <h1 className="text-3xl font-serif font-bold text-brand-900 mb-8">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard title="Total Sales" value={`$${totalSales.toLocaleString()}`} icon={ShoppingCart} color="bg-emerald-500" />
+        <StatCard title="Total Orders" value={orders.length} icon={FileText} color="bg-blue-500" />
+        <StatCard title="Pending Orders" value={pendingOrders} icon={AlertCircle} color="bg-amber-500" />
+        <StatCard title="Total Products" value={products.length} icon={Package} color="bg-purple-500" />
       </div>
 
       <div className="bg-white rounded shadow-sm p-6">
@@ -167,7 +182,7 @@ export const AdminLogs: React.FC = () => {
   );
 };
 
-// --- Pages Manager (New Feature) ---
+// --- Pages Manager ---
 export const AdminPages: React.FC = () => {
   const { pages, addPage, updatePage, deletePage } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -395,1120 +410,197 @@ export const AdminPages: React.FC = () => {
   );
 };
 
-// --- Settings Manager (Content & Basic Settings) ---
+// --- Settings (Complex) ---
 export const AdminSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
-  const [localConfig, setLocalConfig] = useState(config);
-  
-  useEffect(() => {
-    if (config && Object.keys(config).length > 0) {
-      setLocalConfig(prev => ({...config, ...prev})); 
-      setLocalConfig(config);
-    }
-  }, [config]);
+  const [localConfig, setLocalConfig] = useState<SiteConfig>({ ...config });
+  const [activeTab, setActiveTab] = useState('general');
 
-  const handleSave = () => {
-    updateConfig(localConfig);
-    alert('Settings saved successfully!');
+  useEffect(() => { if (config) setLocalConfig(config); }, [config]);
+
+  const handleSave = async () => {
+    await updateConfig(localConfig);
+    alert("Configuration Saved!");
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalConfig(prev => ({ ...prev, logo: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+  const handleImageUpload = async (key: keyof SiteConfig, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      const base64 = await fileToBase64(e.target.files[0]);
+      setLocalConfig(prev => ({ ...prev, [key]: base64 }));
     }
   };
 
-  const handleHeroUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); 
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert("Video too large! Max 10MB for direct upload. Use a URL for larger videos.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalConfig(prev => ({ ...prev, heroVideo: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handlePromoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalConfig(prev => ({ ...prev, promoImage: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  return (
-    <div className="max-w-4xl pb-20">
-      <div className="mb-8">
-        <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
-      </div>
-      
-      <div className="space-y-8">
-        
-        {/* Brand Identity */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Hexagon className="mr-2" size={20}/> Brand Identity</h3>
-          <div className="flex flex-col gap-6">
-            <Input label="Website Name" value={localConfig.siteName || ''} placeholder="LUMIÈRE" onChange={e => setLocalConfig({...localConfig, siteName: e.target.value})} />
-            
-            <div className="flex items-center gap-8">
-              <div className="w-24 h-24 bg-gray-100 border rounded flex items-center justify-center overflow-hidden relative group">
-                 {localConfig.logo ? (
-                   <>
-                     <img src={localConfig.logo} alt="Logo" className="w-full h-full object-contain p-2" />
-                     <button 
-                       onClick={() => setLocalConfig({...localConfig, logo: ''})}
-                       className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                       title="Delete Logo"
-                     >
-                       <Trash size={16} />
-                     </button>
-                   </>
-                 ) : (
-                   <span className="text-xs text-gray-400">No Logo</span>
-                 )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Upload Website Logo</label>
-                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
-                  <Upload size={16}/> Choose Logo
-                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                </label>
-                <p className="text-xs text-gray-400 mt-1">Recommended: Height 100px-200px (PNG or SVG)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Configuration (Moved to Top for Visibility) */}
-        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-blue-500">
-          <h3 className="font-bold text-lg mb-4 flex items-center text-blue-800"><Footprints className="mr-2" size={20}/> Footer Configuration (Shop & Contact)</h3>
-          
-          <div className="space-y-6">
-            {/* Shop Links */}
-            <div>
-                <Input label="Footer Shop Section Title" value={localConfig.footerShopTitle || 'SHOP'} placeholder="SHOP" onChange={e => setLocalConfig({...localConfig, footerShopTitle: e.target.value})} />
-                
-                <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-4 rounded">
-                    <p className="col-span-2 text-xs font-bold text-gray-500 uppercase">Footer Links (Title & URL)</p>
-                    <Input label="Link 1 Text" value={localConfig.footerLink1Label || ''} placeholder="New Arrivals" onChange={e => setLocalConfig({...localConfig, footerLink1Label: e.target.value})} />
-                    <Input label="Link 1 URL" value={localConfig.footerLink1Url || ''} placeholder="/shop?cat=new" onChange={e => setLocalConfig({...localConfig, footerLink1Url: e.target.value})} />
-                    
-                    <Input label="Link 2 Text" value={localConfig.footerLink2Label || ''} placeholder="Kurtis" onChange={e => setLocalConfig({...localConfig, footerLink2Label: e.target.value})} />
-                    <Input label="Link 2 URL" value={localConfig.footerLink2Url || ''} placeholder="/shop?cat=kurtis" onChange={e => setLocalConfig({...localConfig, footerLink2Url: e.target.value})} />
-
-                    <Input label="Link 3 Text" value={localConfig.footerLink3Label || ''} placeholder="Dresses" onChange={e => setLocalConfig({...localConfig, footerLink3Label: e.target.value})} />
-                    <Input label="Link 3 URL" value={localConfig.footerLink3Url || ''} placeholder="/shop?cat=dresses" onChange={e => setLocalConfig({...localConfig, footerLink3Url: e.target.value})} />
-
-                    <Input label="Link 4 Text" value={localConfig.footerLink4Label || ''} placeholder="Sale" onChange={e => setLocalConfig({...localConfig, footerLink4Label: e.target.value})} />
-                    <Input label="Link 4 URL" value={localConfig.footerLink4Url || ''} placeholder="/shop?cat=sale" onChange={e => setLocalConfig({...localConfig, footerLink4Url: e.target.value})} />
-                </div>
-            </div>
-
-            {/* Newsletter */}
-            <div className="pt-4 border-t">
-                <h4 className="font-bold text-sm mb-2 text-gray-600 uppercase">Newsletter Section (Stay in Touch)</h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                    <Input label="Section Title" value={localConfig.footerNewsletterTitle || ''} placeholder="STAY IN TOUCH" onChange={e => setLocalConfig({...localConfig, footerNewsletterTitle: e.target.value})} />
-                    <Input label="Input Placeholder" value={localConfig.footerNewsletterPlaceholder || ''} placeholder="Your email" onChange={e => setLocalConfig({...localConfig, footerNewsletterPlaceholder: e.target.value})} />
-                    <Input label="Button Text" value={localConfig.footerNewsletterButtonText || ''} placeholder="JOIN" onChange={e => setLocalConfig({...localConfig, footerNewsletterButtonText: e.target.value})} />
-                </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero Section */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner</h3>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <Input label="Hero Tagline (Top Text)" value={localConfig.heroTagline || ''} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} placeholder="e.g. New Collection" />
-              <Input label="Hero Title (Main)" value={localConfig.heroTitle} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
-              <Input label="Hero Subtitle" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
-              
-              <div className="border-t pt-4 mt-4">
-                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Background Media</p>
-                <p className="text-xs text-gray-400 mb-2">
-                  (Used when 'Static Image / Video' mode is selected in Developer Settings)
-                </p>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Image Upload</label>
-                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
-                      <Upload size={16}/> Choose Image
-                      <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} />
-                    </label>
-                    <p className="text-xs text-gray-400 mt-1">Recommended: 1920x1080px (16:9) or 1920x800px</p>
-                  </div>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">OR USE VIDEO</span></div>
-                  </div>
-
-                  <Input 
-                    label="Video URL (YouTube/MP4 Link)" 
-                    placeholder="https://..." 
-                    value={localConfig.heroVideo && !localConfig.heroVideo.startsWith('data:') ? localConfig.heroVideo : ''} 
-                    onChange={e => setLocalConfig({...localConfig, heroVideo: e.target.value})} 
-                  />
-                  
-                   <div>
-                    <label className="block text-sm font-medium mb-1">Video Upload (Max 10MB)</label>
-                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
-                      <Video size={16}/> Upload Short Video
-                      <input type="file" className="hidden" accept="video/*" onChange={handleVideoUpload} />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
-               {localConfig.heroVideo ? (
-                 <>
-                   <video src={localConfig.heroVideo} className="w-full h-full object-cover" autoPlay muted loop playsInline />
-                   <button 
-                     onClick={() => setLocalConfig({...localConfig, heroVideo: ''})}
-                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                     title="Remove Video"
-                   >
-                     <Trash size={32} />
-                   </button>
-                 </>
-               ) : (
-                 <>
-                   <img 
-                     src={localConfig.heroImage || DEFAULT_HERO_IMAGE} 
-                     className="w-full h-full object-cover" 
-                     alt="Hero Preview" 
-                   />
-                   {localConfig.heroImage && (
-                     <button 
-                       onClick={() => setLocalConfig({...localConfig, heroImage: ''})}
-                       className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                       title="Delete Image (Revert to Default)"
-                     >
-                       <Trash size={32} />
-                     </button>
-                   )}
-                 </>
-               )}
-               <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs text-center pointer-events-none">Preview</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section Titles */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Type className="mr-2" size={20}/> Homepage Section Titles</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Input label="Category Section Title" value={localConfig.categoryTitle || ''} placeholder="Shop by Category" onChange={e => setLocalConfig({...localConfig, categoryTitle: e.target.value})} />
-            <Input label="Featured Section Title" value={localConfig.featuredTitle || ''} placeholder="New Arrivals" onChange={e => setLocalConfig({...localConfig, featuredTitle: e.target.value})} />
-            <Input label="Featured Section Subtitle" className="md:col-span-2" value={localConfig.featuredSubtitle || ''} placeholder="Fresh styles just added to our collection." onChange={e => setLocalConfig({...localConfig, featuredSubtitle: e.target.value})} />
-          </div>
-        </div>
-
-        {/* Sale / Promo Section */}
-        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-brand-900">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><Megaphone className="mr-2" size={20}/> Sale Section (Explore Sale Banner)</h3>
-          <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">This controls the promotional banner in the middle of the homepage.</p>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <Input label="Banner Title" value={localConfig.promoTitle || ''} placeholder="Summer Sale is Live" onChange={e => setLocalConfig({...localConfig, promoTitle: e.target.value})} />
-              <div className="col-span-1">
-                <label className="block text-sm font-medium mb-1">Banner Description</label>
-                <textarea className="w-full border p-2 text-sm h-24" value={localConfig.promoText || ''} placeholder="Get up to 50% off on selected dresses and kurtis. Limited time offer." onChange={e => setLocalConfig({...localConfig, promoText: e.target.value})}></textarea>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <Input label="Button Label" value={localConfig.promoButtonText || ''} placeholder="Explore Sale" onChange={e => setLocalConfig({...localConfig, promoButtonText: e.target.value})} />
-                 <Input label="Button Link" value={localConfig.promoButtonLink || ''} placeholder="/shop" onChange={e => setLocalConfig({...localConfig, promoButtonLink: e.target.value})} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Banner Image</label>
-                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
-                  <Upload size={16}/> Upload Image
-                  <input type="file" className="hidden" accept="image/*" onChange={handlePromoUpload} />
-                </label>
-                <p className="text-xs text-gray-400 mt-1">Recommended: 1000x800px (4:3) or 800x600px</p>
-              </div>
-            </div>
-            <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
-               <img 
-                 src={localConfig.promoImage || DEFAULT_PROMO_IMAGE} 
-                 className="w-full h-full object-cover" 
-                 alt="Promo Preview" 
-               />
-               {localConfig.promoImage && (
-                 <button 
-                   onClick={() => setLocalConfig({...localConfig, promoImage: ''})}
-                   className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                   title="Delete Image (Revert to Default)"
-                 >
-                   <Trash size={32} />
-                 </button>
-               )}
-               <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-xs text-center pointer-events-none">Preview</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust Badges Section (New) */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4 flex items-center"><ShieldCheck className="mr-2" size={20}/> Homepage Trust Badges</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2 p-4 bg-gray-50 rounded">
-              <p className="font-bold text-sm text-gray-500 uppercase">Badge 1</p>
-              <Input label="Title" value={localConfig.trustBadge1Title || ''} placeholder="Premium Quality" onChange={e => setLocalConfig({...localConfig, trustBadge1Title: e.target.value})} />
-              <Input label="Text" value={localConfig.trustBadge1Text || ''} placeholder="Hand-picked fabrics..." onChange={e => setLocalConfig({...localConfig, trustBadge1Text: e.target.value})} />
-            </div>
-            <div className="space-y-2 p-4 bg-gray-50 rounded">
-              <p className="font-bold text-sm text-gray-500 uppercase">Badge 2</p>
-              <Input label="Title" value={localConfig.trustBadge2Title || ''} placeholder="Secure Payment" onChange={e => setLocalConfig({...localConfig, trustBadge2Title: e.target.value})} />
-              <Input label="Text" value={localConfig.trustBadge2Text || ''} placeholder="100% secure checkout..." onChange={e => setLocalConfig({...localConfig, trustBadge2Text: e.target.value})} />
-            </div>
-            <div className="space-y-2 p-4 bg-gray-50 rounded">
-              <p className="font-bold text-sm text-gray-500 uppercase">Badge 3</p>
-              <Input label="Title" value={localConfig.trustBadge3Title || ''} placeholder="Fast Delivery" onChange={e => setLocalConfig({...localConfig, trustBadge3Title: e.target.value})} />
-              <Input label="Text" value={localConfig.trustBadge3Text || ''} placeholder="Shipping within 3-5 days" onChange={e => setLocalConfig({...localConfig, trustBadge3Text: e.target.value})} />
-            </div>
-          </div>
-        </div>
-
-        {/* Content Section */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4">Website Content (About Us)</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Input label="About Us Title" value={localConfig.aboutTitle || ''} onChange={e => setLocalConfig({...localConfig, aboutTitle: e.target.value})} />
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">About Us Content</label>
-              <textarea className="w-full border p-2 h-32" value={localConfig.aboutContent || ''} onChange={e => setLocalConfig({...localConfig, aboutContent: e.target.value})}></textarea>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Section */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-4">Contact Information & Socials</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Input label="Contact Email" value={localConfig.contactEmail || ''} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} />
-            <Input label="Contact Phone" value={localConfig.contactPhone || ''} onChange={e => setLocalConfig({...localConfig, contactPhone: e.target.value})} />
-            <Input label="Address" className="md:col-span-2" value={localConfig.contactAddress || ''} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} />
-            
-            <div className="md:col-span-2 grid md:grid-cols-3 gap-4 pt-4 border-t mt-4">
-               <div className="flex items-center gap-2 font-bold text-sm text-gray-500 mb-2 col-span-3"><Share2 size={16}/> Social Media Links</div>
-               <Input label="Instagram URL" value={localConfig.socialInstagram || ''} placeholder="https://instagram.com/..." onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} />
-               <Input label="Facebook URL" value={localConfig.socialFacebook || ''} placeholder="https://facebook.com/..." onChange={e => setLocalConfig({...localConfig, socialFacebook: e.target.value})} />
-               <Input label="WhatsApp URL" value={localConfig.socialWhatsapp || ''} placeholder="https://wa.me/..." onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} />
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end">
-           <Button onClick={handleSave} size="lg">Save All Changes</Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- Developer Settings (New Feature) ---
-export const AdminDeveloperSettings: React.FC = () => {
-  const { config, updateConfig } = useStore();
-  const [localConfig, setLocalConfig] = useState(config);
-  
-  // Sync logic
-  useEffect(() => {
-    if (config && Object.keys(config).length > 0) {
-      setLocalConfig({
-        ...config,
-        // Ensure defaults exist if config is incomplete from DB
-        theme: {
-          primaryColor: '#2C251F',
-          secondaryColor: '#D5CDC0',
-          backgroundColor: '#F9F8F6',
-          fontFamilySans: 'Inter',
-          fontFamilySerif: 'Cormorant Garamond',
-          borderRadius: '0px',
-          ...config.theme
-        },
-        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
-        heroImages: config.heroImages || [],
-        heroMode: config.heroMode || 'static',
-        // Migration: Ensure 'slides' exists for secondary slideshows, fallback to 'images' for legacy
-        secondarySlideshows: (config.secondarySlideshows || []).map(s => ({
-          ...s,
-          slides: (s.slides && s.slides.length > 0) 
-            ? s.slides 
-            : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' })),
-          direction: s.direction || 'horizontal'
-        })),
-        verticalCarousels: config.verticalCarousels || [],
-        heroTextColor: config.heroTextColor || '#FFFFFF',
-        heroTextAlign: config.heroTextAlign || 'center',
-        heroFontSize: config.heroFontSize || 'md',
-      });
-    }
-  }, [config]);
-
-  const handleSave = () => {
-    updateConfig(localConfig);
-    alert('Developer settings updated successfully!');
-  };
-
-  const handleReset = () => {
-    if (window.confirm("Are you sure you want to reset all developer settings to default?")) {
-      setLocalConfig(prev => ({
-        ...prev,
-        theme: {
-          primaryColor: '#2C251F',
-          secondaryColor: '#D5CDC0',
-          backgroundColor: '#F9F8F6',
-          fontFamilySans: 'Inter',
-          fontFamilySerif: 'Cormorant Garamond',
-          borderRadius: '0px'
-        },
-        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
-        // Reset Footer Styling
-        footerBgColor: '#2C251F',
-        footerTextColor: '#F3F4F6',
-        // Reset Announcement Bar
-        announcementEnabled: false,
-        announcementBlink: false,
-        announcementBgColor: '#000000',
-        announcementTextColor: '#FFFFFF',
-        // Reset Slideshow
-        heroImages: [],
-        heroMode: 'static',
-        heroTextColor: '#FFFFFF',
-        heroTextAlign: 'center',
-        heroFontSize: 'md',
-        secondarySlideshows: [],
-        verticalCarousels: []
-      }));
-    }
-  };
-
-  const moveSection = (index: number, direction: 'up' | 'down') => {
-    const newSections = [...(localConfig.homepageSections || [])];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (targetIndex >= 0 && targetIndex < newSections.length) {
-      [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
-      setLocalConfig({ ...localConfig, homepageSections: newSections });
-    }
-  };
-
-  // --- Hero Slideshow Handlers ---
-  const handleAddHeroSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalConfig(prev => ({ 
-           ...prev, 
-           heroImages: [...(prev.heroImages || []), reader.result as string] 
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeHeroSlide = (index: number) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       heroImages: prev.heroImages?.filter((_, i) => i !== index)
-    }));
-  };
-
-  // --- Secondary Slideshow Handlers ---
-  const addSecondarySlideshow = () => {
-     const newId = `slideshow_${Date.now()}`;
-     const newSlideshow = { 
-       id: newId, 
-       title: `New Slideshow`, 
-       images: [],
-       slides: [], // Initialize empty slides array
-       textColor: '#2C251F', // Default dark
-       textAlign: 'center' as const,
-       fontSize: 'md' as const,
-       direction: 'horizontal' as const
-     };
-     
-     setLocalConfig(prev => ({
-        ...prev,
-        secondarySlideshows: [...(prev.secondarySlideshows || []), newSlideshow],
-        homepageSections: [...(prev.homepageSections || []), newId]
-     }));
-  };
-
-  const removeSecondarySlideshow = (id: string) => {
-    if(window.confirm("Delete this slideshow section?")) {
-      setLocalConfig(prev => ({
-          ...prev,
-          secondarySlideshows: prev.secondarySlideshows?.filter(s => s.id !== id),
-          homepageSections: prev.homepageSections?.filter(sid => sid !== id)
-      }));
-    }
-  };
-
-  const updateSlideshowTitle = (id: string, title: string) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, title } : s)
-    }));
-  };
-
-  const updateSlideshowStyle = (id: string, field: string, value: any) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, [field]: value } : s)
-    }));
-  };
-
-  // Handlers for individual slides within a slideshow
-  const addSlideToSlideshow = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-         setLocalConfig(prev => ({
-            ...prev,
-            secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
-                ...s, 
-                slides: [...(s.slides || []), { image: reader.result as string, title: '', subtitle: '', textColor: '' }] 
-            } : s)
-         }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeSlideFromSlideshow = (id: string, slideIndex: number) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, slides: s.slides.filter((_, i) => i !== slideIndex) } : s)
-    }));
-  };
-
-  const updateSlideField = (id: string, slideIndex: number, field: string, value: string) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
-          ...s, 
-          slides: s.slides.map((slide, i) => i === slideIndex ? { ...slide, [field]: value } : slide)
-       } : s)
-    }));
-  };
-
-  // --- Vertical Carousel Handlers (NEW) ---
+  // --- Vertical Carousel Logic ---
   const addVerticalCarousel = () => {
-     const newId = `vcarousel_${Date.now()}`;
-     const newCarousel = { 
-       id: newId, 
-       title: `New Vertical Carousel`, 
-       slides: []
-     };
-     
-     setLocalConfig(prev => ({
-        ...prev,
-        verticalCarousels: [...(prev.verticalCarousels || []), newCarousel],
-        homepageSections: [...(prev.homepageSections || []), newId]
-     }));
+    const newCarousel: VerticalCarouselSection = { id: `vc_${Date.now()}`, title: 'New Collection', slides: [] };
+    setLocalConfig(prev => ({ ...prev, verticalCarousels: [...(prev.verticalCarousels || []), newCarousel] }));
   };
-
   const removeVerticalCarousel = (id: string) => {
-    if(window.confirm("Delete this vertical carousel section?")) {
+    setLocalConfig(prev => ({ ...prev, verticalCarousels: prev.verticalCarousels?.filter(vc => vc.id !== id) }));
+  };
+  const addSlideToVerticalCarousel = async (carouselId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      const base64 = await fileToBase64(e.target.files[0]);
+      const newSlide: Slide = { image: base64, title: 'Slide Title', subtitle: 'Slide Subtitle', textColor: '#FFFFFF' };
       setLocalConfig(prev => ({
-          ...prev,
-          verticalCarousels: prev.verticalCarousels?.filter(c => c.id !== id),
-          homepageSections: prev.homepageSections?.filter(sid => sid !== id)
+        ...prev,
+        verticalCarousels: prev.verticalCarousels?.map(vc => 
+          vc.id === carouselId ? { ...vc, slides: [...(vc.slides || []), newSlide] } : vc
+        )
       }));
     }
   };
-
-  const updateVerticalCarouselTitle = (id: string, title: string) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { ...c, title } : c)
-    }));
+  const removeSlideFromVerticalCarousel = (carouselId: string, slideIdx: number) => {
+      setLocalConfig(prev => ({
+        ...prev,
+        verticalCarousels: prev.verticalCarousels?.map(vc => 
+          vc.id === carouselId ? { ...vc, slides: vc.slides.filter((_, idx) => idx !== slideIdx) } : vc
+        )
+      }));
+  };
+  const updateVerticalSlide = (carouselId: string, slideIdx: number, field: keyof Slide, value: string) => {
+      setLocalConfig(prev => ({
+        ...prev,
+        verticalCarousels: prev.verticalCarousels?.map(vc => 
+          vc.id === carouselId ? { ...vc, slides: vc.slides.map((s, idx) => idx === slideIdx ? { ...s, [field]: value } : s) } : vc
+        )
+      }));
   };
 
-  const addSlideToVerticalCarousel = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-         setLocalConfig(prev => ({
-            ...prev,
-            verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { 
-                ...c, 
-                slides: [...(c.slides || []), { image: reader.result as string, title: '', subtitle: '', textColor: '' }] 
-            } : c)
-         }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeSlideFromVerticalCarousel = (id: string, slideIndex: number) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { ...c, slides: c.slides.filter((_, i) => i !== slideIndex) } : c)
-    }));
-  };
-
-  const updateVerticalSlideField = (id: string, slideIndex: number, field: string, value: string) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       verticalCarousels: prev.verticalCarousels?.map(c => c.id === id ? { 
-          ...c, 
-          slides: c.slides.map((slide, i) => i === slideIndex ? { ...slide, [field]: value } : slide)
-       } : c)
-    }));
-  };
-
-  const fonts = [
-    { name: 'Inter (Modern Sans)', value: 'Inter' },
-    { name: 'Lato (Friendly Sans)', value: 'Lato' },
-    { name: 'Montserrat (Geometric Sans)', value: 'Montserrat' },
-    { name: 'Open Sans (Neutral Sans)', value: 'Open Sans' },
-    { name: 'Cormorant Garamond (Elegant Serif)', value: 'Cormorant Garamond' },
-    { name: 'Playfair Display (Display Serif)', value: 'Playfair Display' },
-  ];
-
-  const sectionNames: Record<string, string> = {
-    hero: 'Hero Banner',
-    categories: 'Categories Grid',
-    featured: 'Featured Products',
-    promo: 'Promotional Banner',
-    trust: 'Trust Badges'
-  };
-
-  // Helper to get display name for sections
-  const getSectionName = (id: string) => {
-     if(sectionNames[id]) return sectionNames[id];
-     
-     const slideshow = localConfig.secondarySlideshows?.find(s => s.id === id);
-     if(slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
-
-     const vcarousel = localConfig.verticalCarousels?.find(v => v.id === id);
-     if(vcarousel) return `Vertical Carousel: ${vcarousel.title || 'Untitled'}`;
-
-     return id; // Fallback
-  };
-
-  // Reusable Styling Controls Component
-  const TextStylingControls = ({ 
-    textColor, textAlign, fontSize, 
-    onChangeColor, onChangeAlign, onChangeSize 
-  }: any) => (
-    <div className="flex flex-wrap items-center gap-4 bg-white p-2 rounded border border-gray-200">
-       <div className="flex items-center gap-2">
-         <input 
-           type="color" 
-           value={textColor || '#000000'} 
-           onChange={(e) => onChangeColor(e.target.value)} 
-           className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-         />
-       </div>
-       <div className="flex border rounded overflow-hidden">
-         <button onClick={() => onChangeAlign('left')} className={`p-2 hover:bg-gray-100 ${textAlign === 'left' ? 'bg-gray-200' : 'bg-white'}`} title="Left"><AlignLeft size={16}/></button>
-         <button onClick={() => onChangeAlign('center')} className={`p-2 hover:bg-gray-100 ${textAlign === 'center' ? 'bg-gray-200' : 'bg-white'}`} title="Center"><AlignCenter size={16}/></button>
-         <button onClick={() => onChangeAlign('right')} className={`p-2 hover:bg-gray-100 ${textAlign === 'right' ? 'bg-gray-200' : 'bg-white'}`} title="Right"><AlignRight size={16}/></button>
-       </div>
-       <div className="flex border rounded overflow-hidden text-xs font-bold">
-         <button onClick={() => onChangeSize('sm')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'sm' ? 'bg-gray-200' : 'bg-white'}`}>S</button>
-         <button onClick={() => onChangeSize('md')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'md' ? 'bg-gray-200' : 'bg-white'}`}>M</button>
-         <button onClick={() => onChangeSize('lg')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'lg' ? 'bg-gray-200' : 'bg-white'}`}>L</button>
-       </div>
-    </div>
-  );
-
-  if (!localConfig.theme) return <div>Loading...</div>;
+  const tabs = ['general', 'hero', 'verticals', 'promo', 'footer'];
 
   return (
-    <div className="max-w-4xl pb-20">
-      <div className="mb-8">
-        <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
-        <p className="text-gray-500">Advanced customization for theme and layout.</p>
+    <div className="max-w-5xl mx-auto pb-20">
+      <div className="flex justify-between items-center mb-8 sticky top-0 bg-brand-50 pt-4 pb-4 z-10">
+        <h1 className="text-2xl font-bold">Content & Settings</h1>
+        <Button onClick={handleSave}><Save size={18} className="mr-2" /> Save Changes</Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        
-        {/* Color Palette */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2" size={20}/> Color Palette</h3>
-          
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-1">Primary Color (Text & Dark BG)</label>
-              <div className="flex gap-2">
-                <input 
-                  type="color" 
-                  value={localConfig.theme.primaryColor} 
-                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input 
-                  value={localConfig.theme.primaryColor} 
-                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})} 
-                />
-              </div>
-            </div>
+      <div className="flex space-x-1 mb-6 border-b overflow-x-auto">
+        {tabs.map(t => (
+          <button key={t} onClick={() => setActiveTab(t)} className={`px-4 py-2 capitalize ${activeTab === t ? 'border-b-2 border-brand-900 font-bold' : 'text-gray-500'}`}>{t}</button>
+        ))}
+      </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Secondary / Accent Color</label>
-              <div className="flex gap-2">
-                <input 
-                  type="color" 
-                  value={localConfig.theme.secondaryColor} 
-                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input 
-                  value={localConfig.theme.secondaryColor} 
-                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})} 
-                />
-              </div>
+      <div className="space-y-8">
+        {/* General */}
+        {activeTab === 'general' && (
+          <div className="bg-white p-6 rounded-lg shadow space-y-6">
+            <h3 className="font-bold border-b pb-2">Brand Identity</h3>
+            <Input label="Site Name" value={localConfig.siteName} onChange={e => setLocalConfig({...localConfig, siteName: e.target.value})} />
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                  <label className="block text-sm font-medium mb-1">Logo</label>
+                  <input type="file" onChange={e => handleImageUpload('logo', e)} className="text-sm" />
+                  {localConfig.logo && <img src={localConfig.logo} className="mt-2 h-12 object-contain" />}
+               </div>
+               <Input label="Currency Symbol" value={localConfig.currency} onChange={e => setLocalConfig({...localConfig, currency: e.target.value})} />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Page Background Color</label>
-              <div className="flex gap-2">
-                <input 
-                  type="color" 
-                  value={localConfig.theme.backgroundColor} 
-                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input 
-                  value={localConfig.theme.backgroundColor} 
-                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})} 
-                />
-              </div>
+            
+            <h3 className="font-bold border-b pb-2 pt-4">Announcement Bar</h3>
+            <div className="flex items-center space-x-4 mb-2">
+               <label className="flex items-center space-x-2"><input type="checkbox" checked={localConfig.announcementEnabled} onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})} /> <span>Enabled</span></label>
+               <label className="flex items-center space-x-2"><input type="checkbox" checked={localConfig.announcementBlink} onChange={e => setLocalConfig({...localConfig, announcementBlink: e.target.checked})} /> <span>Blinking Effect</span></label>
+            </div>
+            <Input label="Text" value={localConfig.announcementText} onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} />
+            <div className="grid grid-cols-3 gap-4">
+              <Input label="Link (Optional)" value={localConfig.announcementLink} onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} />
+              <Input label="Background Color" type="color" value={localConfig.announcementBgColor} onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} className="h-10" />
+              <Input label="Text Color" type="color" value={localConfig.announcementTextColor} onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} className="h-10" />
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Typography & Style */}
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Type className="mr-2" size={20}/> Typography & Style</h3>
-          
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-1">Heading Font (Serif)</label>
-              <select 
-                className="w-full border p-2 rounded"
-                value={localConfig.theme.fontFamilySerif}
-                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySerif: e.target.value}})}
-              >
-                {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Body Font (Sans)</label>
-              <select 
-                className="w-full border p-2 rounded"
-                value={localConfig.theme.fontFamilySans}
-                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySans: e.target.value}})}
-              >
-                {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Border Radius Style</label>
-              <div className="grid grid-cols-4 gap-2">
-                {['0px', '4px', '8px', '99px'].map(r => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setLocalConfig({...localConfig, theme: {...localConfig.theme!, borderRadius: r}})}
-                    className={`border p-2 text-center text-xs ${localConfig.theme?.borderRadius === r ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}`}
-                    style={{ borderRadius: r }}
-                  >
-                    {r === '0px' ? 'Square' : r === '99px' ? 'Round' : r}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Announcement Bar Settings */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-yellow-400">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Megaphone className="mr-2" size={20}/> Announcement Bar</h3>
-          
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-4">
-               <label className="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border hover:bg-gray-100 transition-colors">
-                 <input 
-                   type="checkbox" 
-                   className="w-5 h-5 accent-brand-900 rounded"
-                   checked={localConfig.announcementEnabled || false} 
-                   onChange={e => setLocalConfig({
-                     ...localConfig, 
-                     announcementEnabled: e.target.checked,
-                     announcementBlink: e.target.checked
-                   })}
-                 />
-                 <span className="font-medium text-sm">Announcement Bar</span>
-               </label>
-            </div>
-
-            {localConfig.announcementEnabled && (
-              <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up p-4 bg-gray-50 rounded">
-                <Input 
-                  label="Announcement Text" 
-                  value={localConfig.announcementText || ''} 
-                  placeholder="e.g., Free Shipping on Orders Over $50!" 
-                  onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} 
-                />
-                <Input 
-                  label="Link URL (Optional)" 
-                  value={localConfig.announcementLink || ''} 
-                  placeholder="/shop" 
-                  onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} 
-                />
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Background Color</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={localConfig.announcementBgColor || '#000000'} 
-                      onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})}
-                      className="w-10 h-10 rounded cursor-pointer border-0"
-                    />
-                    <Input 
-                      value={localConfig.announcementBgColor || '#000000'} 
-                      onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} 
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Text Color</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={localConfig.announcementTextColor || '#FFFFFF'} 
-                      onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})}
-                      className="w-10 h-10 rounded cursor-pointer border-0"
-                    />
-                    <Input 
-                      value={localConfig.announcementTextColor || '#FFFFFF'} 
-                      onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} 
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer Styling */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-gray-800">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Footprints className="mr-2" size={20}/> Footer Styling</h3>
-          
-          <div className="grid md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded">
-            <div>
-              <label className="block text-sm font-medium mb-1">Footer Background Color</label>
-              <div className="flex gap-2">
-                <input 
-                  type="color" 
-                  value={localConfig.footerBgColor || '#2C251F'} 
-                  onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input 
-                  value={localConfig.footerBgColor || '#2C251F'} 
-                  onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} 
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Footer Text Color</label>
-              <div className="flex gap-2">
-                <input 
-                  type="color" 
-                  value={localConfig.footerTextColor || '#F3F4F6'} 
-                  onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})}
-                  className="w-10 h-10 rounded cursor-pointer border-0"
-                />
-                <Input 
-                  value={localConfig.footerTextColor || '#F3F4F6'} 
-                  onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero Slideshow */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
-          <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Section Mode</h3>
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <label className={`flex-1 p-4 border rounded cursor-pointer transition-all ${localConfig.heroMode === 'static' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'hover:bg-gray-50'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                      <input type="radio" name="heroMode" value="static" checked={localConfig.heroMode === 'static' || !localConfig.heroMode} onChange={() => setLocalConfig({...localConfig, heroMode: 'static'})} className="accent-purple-600" />
-                      <span className="font-bold text-brand-900">Static Image / Video</span>
-                  </div>
-                  <p className="text-xs text-gray-500 pl-6">Displays the single hero image or video configured in "Content & Settings".</p>
-              </label>
-
-              <label className={`flex-1 p-4 border rounded cursor-pointer transition-all ${localConfig.heroMode === 'slideshow' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'hover:bg-gray-50'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                      <input type="radio" name="heroMode" value="slideshow" checked={localConfig.heroMode === 'slideshow'} onChange={() => setLocalConfig({...localConfig, heroMode: 'slideshow'})} className="accent-purple-600" />
-                      <span className="font-bold text-brand-900">Slideshow Carousel</span>
-                  </div>
-                  <p className="text-xs text-gray-500 pl-6">Cycles through the multiple images uploaded below.</p>
-              </label>
-          </div>
-
-          {/* Hero Slideshow Configuration */}
-          {localConfig.heroMode === 'slideshow' && (
-            <div className="animate-fade-in-up space-y-6">
-              
-              <div className="bg-purple-50 p-4 rounded border border-purple-100">
-                 <h4 className="font-bold text-sm text-purple-900 mb-3">Hero Text Styling</h4>
-                 <TextStylingControls 
-                    textColor={localConfig.heroTextColor}
-                    textAlign={localConfig.heroTextAlign}
-                    fontSize={localConfig.heroFontSize}
-                    onChangeColor={(v: string) => setLocalConfig({...localConfig, heroTextColor: v})}
-                    onChangeAlign={(v: any) => setLocalConfig({...localConfig, heroTextAlign: v})}
-                    onChangeSize={(v: any) => setLocalConfig({...localConfig, heroFontSize: v})}
-                 />
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {localConfig.heroImages?.map((img, idx) => (
-                  <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
-                    <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx + 1}`} />
-                    <button 
-                      onClick={() => removeHeroSlide(idx)}
-                      className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Remove Slide"
-                    >
-                      <Trash size={24} />
-                    </button>
-                    <div className="absolute bottom-0 right-0 bg-black/50 text-white text-xs px-2 py-1 rounded-tl">
-                      {idx + 1}
+        {/* Hero */}
+        {activeTab === 'hero' && (
+          <div className="bg-white p-6 rounded-lg shadow space-y-6">
+            <h3 className="font-bold border-b pb-2">Hero Section</h3>
+            <div className="grid grid-cols-2 gap-6">
+               <div className="space-y-4">
+                  <Input label="Title" value={localConfig.heroTitle} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
+                  <Input label="Subtitle" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
+                  <Input label="Tagline" value={localConfig.heroTagline} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} />
+               </div>
+               <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Text Color</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={localConfig.heroTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, heroTextColor: e.target.value})} />
+                      <span className="text-xs">{localConfig.heroTextColor}</span>
                     </div>
                   </div>
-                ))}
-                
-                <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video p-2 text-center">
-                   <Plus className="text-gray-400 mb-2" size={24}/>
-                   <span className="text-sm text-gray-500 font-medium">Add Slide</span>
-                   <span className="text-xs text-gray-400 mt-1">Rec: 1920x1080px</span>
-                   <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
-                </label>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Additional Slideshows (Horizontal) */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-indigo-500">
-          <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg flex items-center"><MonitorPlay className="mr-2" size={20}/> Additional Slideshow Sections (Horizontal)</h3>
-              <Button onClick={addSecondarySlideshow} size="sm"><Plus size={16} className="mr-1"/> Add Horizontal Slideshow</Button>
-          </div>
-          <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">
-             Create standalone slideshows for specific collections or campaigns.
-          </p>
-          
-          <div className="space-y-8">
-             {localConfig.secondarySlideshows?.map((slideshow, index) => (
-               <div key={slideshow.id} className="border p-6 rounded relative bg-gray-50/50">
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                     <div className="flex-1 w-full md:w-auto">
-                        <Input 
-                          label="Slideshow Title" 
-                          value={slideshow.title || ''} 
-                          onChange={(e) => updateSlideshowTitle(slideshow.id, e.target.value)} 
-                          placeholder="e.g. Summer Highlights"
-                        />
-                     </div>
-                     
-                     <div className="flex-1 w-full md:w-auto">
-                        <label className="block text-sm font-medium mb-1">Section Style</label>
-                        <TextStylingControls 
-                          textColor={slideshow.textColor}
-                          textAlign={slideshow.textAlign}
-                          fontSize={slideshow.fontSize}
-                          onChangeColor={(v: string) => updateSlideshowStyle(slideshow.id, 'textColor', v)}
-                          onChangeAlign={(v: any) => updateSlideshowStyle(slideshow.id, 'textAlign', v)}
-                          onChangeSize={(v: any) => updateSlideshowStyle(slideshow.id, 'fontSize', v)}
-                        />
-                     </div>
-
-                     <button onClick={() => removeSecondarySlideshow(slideshow.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {slideshow.slides?.map((slide, slideIdx) => (
-                      <div key={slideIdx} className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded border shadow-sm items-start">
-                        <div className="w-full md:w-48 aspect-video bg-gray-200 rounded overflow-hidden relative flex-shrink-0">
-                           <img src={slide.image} className="w-full h-full object-cover" alt="" />
-                           <button 
-                              onClick={() => removeSlideFromSlideshow(slideshow.id, slideIdx)}
-                              className="absolute top-2 right-2 bg-white text-rose-500 p-1 rounded-full shadow hover:bg-rose-50"
-                              title="Delete Slide"
-                            >
-                              <Trash size={16} />
-                            </button>
-                        </div>
-                        <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-                           <div className="col-span-2">
-                              <Input 
-                                placeholder="Title (e.g. Urban Vibes)" 
-                                value={slide.title || ''} 
-                                onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'title', e.target.value)} 
-                              />
-                           </div>
-                           <div className="col-span-2">
-                              <Input 
-                                placeholder="Subtitle (e.g. Discover the city look)" 
-                                value={slide.subtitle || ''} 
-                                onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'subtitle', e.target.value)} 
-                              />
-                           </div>
-                           <div>
-                              <label className="text-xs font-bold text-gray-400 block mb-1">Text Color</label>
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="color" 
-                                  value={slide.textColor || slideshow.textColor || '#000000'} 
-                                  onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'textColor', e.target.value)}
-                                  className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-                                />
-                                <span className="text-xs text-gray-500">{slide.textColor || 'Default'}</span>
-                              </div>
-                           </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    <label className="border-2 border-dashed border-gray-300 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-brand-900 transition-colors">
-                       <Plus className="text-gray-400 mb-2" size={24}/>
-                       <span className="text-sm text-gray-500 font-medium">Add New Slide</span>
-                       <span className="text-xs text-gray-400 mt-1">Rec: 1920x800px or 16:9 ratio</span>
-                       <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToSlideshow(slideshow.id, e)} />
-                    </label>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Text Alignment</label>
+                    <select value={localConfig.heroTextAlign} onChange={e => setLocalConfig({...localConfig, heroTextAlign: e.target.value as any})} className="border p-2 rounded w-full">
+                       <option value="left">Left</option>
+                       <option value="center">Center</option>
+                       <option value="right">Right</option>
+                    </select>
                   </div>
                </div>
-             ))}
-             {(!localConfig.secondarySlideshows || localConfig.secondarySlideshows.length === 0) && (
-               <p className="text-center text-gray-400 italic">No additional slideshows added yet.</p>
-             )}
+            </div>
+            
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium mb-2">Hero Background Image</label>
+              <input type="file" onChange={e => handleImageUpload('heroImage', e)} />
+              {localConfig.heroImage && <img src={localConfig.heroImage} className="mt-2 h-40 object-cover rounded" />}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Vertical Carousels (New Feature) */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-orange-500">
-          <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg flex items-center text-orange-900"><PanelTop className="mr-2" size={20}/> Vertical Image Carousels</h3>
-              <Button onClick={addVerticalCarousel} size="sm" className="bg-orange-600 hover:bg-orange-700"><Plus size={16} className="mr-1"/> Add Vertical Carousel</Button>
-          </div>
-          <p className="text-sm text-gray-500 mb-6 bg-orange-50 p-3 rounded text-orange-900">
-             Create specialized vertical scrolling carousels. Ideal for lookbooks or storytelling sequences.
-          </p>
-          
-          <div className="space-y-8">
-             {localConfig.verticalCarousels?.map((carousel, index) => (
-               <div key={carousel.id} className="border p-6 rounded relative bg-orange-50/30">
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                     <div className="flex-1 w-full md:w-auto">
-                        <Input 
-                          label="Carousel Title" 
-                          value={carousel.title || ''} 
-                          onChange={(e) => updateVerticalCarouselTitle(carousel.id, e.target.value)} 
-                          placeholder="e.g. Winter Lookbook"
+        {/* Vertical Carousels */}
+        {activeTab === 'verticals' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-lg">Vertical Carousels</h3>
+              <Button onClick={addVerticalCarousel} size="sm"><Plus size={16} className="mr-1"/> Add New Section</Button>
+            </div>
+            
+            {localConfig.verticalCarousels?.map((carousel, cIdx) => (
+               <div key={carousel.id} className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                  <div className="flex justify-between items-center mb-4 border-b pb-2">
+                     <div className="flex items-center gap-4 flex-1">
+                        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{carousel.id}</span>
+                        <input 
+                          type="text" 
+                          placeholder="Section Title" 
+                          className="font-bold text-lg border-none focus:ring-0 w-full" 
+                          value={carousel.title} 
+                          onChange={(e) => {
+                             const updated = [...(localConfig.verticalCarousels || [])];
+                             updated[cIdx].title = e.target.value;
+                             setLocalConfig({ ...localConfig, verticalCarousels: updated });
+                          }}
                         />
                      </div>
-                     <button onClick={() => removeVerticalCarousel(carousel.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
+                     <button onClick={() => removeVerticalCarousel(carousel.id)} className="text-rose-500 hover:bg-rose-50 p-2 rounded"><Trash2 size={18}/></button>
                   </div>
-                  
-                  <div className="space-y-4">
-                    {carousel.slides?.map((slide, slideIdx) => (
-                      <div key={slideIdx} className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded border shadow-sm items-start">
-                        <div className="w-full md:w-32 aspect-[3/4] bg-gray-200 rounded overflow-hidden relative flex-shrink-0">
-                           <img src={slide.image} className="w-full h-full object-cover" alt="" />
-                           <button 
-                              onClick={() => removeSlideFromVerticalCarousel(carousel.id, slideIdx)}
-                              className="absolute top-2 right-2 bg-white text-rose-500 p-1 rounded-full shadow hover:bg-rose-50"
-                              title="Delete Slide"
-                            >
-                              <Trash size={16} />
-                            </button>
-                        </div>
-                        <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-                           <div className="col-span-2">
-                              <Input 
-                                placeholder="Title (e.g. The Coat)" 
-                                value={slide.title || ''} 
-                                onChange={(e) => updateVerticalSlideField(carousel.id, slideIdx, 'title', e.target.value)} 
-                              />
-                           </div>
-                           <div className="col-span-2">
-                              <Input 
-                                placeholder="Subtitle (e.g. Pure Wool)" 
-                                value={slide.subtitle || ''} 
-                                onChange={(e) => updateVerticalSlideField(carousel.id, slideIdx, 'subtitle', e.target.value)} 
-                              />
-                           </div>
-                           <div>
-                              <label className="text-xs font-bold text-gray-400 block mb-1">Text Color</label>
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="color" 
-                                  value={slide.textColor || '#FFFFFF'} 
-                                  onChange={(e) => updateVerticalSlideField(carousel.id, slideIdx, 'textColor', e.target.value)}
-                                  className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-                                />
-                              </div>
-                           </div>
-                        </div>
-                      </div>
+
+                  {/* Slides Grid */}
+                  <div className="flex gap-4 overflow-x-auto pb-4">
+                    {carousel.slides.map((slide, sIdx) => (
+                       <div key={sIdx} className="flex-shrink-0 w-48 bg-gray-50 rounded p-2 relative group">
+                          <img src={slide.image} className="w-full h-64 object-cover rounded mb-2" />
+                          <button 
+                            onClick={() => removeSlideFromVerticalCarousel(carousel.id, sIdx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12}/>
+                          </button>
+                          <div className="space-y-1">
+                             <input className="w-full text-xs border p-1 rounded" placeholder="Title" value={slide.title} onChange={e => updateVerticalSlide(carousel.id, sIdx, 'title', e.target.value)} />
+                             <input className="w-full text-xs border p-1 rounded" placeholder="Subtitle" value={slide.subtitle} onChange={e => updateVerticalSlide(carousel.id, sIdx, 'subtitle', e.target.value)} />
+                             <div className="flex items-center gap-1">
+                                <input type="color" className="w-4 h-4" value={slide.textColor || '#FFFFFF'} onChange={e => updateVerticalSlide(carousel.id, sIdx, 'textColor', e.target.value)} />
+                                <span className="text-[10px] text-gray-400">Color</span>
+                             </div>
+                          </div>
+                       </div>
                     ))}
-                    
-                    <label className="border-2 border-dashed border-orange-200 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-orange-500 transition-colors">
+                    <label className="border-2 border-dashed border-orange-200 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-orange-500 transition-colors w-48 h-80 flex-shrink-0">
                        <Plus className="text-orange-400 mb-2" size={24}/>
                        <span className="text-sm text-orange-500 font-medium">Add Vertical Slide</span>
-                       <span className="text-xs text-gray-400 mt-1">Rec: Portrait Images</span>
+                       <span className="text-xs text-gray-400 mt-1 text-center">Rec: 508x702px<br/>Ratio: 254:351</span>
                        <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToVerticalCarousel(carousel.id, e)} />
                     </label>
                   </div>
@@ -1518,48 +610,213 @@ export const AdminDeveloperSettings: React.FC = () => {
                <p className="text-center text-gray-400 italic">No vertical carousels added yet.</p>
              )}
           </div>
-        </div>
+        )}
 
-        {/* Section Reordering */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
-          <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
-          
-          <div className="space-y-2 max-w-lg">
-            {localConfig.homepageSections?.map((sectionId, index) => (
-              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition group">
-                <span className="font-medium capitalize flex items-center">
-                  <div className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs mr-3 font-bold text-gray-600">{index + 1}</div>
-                  {getSectionName(sectionId)}
-                </span>
-                <div className="flex gap-1">
-                  <button 
-                    onClick={() => moveSection(index, 'up')}
-                    disabled={index === 0}
-                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                  >
-                    <ArrowUp size={16}/>
-                  </button>
-                  <button 
-                    onClick={() => moveSection(index, 'down')}
-                    disabled={index === (localConfig.homepageSections?.length || 0) - 1}
-                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                  >
-                    <ArrowDown size={16}/>
-                  </button>
-                </div>
+        {/* Promo */}
+        {activeTab === 'promo' && (
+           <div className="bg-white p-6 rounded-lg shadow space-y-6">
+              <h3 className="font-bold border-b pb-2">Promotional Banner</h3>
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="space-y-4">
+                    <Input label="Title" value={localConfig.promoTitle} onChange={e => setLocalConfig({...localConfig, promoTitle: e.target.value})} />
+                    <Input label="Text" value={localConfig.promoText} onChange={e => setLocalConfig({...localConfig, promoText: e.target.value})} />
+                    <Input label="Button Label" value={localConfig.promoButtonText} onChange={e => setLocalConfig({...localConfig, promoButtonText: e.target.value})} />
+                    <Input label="Button Link" value={localConfig.promoButtonLink} onChange={e => setLocalConfig({...localConfig, promoButtonLink: e.target.value})} />
+                 </div>
+                 <div>
+                    <label className="block text-sm font-medium mb-2">Image</label>
+                    <input type="file" onChange={e => handleImageUpload('promoImage', e)} />
+                    {localConfig.promoImage && <img src={localConfig.promoImage} className="mt-2 h-48 w-full object-cover rounded" />}
+                 </div>
               </div>
-            ))}
+           </div>
+        )}
+        
+        {/* Footer */}
+        {activeTab === 'footer' && (
+           <div className="bg-white p-6 rounded-lg shadow space-y-6">
+             <h3 className="font-bold border-b pb-2">Footer & Contact</h3>
+             <div className="grid grid-cols-2 gap-6">
+               <Input label="Contact Email" value={localConfig.contactEmail} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} />
+               <Input label="Contact Phone" value={localConfig.contactPhone} onChange={e => setLocalConfig({...localConfig, contactPhone: e.target.value})} />
+               <Input label="Address" value={localConfig.contactAddress} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} className="col-span-2" />
+             </div>
+             <div className="grid grid-cols-2 gap-6 mt-4">
+               <div>
+                  <label className="block text-sm font-medium mb-1">Background Color</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={localConfig.footerBgColor || '#2C251F'} onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} />
+                    <span className="text-sm">{localConfig.footerBgColor}</span>
+                  </div>
+               </div>
+               <div>
+                  <label className="block text-sm font-medium mb-1">Text Color</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={localConfig.footerTextColor || '#F3F4F6'} onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} />
+                    <span className="text-sm">{localConfig.footerTextColor}</span>
+                  </div>
+               </div>
+             </div>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- Developer Settings (Theme) ---
+export const AdminDeveloperSettings: React.FC = () => {
+  const { config, updateConfig } = useStore();
+  const [theme, setTheme] = useState<ThemeConfig>({
+    primaryColor: '#2C251F', secondaryColor: '#D5CDC0', backgroundColor: '#F9F8F6',
+    fontFamilySans: 'Inter', fontFamilySerif: 'Cormorant Garamond', borderRadius: '0px'
+  });
+
+  useEffect(() => { if (config.theme) setTheme(config.theme); }, [config]);
+
+  const save = async () => {
+    await updateConfig({ ...config, theme });
+    alert("Theme Updated!");
+  };
+
+  const ColorPicker = ({ label, val, set }: any) => (
+    <div>
+      <label className="block text-sm font-medium mb-1">{label}</label>
+      <div className="flex items-center space-x-2">
+        <input type="color" value={val} onChange={e => set(e.target.value)} className="h-10 w-10 border rounded cursor-pointer" />
+        <input type="text" value={val} onChange={e => set(e.target.value)} className="border p-2 rounded text-sm w-28" />
+      </div>
+    </div>
+  );
+
+  const moveSection = (index: number, direction: 'up' | 'down') => {
+    const newSections = [...(config.homepageSections || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newSections.length) {
+      [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
+      updateConfig({ ...config, homepageSections: newSections });
+    }
+  };
+
+  const getSectionName = (id: string) => {
+     const sectionNames: Record<string, string> = {
+        hero: 'Hero Banner',
+        categories: 'Categories Grid',
+        featured: 'Featured Products',
+        promo: 'Promotional Banner',
+        trust: 'Trust Badges'
+     };
+     
+     if(sectionNames[id]) return sectionNames[id];
+     
+     const slideshow = config.secondarySlideshows?.find(s => s.id === id);
+     if(slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
+
+     const vcarousel = config.verticalCarousels?.find(v => v.id === id);
+     if(vcarousel) return `Vertical Carousel: ${vcarousel.title || 'Untitled'}`;
+
+     return id;
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto pb-20">
+      <h1 className="text-2xl font-bold mb-8">Developer / Theme Settings</h1>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Left Column: Theme & Styles */}
+        <div className="space-y-8">
+          <div className="bg-white p-6 rounded-lg shadow space-y-8">
+             <div>
+               <h3 className="font-bold border-b pb-2 mb-4">Color Palette</h3>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <ColorPicker label="Primary (Brand 900)" val={theme.primaryColor} set={(v: string) => setTheme({...theme, primaryColor: v})} />
+                 <ColorPicker label="Secondary (Brand 200)" val={theme.secondaryColor} set={(v: string) => setTheme({...theme, secondaryColor: v})} />
+                 <ColorPicker label="Background (Brand 50)" val={theme.backgroundColor} set={(v: string) => setTheme({...theme, backgroundColor: v})} />
+               </div>
+             </div>
+             
+             <div>
+               <h3 className="font-bold border-b pb-2 mb-4">Typography</h3>
+               <div className="grid grid-cols-2 gap-6">
+                 <div>
+                    <label className="block text-sm font-medium mb-1">Sans Serif Font</label>
+                    <select value={theme.fontFamilySans} onChange={e => setTheme({...theme, fontFamilySans: e.target.value})} className="border p-2 rounded w-full">
+                       <option value="Inter">Inter</option>
+                       <option value="Arial">Arial</option>
+                       <option value="Helvetica">Helvetica</option>
+                       <option value="system-ui">System UI</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label className="block text-sm font-medium mb-1">Serif Font</label>
+                    <select value={theme.fontFamilySerif} onChange={e => setTheme({...theme, fontFamilySerif: e.target.value})} className="border p-2 rounded w-full">
+                       <option value="Cormorant Garamond">Cormorant Garamond</option>
+                       <option value="Playfair Display">Playfair Display</option>
+                       <option value="Merriweather">Merriweather</option>
+                       <option value="Times New Roman">Times New Roman</option>
+                    </select>
+                 </div>
+               </div>
+             </div>
+
+             <div>
+               <h3 className="font-bold border-b pb-2 mb-4">UI Elements</h3>
+               <div>
+                  <label className="block text-sm font-medium mb-1">Border Radius</label>
+                  <div className="flex space-x-4">
+                     {['0px', '4px', '8px', '12px', '99px'].map(r => (
+                       <button 
+                        key={r} 
+                        onClick={() => setTheme({...theme, borderRadius: r})}
+                        className={`px-4 py-2 border ${theme.borderRadius === r ? 'bg-brand-900 text-white' : 'bg-gray-50'}`}
+                        style={{ borderRadius: r }}
+                       >
+                         {r === '0px' ? 'Square' : r === '99px' ? 'Round' : r}
+                       </button>
+                     ))}
+                  </div>
+               </div>
+             </div>
+
+             <Button onClick={save} className="w-full">Update Theme</Button>
           </div>
         </div>
 
-      </div>
-
-      <div className="mt-8 pt-4 border-t flex justify-end gap-4">
-         <Button onClick={handleReset} variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
-            <RotateCcw size={16} className="mr-2" /> Reset Defaults
-         </Button>
-         <Button onClick={handleSave} size="lg">Save Configuration</Button>
+        {/* Right Column: Layout Reordering */}
+        <div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="font-bold border-b pb-2 mb-4 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout Order</h3>
+            <p className="text-sm text-gray-500 mb-4">Drag and drop functionality not implemented, use arrows to reorder sections.</p>
+            
+            <div className="space-y-2">
+              {config.homepageSections?.map((sectionId, index) => (
+                <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition group">
+                  <span className="font-medium capitalize flex items-center">
+                    <div className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs mr-3 font-bold text-gray-600">{index + 1}</div>
+                    {getSectionName(sectionId)}
+                  </span>
+                  <div className="flex gap-1">
+                    <button 
+                      onClick={() => moveSection(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                    >
+                      <ArrowUp size={16}/>
+                    </button>
+                    <button 
+                      onClick={() => moveSection(index, 'down')}
+                      disabled={index === (config.homepageSections?.length || 0) - 1}
+                      className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                    >
+                      <ArrowDown size={16}/>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
