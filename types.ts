@@ -83,7 +83,6 @@ export interface SiteConfig {
 
   // Hero
   heroImage: string;
-  heroImages?: string[]; // Array of images for slideshow
   heroVideo?: string; // Optional URL or base64 video
   heroTagline?: string;
   heroTitle: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
@@ -7,7 +6,7 @@ import { Product, Category, User, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, Check
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -523,8 +522,7 @@ export const AdminDeveloperSettings: React.FC = () => {
           borderRadius: '0px',
           ...config.theme
         },
-        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
-        heroImages: config.heroImages || []
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust']
       });
     }
   }, [config]);
@@ -554,9 +552,7 @@ export const AdminDeveloperSettings: React.FC = () => {
         announcementEnabled: false,
         announcementBlink: false,
         announcementBgColor: '#000000',
-        announcementTextColor: '#FFFFFF',
-        // Reset Slideshow
-        heroImages: []
+        announcementTextColor: '#FFFFFF'
       }));
     }
   };
@@ -569,28 +565,6 @@ export const AdminDeveloperSettings: React.FC = () => {
       [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
       setLocalConfig({ ...localConfig, homepageSections: newSections });
     }
-  };
-
-  // --- Slideshow Handlers ---
-  const handleAddHeroSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalConfig(prev => ({ 
-           ...prev, 
-           heroImages: [...(prev.heroImages || []), reader.result as string] 
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeHeroSlide = (index: number) => {
-    setLocalConfig(prev => ({
-       ...prev,
-       heroImages: prev.heroImages?.filter((_, i) => i !== index)
-    }));
   };
 
   const fonts = [
@@ -794,7 +768,7 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer Styling */}
+        {/* Footer Styling (New) */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-gray-800">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Footprints className="mr-2" size={20}/> Footer Styling</h3>
           
@@ -830,39 +804,6 @@ export const AdminDeveloperSettings: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Hero Slideshow (New) */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Slideshow</h3>
-          <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-3 rounded">
-            Upload multiple images here to create a slideshow on the homepage hero section. 
-            If images are added here, they will override the single hero image set in 'Content & Settings'.
-          </p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {localConfig.heroImages?.map((img, idx) => (
-              <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
-                <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx + 1}`} />
-                <button 
-                  onClick={() => removeHeroSlide(idx)}
-                  className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove Slide"
-                >
-                  <Trash size={24} />
-                </button>
-                <div className="absolute bottom-0 right-0 bg-black/50 text-white text-xs px-2 py-1 rounded-tl">
-                  {idx + 1}
-                </div>
-              </div>
-            ))}
-            
-            <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video">
-               <Plus className="text-gray-400 mb-2" size={24}/>
-               <span className="text-sm text-gray-500 font-medium">Add Slide</span>
-               <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
-            </label>
           </div>
         </div>
 
@@ -908,299 +849,533 @@ export const AdminDeveloperSettings: React.FC = () => {
   );
 };
 
-// --- Product Management ---
-export const AdminProducts: React.FC = () => {
-    const { products, deleteProduct, addProduct, updateProduct, categories } = useStore();
-    const [view, setView] = useState<'list' | 'edit'>('list');
-    const [formData, setFormData] = useState<Partial<Product>>({});
-
-    const handleEdit = (p: Product) => {
-        setFormData(p);
-        setView('edit');
-    };
-
-    const handleCreate = () => {
-        setFormData({ 
-            name: '', description: '', price: 0, category: categories[0]?.name || '', 
-            images: [], sizes: [], colors: [], stock: 0 
-        });
-        setView('edit');
-    };
-
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFormData(prev => ({ ...prev, images: [reader.result as string] }));
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if(formData.id) await updateProduct(formData as Product);
-            else await addProduct(formData as Product);
-            setView('list');
-        } catch(e: any) { alert(e.message); }
-    };
-
-    if (view === 'edit') {
-        return (
-            <div className="max-w-2xl bg-white p-8 rounded shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold">{formData.id ? 'Edit Product' : 'New Product'}</h2>
-                    <Button variant="outline" onClick={() => setView('list')}><X size={16}/></Button>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input label="Name" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Description</label>
-                        <textarea className="w-full border p-2 rounded" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input label="Price" type="number" value={formData.price || 0} onChange={e => setFormData({...formData, price: Number(e.target.value)})} required />
-                        <Input label="Stock" type="number" value={formData.stock || 0} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Category</label>
-                            <select className="w-full border p-2 rounded" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-4 mt-6">
-                            <label className="flex items-center gap-2">
-                                <input type="checkbox" checked={formData.newArrival} onChange={e => setFormData({...formData, newArrival: e.target.checked})} /> New Arrival
-                            </label>
-                            <label className="flex items-center gap-2">
-                                <input type="checkbox" checked={formData.bestSeller} onChange={e => setFormData({...formData, bestSeller: e.target.checked})} /> Best Seller
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Image</label>
-                        <input type="file" onChange={handleImageUpload} className="mb-2" />
-                        {formData.images?.[0] && <img src={formData.images[0]} className="h-20 w-20 object-cover rounded" />}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input label="Sizes (comma separated)" value={formData.sizes?.join(',') || ''} onChange={e => setFormData({...formData, sizes: e.target.value.split(',')})} />
-                        <Input label="Colors (comma separated)" value={formData.colors?.join(',') || ''} onChange={e => setFormData({...formData, colors: e.target.value.split(',')})} />
-                    </div>
-                    <Button type="submit" className="w-full">Save Product</Button>
-                </form>
-            </div>
-        )
-    }
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-serif font-bold">Products</h1>
-                <Button onClick={handleCreate}><Plus size={16} className="mr-2"/> Add Product</Button>
-            </div>
-            <div className="bg-white rounded shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Product</th>
-                            <th className="px-6 py-3">Category</th>
-                            <th className="px-6 py-3">Price</th>
-                            <th className="px-6 py-3">Stock</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map(p => (
-                            <tr key={p.id} className="border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 flex items-center gap-3">
-                                    {p.images?.[0] && <img src={p.images[0]} className="w-10 h-10 object-cover rounded" />}
-                                    <span className="font-medium">{p.name}</span>
-                                </td>
-                                <td className="px-6 py-4">{p.category}</td>
-                                <td className="px-6 py-4">${p.price}</td>
-                                <td className="px-6 py-4">{p.stock}</td>
-                                <td className="px-6 py-4 text-right space-x-2">
-                                    <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-800"><Edit size={16} /></button>
-                                    <button onClick={() => deleteProduct(p.id)} className="text-red-600 hover:text-red-800"><Trash size={16} /></button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-// --- Order Management ---
-export const AdminOrders: React.FC = () => {
-    const { orders, updateOrderStatus } = useStore();
-
-    return (
-        <div>
-            <h1 className="text-2xl font-serif font-bold mb-6">Orders</h1>
-            <div className="bg-white rounded shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Order ID</th>
-                            <th className="px-6 py-3">Date</th>
-                            <th className="px-6 py-3">Customer</th>
-                            <th className="px-6 py-3">Total</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {orders.map(o => (
-                            <tr key={o.id} className="border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 font-mono">{o.id.substring(0,8)}...</td>
-                                <td className="px-6 py-4">{o.date}</td>
-                                <td className="px-6 py-4">
-                                    <div className="font-medium">{o.customerName}</div>
-                                    <div className="text-xs text-gray-500">{o.email}</div>
-                                </td>
-                                <td className="px-6 py-4">${o.total}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                        o.status === 'Delivered' ? 'bg-green-100 text-green-800' : 
-                                        o.status === 'Cancelled' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                        {o.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <select 
-                                        value={o.status} 
-                                        onChange={(e) => updateOrderStatus(o.id, e.target.value as any)}
-                                        className="border rounded p-1 text-xs"
-                                    >
-                                        <option value="Pending">Pending</option>
-                                        <option value="Shipped">Shipped</option>
-                                        <option value="Delivered">Delivered</option>
-                                        <option value="Cancelled">Cancelled</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-// --- Category Management ---
-export const AdminCategories: React.FC = () => {
-    const { categories, addCategory, deleteCategory } = useStore();
-    const [newCat, setNewCat] = useState('');
-    const [newImg, setNewImg] = useState('');
-
-    const handleAdd = async () => {
-        if(!newCat) return;
-        await addCategory({ id: newCat.toLowerCase().replace(/\s+/g, '-'), name: newCat, image: newImg || 'https://via.placeholder.com/300' });
-        setNewCat('');
-        setNewImg('');
-    }
-
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => setNewImg(reader.result as string);
-        reader.readAsDataURL(file);
-      }
-    };
-
-    return (
-        <div className="max-w-4xl">
-            <h1 className="text-2xl font-serif font-bold mb-6">Categories</h1>
-            
-            <div className="bg-white p-6 rounded shadow-sm mb-8 flex items-end gap-4">
-                <div className="flex-1">
-                    <label className="block text-sm font-medium mb-1">Category Name</label>
-                    <input className="w-full border p-2 rounded" value={newCat} onChange={e => setNewCat(e.target.value)} />
-                </div>
-                <div className="flex-1">
-                     <label className="block text-sm font-medium mb-1">Image</label>
-                     <input type="file" onChange={handleImageUpload} className="text-sm" />
-                </div>
-                <Button onClick={handleAdd}>Add Category</Button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {categories.map(c => (
-                    <div key={c.id} className="bg-white rounded shadow-sm overflow-hidden relative group">
-                        <img src={c.image} className="w-full h-32 object-cover" />
-                        <div className="p-4 flex justify-between items-center">
-                            <span className="font-bold">{c.name}</span>
-                            <button onClick={() => deleteCategory(c.id)} className="text-red-500 hover:text-red-700"><Trash size={16}/></button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
 
 // --- User Management ---
 export const AdminUsers: React.FC = () => {
-    const { users, addUser, deleteUser } = useStore();
-    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
+  const { users, addUser, deleteUser, changeUserPassword } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState<{
+    username: string; 
+    password: string; 
+    role: 'admin' | 'staff'; 
+    permissions: string[];
+  }>({ username: '', password: '', role: 'staff', permissions: [] });
+  
+  const [passModalId, setPassModalId] = useState<string | null>(null);
+  const [newPass, setNewPass] = useState('');
 
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await addUser(newUser);
-        setNewUser({ username: '', password: '', role: 'staff' });
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addUser(newUser);
+    setIsModalOpen(false);
+    setNewUser({ username: '', password: '', role: 'staff', permissions: [] });
+  };
+
+  const handlePassUpdate = async () => {
+    if(passModalId && newPass) {
+      await changeUserPassword(passModalId, newPass);
+      setPassModalId(null);
+      setNewPass('');
+      alert("Password updated");
     }
+  };
 
-    return (
-        <div className="max-w-4xl">
-            <h1 className="text-2xl font-serif font-bold mb-6">User Management</h1>
+  const togglePerm = (p: string) => {
+    setNewUser(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(p) ? prev.permissions.filter(x => x !== p) : [...prev.permissions, p]
+    }));
+  };
 
-            <div className="bg-white p-6 rounded shadow-sm mb-8">
-                <h3 className="font-bold mb-4">Add New User</h3>
-                <form onSubmit={handleAdd} className="flex gap-4 items-end">
-                    <Input label="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required />
-                    <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required />
-                    <div className="w-full">
-                        <label className="block text-sm font-medium mb-1">Role</label>
-                        <select className="w-full border p-2 rounded h-[42px]" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                            <option value="staff">Staff</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <Button type="submit">Add</Button>
-                </form>
-            </div>
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">User Management</h1>
+        <Button onClick={() => setIsModalOpen(true)}><Plus size={16} className="mr-2" /> Add User</Button>
+      </div>
 
-            <div className="bg-white rounded shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Username</th>
-                            <th className="px-6 py-3">Role</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(u => (
-                            <tr key={u.id} className="border-b">
-                                <td className="px-6 py-4 font-medium">{u.username}</td>
-                                <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs uppercase">{u.role}</span></td>
-                                <td className="px-6 py-4 text-right">
-                                    {u.username !== 'admin' && (
-                                        <button onClick={() => deleteUser(u.id)} className="text-red-600 hover:text-red-800"><Trash size={16} /></button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-700 uppercase">
+             <tr>
+               <th className="px-6 py-4">Username</th>
+               <th className="px-6 py-4">Role</th>
+               <th className="px-6 py-4">Permissions</th>
+               <th className="px-6 py-4 text-right">Actions</th>
+             </tr>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id} className="border-b">
+                <td className="px-6 py-4 font-medium flex items-center gap-2"><UserIcon size={16}/> {u.username}</td>
+                <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded-full text-xs">{u.role}</span></td>
+                <td className="px-6 py-4 text-gray-500 text-xs">
+                  {u.role === 'admin' ? 'All Access' : u.permissions.join(', ')}
+                </td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  <button onClick={() => setPassModalId(u.id)} className="text-blue-600 hover:text-blue-800 text-xs underline">Change Password</button>
+                  {u.username !== 'admin' && (
+                    <button onClick={() => deleteUser(u.id)} className="text-rose-600 hover:text-rose-800 text-xs underline">Delete</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Add User Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h3 className="font-bold text-lg mb-4">Add New User</h3>
+            <form onSubmit={handleAdd} className="space-y-4">
+              <Input label="Username" required value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+              <Input label="Password" type="password" required value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select 
+                  className="w-full border p-2 text-sm" 
+                  value={newUser.role} 
+                  onChange={e => setNewUser({...newUser, role: e.target.value as 'admin' | 'staff'})}
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {newUser.role === 'staff' && (
+                <div>
+                   <label className="block text-sm font-medium mb-2">Permissions</label>
+                   <div className="space-y-2">
+                     {['products', 'orders', 'categories', 'settings', 'users'].map(p => (
+                       <label key={p} className="flex items-center text-sm gap-2">
+                         <input type="checkbox" checked={newUser.permissions.includes(p)} onChange={() => togglePerm(p)} />
+                         <span className="capitalize">{p}</span>
+                       </label>
+                     ))}
+                   </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit">Create</Button>
+              </div>
+            </form>
+          </div>
         </div>
-    );
+      )}
+
+      {/* Change Password Modal */}
+      {passModalId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h3 className="font-bold text-lg mb-4">Reset Password</h3>
+            <Input label="New Password" type="password" value={newPass} onChange={e => setNewPass(e.target.value)} />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button type="button" variant="secondary" onClick={() => { setPassModalId(null); setNewPass(''); }}>Cancel</Button>
+              <Button onClick={handlePassUpdate}>Update</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Categories Manager ---
+export const AdminCategories: React.FC = () => {
+  const { categories, addCategory, deleteCategory, updateCategory } = useStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: '', image: '' });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleEdit = (cat: Category) => {
+    setEditingId(cat.id);
+    setForm({ name: cat.name, image: cat.image });
+    setIsFormOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingId(null);
+    setForm({ name: '', image: '' });
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const catData: Category = {
+      id: editingId || Date.now().toString(),
+      name: form.name,
+      image: form.image || 'https://via.placeholder.com/400x600?text=No+Image'
+    };
+    
+    if (editingId) updateCategory(catData);
+    else addCategory(catData);
+    
+    setIsFormOpen(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Manage Categories</h1>
+        <Button onClick={handleAddNew}><Plus size={16} className="mr-2" /> Add Category</Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {categories.map(cat => (
+          <div key={cat.id} className="bg-white rounded shadow-sm overflow-hidden group relative">
+            <div className="aspect-square relative">
+              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                 <button onClick={() => handleEdit(cat)} className="bg-white p-2 rounded-full hover:bg-gray-200"><Edit size={16}/></button>
+                 <button onClick={() => deleteCategory(cat.id)} className="bg-white p-2 rounded-full hover:bg-rose-100 text-rose-500"><Trash size={16}/></button>
+              </div>
+            </div>
+            <div className="p-3 font-medium text-center border-t">{cat.name}</div>
+          </div>
+        ))}
+      </div>
+
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">{editingId ? 'Edit' : 'Add'} Category</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input label="Name" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+              <div>
+                <label className="block text-sm font-medium mb-1">Image</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+                    {form.image && <img src={form.image} className="w-full h-full object-cover" />}
+                  </div>
+                  <label className="cursor-pointer text-sm text-blue-600 hover:underline">
+                    Upload Image
+                    <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
+                  </label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                <Button type="submit">Save</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Products Manager ---
+export const AdminProducts: React.FC = () => {
+  const { products, categories, deleteProduct, addProduct, updateProduct } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  // Initialize with the first category ID if available, else empty
+  const defaultCat = categories.length > 0 ? categories[0].name : '';
+
+  const [newProd, setNewProd] = useState<Partial<Product>>({
+    name: '', price: 0, discountPrice: undefined, category: defaultCat, description: '', images: [], sizes: ['S', 'M', 'L'], colors: [], stock: 10
+  });
+
+  const [sizeInput, setSizeInput] = useState("");
+  const [colorInput, setColorInput] = useState("");
+
+  const openAddModal = () => {
+    setEditingId(null);
+    setNewProd({
+      name: '', price: 0, discountPrice: undefined, category: categories.length > 0 ? categories[0].name : '', description: '', images: [], sizes: ['S', 'M', 'L'], colors: [], stock: 10
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (product: Product) => {
+    setEditingId(product.id);
+    setNewProd({ ...product });
+    setIsModalOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProd(prev => ({ ...prev, images: [reader.result as string] }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setNewProd(prev => ({ ...prev, images: [] }));
+  };
+
+  const addSize = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(sizeInput && !newProd.sizes?.includes(sizeInput)) {
+      setNewProd(prev => ({...prev, sizes: [...(prev.sizes || []), sizeInput]}));
+      setSizeInput("");
+    }
+  };
+
+  const removeSize = (s: string) => {
+    setNewProd(prev => ({...prev, sizes: prev.sizes?.filter(x => x !== s)}));
+  };
+
+  const addColor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(colorInput && !newProd.colors?.includes(colorInput)) {
+      setNewProd(prev => ({...prev, colors: [...(prev.colors || []), colorInput]}));
+      setColorInput("");
+    }
+  };
+
+  const removeColor = (c: string) => {
+    setNewProd(prev => ({...prev, colors: prev.colors?.filter(x => x !== c)}));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingId) {
+      updateProduct({ ...newProd, id: editingId } as Product);
+    } else {
+      const product: Product = {
+        id: Date.now().toString(),
+        name: newProd.name!,
+        description: newProd.description || '',
+        price: Number(newProd.price),
+        discountPrice: newProd.discountPrice ? Number(newProd.discountPrice) : undefined,
+        category: newProd.category || 'Uncategorized',
+        images: newProd.images?.length ? newProd.images : ['https://via.placeholder.com/400x600'],
+        sizes: newProd.sizes || ['S', 'M', 'L'],
+        colors: newProd.colors || ['Black', 'White'],
+        newArrival: true,
+        bestSeller: false,
+        stock: Number(newProd.stock)
+      };
+      addProduct(product);
+    }
+    setIsModalOpen(false);
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Products</h1>
+        <Button onClick={openAddModal}><Plus size={16} className="mr-2" /> Add Product</Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map(p => (
+          <div key={p.id} className="bg-white rounded shadow-sm overflow-hidden flex flex-col group">
+            <div className="h-48 bg-gray-100 relative overflow-hidden">
+               <img src={p.images[0]} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="" />
+               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+                  <button onClick={() => openEditModal(p)} className="bg-white p-2 rounded-full hover:bg-gray-100 text-brand-900 transition"><Edit size={16}/></button>
+                  <button onClick={() => deleteProduct(p.id)} className="bg-white p-2 rounded-full hover:bg-rose-50 text-rose-500 transition"><Trash size={16}/></button>
+               </div>
+               {p.discountPrice && (
+                 <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded">
+                   SALE
+                 </div>
+               )}
+            </div>
+            <div className="p-4 flex-1">
+              <h3 className="font-bold text-lg mb-1">{p.name}</h3>
+              <p className="text-sm text-gray-500 mb-3">{p.category}</p>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                   <div>
+                     <span className="font-bold text-brand-900">${p.discountPrice || p.price}</span>
+                     {p.discountPrice && <span className="ml-2 text-xs text-gray-400 line-through">${p.price}</span>}
+                   </div>
+                   {/* Likes Counter for Admin */}
+                   <div className="flex items-center text-xs text-rose-500 mt-1 font-medium">
+                      <Heart size={12} className="mr-1 fill-current" /> {p.likes || 0} Likes
+                   </div>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded ${p.stock < 5 ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-green-600'}`}>
+                  {p.stock} in stock
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold font-serif">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
+              <button onClick={() => setIsModalOpen(false)}><X className="text-gray-400 hover:text-black" /></button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-2">Product Image</label>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-32 h-40 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden relative">
+                      {newProd.images?.[0] ? (
+                        <>
+                          <img src={newProd.images[0]} alt="Preview" className="w-full h-full object-cover" />
+                          <button type="button" onClick={removeImage} className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 text-white"><Trash size={20} /></button>
+                        </>
+                      ) : (
+                        <div className="text-gray-400 flex flex-col items-center p-4 text-center"><ImageIcon size={24} className="mb-2" /><span className="text-xs">No image</span></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <label className="cursor-pointer bg-white border border-gray-300 text-brand-900 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 inline-flex items-center transition">
+                        <Upload size={16} className="mr-2" /> Upload Image
+                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <Input label="Product Name" required value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} className="md:col-span-2" />
+                
+                <Input label="Original Price ($)" type="number" required value={newProd.price} onChange={e => setNewProd({...newProd, price: +e.target.value})} />
+                
+                <div className="w-full">
+                  <Input 
+                    label="Discounted Price (Optional)" 
+                    type="number" 
+                    value={newProd.discountPrice || ''} 
+                    onChange={e => setNewProd({...newProd, discountPrice: e.target.value ? +e.target.value : undefined})} 
+                  />
+                  {newProd.discountPrice && newProd.price && newProd.discountPrice < newProd.price && (
+                    <p className="text-xs text-green-600 mt-1">
+                      {Math.round(((newProd.price - newProd.discountPrice) / newProd.price) * 100)}% Off
+                    </p>
+                  )}
+                </div>
+
+                <Input label="Stock Quantity" type="number" required value={newProd.stock} onChange={e => setNewProd({...newProd, stock: +e.target.value})} />
+                
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <select 
+                    className="w-full border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-800" 
+                    value={newProd.category}
+                    onChange={e => setNewProd({...newProd, category: e.target.value})}
+                  >
+                    <option value="" disabled>Select Category</option>
+                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+                
+                {/* Dynamic Size & Color Inputs */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">Available Sizes</label>
+                  <div className="flex gap-2 mb-2">
+                    <input 
+                      className="flex-1 border border-gray-200 px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-800"
+                      placeholder="e.g. XL, 38, Free Size"
+                      value={sizeInput}
+                      onChange={e => setSizeInput(e.target.value)}
+                    />
+                    <button onClick={addSize} className="bg-brand-100 text-brand-900 px-3 py-1 text-xs font-bold hover:bg-brand-200">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {newProd.sizes?.map(s => (
+                      <span key={s} className="bg-gray-100 text-xs px-2 py-1 rounded flex items-center gap-1">
+                        {s} <button type="button" onClick={() => removeSize(s)} className="text-gray-400 hover:text-red-500"><X size={12}/></button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">Available Colors</label>
+                  <div className="flex gap-2 mb-2">
+                    <input 
+                      className="flex-1 border border-gray-200 px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-800"
+                      placeholder="e.g. Red, Navy Blue"
+                      value={colorInput}
+                      onChange={e => setColorInput(e.target.value)}
+                    />
+                    <button onClick={addColor} className="bg-brand-100 text-brand-900 px-3 py-1 text-xs font-bold hover:bg-brand-200">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {newProd.colors?.map(c => (
+                      <span key={c} className="bg-gray-100 text-xs px-2 py-1 rounded flex items-center gap-1">
+                        {c} <button type="button" onClick={() => removeColor(c)} className="text-gray-400 hover:text-red-500"><X size={12}/></button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-full">
+                   <label className="block text-sm font-medium mb-1">Status</label>
+                   <div className="flex gap-4 mt-2">
+                     <label className="flex items-center text-sm cursor-pointer"><input type="checkbox" className="mr-2" checked={newProd.newArrival} onChange={e => setNewProd({...newProd, newArrival: e.target.checked})} />New Arrival</label>
+                     <label className="flex items-center text-sm cursor-pointer"><input type="checkbox" className="mr-2" checked={newProd.bestSeller} onChange={e => setNewProd({...newProd, bestSeller: e.target.checked})} />Best Seller</label>
+                   </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea className="w-full border border-gray-200 p-3 text-sm min-h-[100px]" value={newProd.description} onChange={e => setNewProd({...newProd, description: e.target.value})}></textarea>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit">{editingId ? 'Update Product' : 'Create Product'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Orders Manager ---
+export const AdminOrders: React.FC = () => {
+  const { orders, updateOrderStatus } = useStore();
+  return (
+    <div>
+      <h1 className="text-2xl font-serif font-bold mb-8">Manage Orders</h1>
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-700 uppercase">
+            <tr><th className="px-6 py-4">ID</th><th className="px-6 py-4">Customer</th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Total</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Action</th></tr>
+          </thead>
+          <tbody>
+            {orders.map(order => (
+              <tr key={order.id} className="border-b hover:bg-gray-50">
+                <td className="px-6 py-4 font-medium">{order.id}</td>
+                <td className="px-6 py-4"><div>{order.customerName}</div><div className="text-xs text-gray-500">{order.email}</div></td>
+                <td className="px-6 py-4">{order.date}</td>
+                <td className="px-6 py-4">${order.total}</td>
+                <td className="px-6 py-4"><span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.status}</span></td>
+                <td className="px-6 py-4"><select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value as any)} className="border text-xs p-1 rounded bg-white"><option>Pending</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };

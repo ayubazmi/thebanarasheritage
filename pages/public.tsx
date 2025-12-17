@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck } from 'lucide-react';
 import { useStore } from '../store';
@@ -39,26 +39,13 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
 export const HomePage: React.FC = () => {
   const { products, categories, config } = useStore();
   const featured = products.filter(p => p.newArrival).slice(0, 4);
-  
-  // Slideshow Logic
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const heroImages = config.heroImages && config.heroImages.length > 0 
-    ? config.heroImages 
-    : [config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'];
 
-  useEffect(() => {
-    if (heroImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % heroImages.length);
-    }, 5000); // 5 seconds slide duration
-    return () => clearInterval(interval);
-  }, [heroImages.length]);
-
+  const heroImage = config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
   const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
   // Section Renders
   const renderHero = () => (
-    <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden group">
+    <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden">
         {config.heroVideo ? (
           <video 
             src={config.heroVideo} 
@@ -69,35 +56,12 @@ export const HomePage: React.FC = () => {
             playsInline
           />
         ) : (
-          <>
-            {heroImages.map((img, index) => (
-              <div 
-                key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
-              >
-                 <img 
-                   src={img} 
-                   className="w-full h-full object-cover"
-                   alt="Fashion Banner"
-                 />
-              </div>
-            ))}
-            
-            {/* Slide Indicators (only if multiple images) */}
-            {heroImages.length > 1 && (
-               <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                 {heroImages.map((_, idx) => (
-                   <button 
-                     key={idx}
-                     onClick={() => setCurrentSlide(idx)}
-                     className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'}`}
-                   />
-                 ))}
-               </div>
-            )}
-          </>
+          <img 
+            src={heroImage} 
+            className="absolute inset-0 w-full h-full object-cover"
+            alt="Fashion Banner"
+          />
         )}
-
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute inset-0 flex items-center justify-center text-center">
           <div className="max-w-2xl px-6">
