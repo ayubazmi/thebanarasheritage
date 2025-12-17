@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
@@ -522,7 +523,8 @@ export const AdminDeveloperSettings: React.FC = () => {
           borderRadius: '0px',
           ...config.theme
         },
-        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust']
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroImages: config.heroImages || []
       });
     }
   }, [config]);
@@ -552,7 +554,9 @@ export const AdminDeveloperSettings: React.FC = () => {
         announcementEnabled: false,
         announcementBlink: false,
         announcementBgColor: '#000000',
-        announcementTextColor: '#FFFFFF'
+        announcementTextColor: '#FFFFFF',
+        // Reset Slideshow
+        heroImages: []
       }));
     }
   };
@@ -565,6 +569,28 @@ export const AdminDeveloperSettings: React.FC = () => {
       [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
       setLocalConfig({ ...localConfig, homepageSections: newSections });
     }
+  };
+
+  // --- Slideshow Handlers ---
+  const handleAddHeroSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ 
+           ...prev, 
+           heroImages: [...(prev.heroImages || []), reader.result as string] 
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeHeroSlide = (index: number) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       heroImages: prev.heroImages?.filter((_, i) => i !== index)
+    }));
   };
 
   const fonts = [
@@ -768,7 +794,7 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer Styling (New) */}
+        {/* Footer Styling */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-gray-800">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Footprints className="mr-2" size={20}/> Footer Styling</h3>
           
@@ -804,6 +830,39 @@ export const AdminDeveloperSettings: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Hero Slideshow (New) */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Slideshow</h3>
+          <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-3 rounded">
+            Upload multiple images here to create a slideshow on the homepage hero section. 
+            If images are added here, they will override the single hero image set in 'Content & Settings'.
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {localConfig.heroImages?.map((img, idx) => (
+              <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
+                <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx + 1}`} />
+                <button 
+                  onClick={() => removeHeroSlide(idx)}
+                  className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove Slide"
+                >
+                  <Trash size={24} />
+                </button>
+                <div className="absolute bottom-0 right-0 bg-black/50 text-white text-xs px-2 py-1 rounded-tl">
+                  {idx + 1}
+                </div>
+              </div>
+            ))}
+            
+            <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video">
+               <Plus className="text-gray-400 mb-2" size={24}/>
+               <span className="text-sm text-gray-500 font-medium">Add Slide</span>
+               <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
+            </label>
           </div>
         </div>
 
