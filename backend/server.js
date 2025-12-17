@@ -95,6 +95,10 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   announcementBgColor: { type: String, default: '#000000' },
   announcementTextColor: { type: String, default: '#FFFFFF' },
 
+  // Footer Styling
+  footerBgColor: { type: String, default: '#2C251F' },
+  footerTextColor: { type: String, default: '#F3F4F6' },
+
   // Hero Section
   heroImage: String,
   heroVideo: String,
@@ -275,7 +279,9 @@ app.get('/api/config', async (req, res) => {
         contactEmail: 'support@lumiere.com',
         contactPhone: '+1 (555) 123-4567',
         contactAddress: '123 Fashion Ave, New York, NY',
-        currency: '$'
+        currency: '$',
+        footerBgColor: '#2C251F',
+        footerTextColor: '#F3F4F6'
       });
       await config.save();
     }

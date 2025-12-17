@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -75,6 +76,10 @@ export interface SiteConfig {
   announcementLink?: string;
   announcementBgColor?: string;
   announcementTextColor?: string;
+
+  // Footer Styling
+  footerBgColor?: string;
+  footerTextColor?: string;
 
   // Hero
   heroImage: string;

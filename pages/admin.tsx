@@ -760,6 +760,45 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Footer Styling (New) */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-gray-800">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Footprints className="mr-2" size={20}/> Footer Styling</h3>
+          
+          <div className="grid md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded">
+            <div>
+              <label className="block text-sm font-medium mb-1">Footer Background Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.footerBgColor || '#2C251F'} 
+                  onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.footerBgColor || '#2C251F'} 
+                  onChange={e => setLocalConfig({...localConfig, footerBgColor: e.target.value})} 
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Footer Text Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.footerTextColor || '#F3F4F6'} 
+                  onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.footerTextColor || '#F3F4F6'} 
+                  onChange={e => setLocalConfig({...localConfig, footerTextColor: e.target.value})} 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Section Reordering */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
