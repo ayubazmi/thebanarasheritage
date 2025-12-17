@@ -52,7 +52,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
 
   return (
     <section className="py-8 md:py-12 w-full bg-white group">
-       <div className="px-8 md:px-32 lg:px-48 xl:px-64 max-w-[2000px] mx-auto">
+       <div className="px-4 md:px-12 max-w-[1800px] mx-auto">
           {data.title && (
             <div className="mb-6 text-center">
                <h2 className="text-3xl font-serif text-brand-900">{data.title}</h2>
@@ -128,7 +128,7 @@ export const HomePage: React.FC = () => {
     <section key="hero" className={`relative h-[85vh] w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-8 md:py-12' : ''}`}>
         
         {/* Container for Slideshow (adds padding) or Full Width for Static */}
-        <div className={`relative w-full h-full ${isSlideshow ? 'px-8 md:px-32 lg:px-48 xl:px-64 max-w-[2000px] mx-auto' : ''}`}>
+        <div className={`relative w-full h-full ${isSlideshow ? 'px-4 md:px-12 max-w-[1800px] mx-auto' : ''}`}>
             
             {/* Inner Content Wrapper (Rounded corners for slideshow) */}
             <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
