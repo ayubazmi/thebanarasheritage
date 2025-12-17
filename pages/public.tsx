@@ -55,11 +55,9 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   if (slides.length === 0) return null;
 
   // Styling Helpers
-  // Changed right alignment to use text-center for better aesthetics as requested ("right side but in center")
-  const textAlignClass = data.textAlign === 'left' ? 'text-left' : 'text-center';
+  const textAlignClass = data.textAlign === 'left' ? 'text-left' : data.textAlign === 'right' ? 'text-right' : 'text-center';
   const alignItemsClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
   
-  // Padding based on alignment to prevent text hitting edges
   const paddingClass = data.textAlign === 'left' ? 'pl-10 md:pl-20 pr-10' : data.textAlign === 'right' ? 'pr-10 md:pr-20 pl-10' : 'px-4';
 
   const fontSizeClassTitle = data.fontSize === 'lg' ? 'text-4xl md:text-6xl' : data.fontSize === 'sm' ? 'text-2xl md:text-4xl' : 'text-3xl md:text-5xl';
@@ -90,7 +88,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                        {slide.title && (
                          <h3 
                            className={`${fontSizeClassTitle} font-serif font-bold mb-4 drop-shadow-lg animate-fade-in-up`}
-                           style={{ color: data.textColor || '#FFFFFF' }}
+                           style={{ color: slide.textColor || data.textColor || '#FFFFFF' }}
                          >
                            {slide.title}
                          </h3>
@@ -98,7 +96,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                        {slide.subtitle && (
                          <p 
                            className={`${fontSizeClassSub} max-w-2xl drop-shadow-md animate-fade-in-up delay-100`}
-                           style={{ color: data.textColor || '#FFFFFF', opacity: 0.9 }}
+                           style={{ color: slide.textColor || data.textColor || '#FFFFFF', opacity: 0.9 }}
                          >
                            {slide.subtitle}
                          </p>
@@ -164,11 +162,10 @@ export const HomePage: React.FC = () => {
   // Section Renders
   const renderHero = () => {
     // Dynamic Styles for Hero
-    // Changed right alignment to center text as well for consistency
     const alignClass = config.heroTextAlign === 'left' 
       ? 'justify-start md:pl-24 text-left' 
       : config.heroTextAlign === 'right' 
-        ? 'justify-end md:pr-24 text-center' 
+        ? 'justify-end md:pr-24 text-right' 
         : 'justify-center text-center';
         
     const titleSizeClass = config.heroFontSize === 'sm' 

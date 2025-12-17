@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
@@ -529,7 +528,13 @@ export const AdminDeveloperSettings: React.FC = () => {
         homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
         heroImages: config.heroImages || [],
         heroMode: config.heroMode || 'static',
-        secondarySlideshows: config.secondarySlideshows || [],
+        // Migration: Ensure 'slides' exists for secondary slideshows, fallback to 'images' for legacy
+        secondarySlideshows: (config.secondarySlideshows || []).map(s => ({
+          ...s,
+          slides: (s.slides && s.slides.length > 0) 
+            ? s.slides 
+            : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }))
+        })),
         heroTextColor: config.heroTextColor || '#FFFFFF',
         heroTextAlign: config.heroTextAlign || 'center',
         heroFontSize: config.heroFontSize || 'md',
@@ -613,6 +618,7 @@ export const AdminDeveloperSettings: React.FC = () => {
        id: newId, 
        title: `New Slideshow`, 
        images: [],
+       slides: [], // Initialize empty slides array
        textColor: '#2C251F', // Default dark
        textAlign: 'center' as const,
        fontSize: 'md' as const
@@ -649,24 +655,38 @@ export const AdminDeveloperSettings: React.FC = () => {
     }));
   };
 
-  const addImageToSlideshow = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handlers for individual slides within a slideshow
+  const addSlideToSlideshow = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
          setLocalConfig(prev => ({
             ...prev,
-            secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, images: [...s.images, reader.result as string] } : s)
+            secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
+                ...s, 
+                slides: [...(s.slides || []), { image: reader.result as string, title: '', subtitle: '', textColor: '' }] 
+            } : s)
          }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeImageFromSlideshow = (id: string, imgIndex: number) => {
+  const removeSlideFromSlideshow = (id: string, slideIndex: number) => {
     setLocalConfig(prev => ({
        ...prev,
-       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, images: s.images.filter((_, i) => i !== imgIndex) } : s)
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, slides: s.slides.filter((_, i) => i !== slideIndex) } : s)
+    }));
+  };
+
+  const updateSlideField = (id: string, slideIndex: number, field: string, value: string) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
+          ...s, 
+          slides: s.slides.map((slide, i) => i === slideIndex ? { ...slide, [field]: value } : slide)
+       } : s)
     }));
   };
 
@@ -1019,7 +1039,7 @@ export const AdminDeveloperSettings: React.FC = () => {
               <Button onClick={addSecondarySlideshow} size="sm"><Plus size={16} className="mr-1"/> Add New Slideshow</Button>
           </div>
           <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">
-             You can add multiple standalone slideshow carousels to the homepage. After adding, drag and drop them in the "Homepage Layout" section below to position them.
+             Create standalone slideshows for specific collections or campaigns. You can add text overlays to each slide.
           </p>
           
           <div className="space-y-8">
@@ -1036,7 +1056,7 @@ export const AdminDeveloperSettings: React.FC = () => {
                      </div>
                      
                      <div className="flex-1 w-full md:w-auto">
-                        <label className="block text-sm font-medium mb-1">Title Style</label>
+                        <label className="block text-sm font-medium mb-1">Section Style</label>
                         <TextStylingControls 
                           textColor={slideshow.textColor}
                           textAlign={slideshow.textAlign}
@@ -1050,22 +1070,54 @@ export const AdminDeveloperSettings: React.FC = () => {
                      <button onClick={() => removeSecondarySlideshow(slideshow.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {slideshow.images.map((img, imgIdx) => (
-                      <div key={imgIdx} className="relative group aspect-video bg-gray-200 rounded overflow-hidden border">
-                        <img src={img} className="w-full h-full object-cover" alt="" />
-                        <button 
-                          onClick={() => removeImageFromSlideshow(slideshow.id, imgIdx)}
-                          className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash size={20} />
-                        </button>
+                  <div className="space-y-4">
+                    {slideshow.slides?.map((slide, slideIdx) => (
+                      <div key={slideIdx} className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded border shadow-sm items-start">
+                        <div className="w-full md:w-48 aspect-video bg-gray-200 rounded overflow-hidden relative flex-shrink-0">
+                           <img src={slide.image} className="w-full h-full object-cover" alt="" />
+                           <button 
+                              onClick={() => removeSlideFromSlideshow(slideshow.id, slideIdx)}
+                              className="absolute top-2 right-2 bg-white text-rose-500 p-1 rounded-full shadow hover:bg-rose-50"
+                              title="Delete Slide"
+                            >
+                              <Trash size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+                           <div className="col-span-2">
+                              <Input 
+                                placeholder="Title (e.g. Urban Vibes)" 
+                                value={slide.title || ''} 
+                                onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'title', e.target.value)} 
+                              />
+                           </div>
+                           <div className="col-span-2">
+                              <Input 
+                                placeholder="Subtitle (e.g. Discover the city look)" 
+                                value={slide.subtitle || ''} 
+                                onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'subtitle', e.target.value)} 
+                              />
+                           </div>
+                           <div>
+                              <label className="text-xs font-bold text-gray-400 block mb-1">Text Color</label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="color" 
+                                  value={slide.textColor || slideshow.textColor || '#000000'} 
+                                  onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'textColor', e.target.value)}
+                                  className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                                />
+                                <span className="text-xs text-gray-500">{slide.textColor || 'Default'}</span>
+                              </div>
+                           </div>
+                        </div>
                       </div>
                     ))}
-                    <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-brand-900 transition-colors aspect-video">
-                       <Plus className="text-gray-400 mb-1" size={20}/>
-                       <span className="text-xs text-gray-500 font-medium">Add Image</span>
-                       <input type="file" className="hidden" accept="image/*" onChange={(e) => addImageToSlideshow(slideshow.id, e)} />
+                    
+                    <label className="border-2 border-dashed border-gray-300 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-brand-900 transition-colors">
+                       <Plus className="text-gray-400 mb-2" size={24}/>
+                       <span className="text-sm text-gray-500 font-medium">Add New Slide</span>
+                       <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToSlideshow(slideshow.id, e)} />
                     </label>
                   </div>
                </div>
