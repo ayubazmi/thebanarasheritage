@@ -42,24 +42,23 @@ export const HomePage: React.FC = () => {
   
   // Slideshow Logic
   const [currentSlide, setCurrentSlide] = useState(0);
-  const heroImages = config.heroImages && config.heroImages.length > 0 
-    ? config.heroImages 
-    : [config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'];
+  const isSlideshow = config.heroMode === 'slideshow';
+  const heroImages = config.heroImages || [];
 
   useEffect(() => {
-    if (heroImages.length <= 1) return;
+    if (!isSlideshow || heroImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % heroImages.length);
     }, 5000); // 5 seconds slide duration
     return () => clearInterval(interval);
-  }, [heroImages.length]);
+  }, [isSlideshow, heroImages.length]);
 
   const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
   // Section Renders
   const renderHero = () => (
     <section key="hero" className="relative h-[85vh] w-full bg-brand-200 overflow-hidden group">
-        {config.heroVideo ? (
+        {(!isSlideshow && config.heroVideo) ? (
           <video 
             src={config.heroVideo} 
             className="absolute inset-0 w-full h-full object-cover"
@@ -68,7 +67,7 @@ export const HomePage: React.FC = () => {
             loop 
             playsInline
           />
-        ) : (
+        ) : isSlideshow && heroImages.length > 0 ? (
           <>
             {heroImages.map((img, index) => (
               <div 
@@ -96,6 +95,12 @@ export const HomePage: React.FC = () => {
                </div>
             )}
           </>
+        ) : (
+           <img 
+             src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'} 
+             className="w-full h-full object-cover"
+             alt="Fashion Banner"
+           />
         )}
 
         <div className="absolute inset-0 bg-black/20" />

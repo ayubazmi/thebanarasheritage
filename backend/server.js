@@ -100,6 +100,7 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   footerTextColor: { type: String, default: '#F3F4F6' },
 
   // Hero Section
+  heroMode: { type: String, default: 'static' }, // static | slideshow
   heroImage: String,
   heroImages: [String], // Array for slideshow
   heroVideo: String,
@@ -263,6 +264,7 @@ app.get('/api/config', async (req, res) => {
           borderRadius: '0px'
         },
         homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroMode: 'static',
         heroImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000',
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',
