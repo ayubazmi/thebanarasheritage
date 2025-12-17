@@ -174,12 +174,28 @@ export const AdminPages: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   
   const [pageForm, setPageForm] = useState<Partial<Page>>({
-    title: '', slug: '', content: '', showInNav: false, showInFooter: false
+    title: '', 
+    slug: '', 
+    content: '', 
+    showInNav: false, 
+    showInFooter: false,
+    textColor: '#2C251F',
+    textAlign: 'left',
+    fontSize: 'md'
   });
 
   const openAddModal = () => {
     setEditingId(null);
-    setPageForm({ title: '', slug: '', content: '', showInNav: false, showInFooter: false });
+    setPageForm({ 
+        title: '', 
+        slug: '', 
+        content: '', 
+        showInNav: false, 
+        showInFooter: false,
+        textColor: '#2C251F',
+        textAlign: 'left',
+        fontSize: 'md'
+    });
     setIsModalOpen(true);
   };
 
@@ -198,7 +214,10 @@ export const AdminPages: React.FC = () => {
         slug: pageForm.slug!,
         content: pageForm.content || '',
         showInNav: pageForm.showInNav || false,
-        showInFooter: pageForm.showInFooter || false
+        showInFooter: pageForm.showInFooter || false,
+        textColor: pageForm.textColor || '#2C251F',
+        textAlign: pageForm.textAlign || 'left',
+        fontSize: pageForm.fontSize || 'md'
       };
 
       if (editingId) {
@@ -290,23 +309,66 @@ export const AdminPages: React.FC = () => {
                   onChange={e => setPageForm({...pageForm, slug: e.target.value})} 
                 />
                 
-                <div className="md:col-span-2 flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer border px-4 py-2 rounded hover:bg-gray-50">
-                    <input 
-                      type="checkbox" 
-                      checked={pageForm.showInNav} 
-                      onChange={e => setPageForm({...pageForm, showInNav: e.target.checked})} 
-                    />
-                    <span className="text-sm font-medium">Show in Header Navigation</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer border px-4 py-2 rounded hover:bg-gray-50">
-                    <input 
-                      type="checkbox" 
-                      checked={pageForm.showInFooter} 
-                      onChange={e => setPageForm({...pageForm, showInFooter: e.target.checked})} 
-                    />
-                    <span className="text-sm font-medium">Show in Footer Links</span>
-                  </label>
+                <div className="md:col-span-2 flex flex-col gap-4">
+                  <label className="block text-sm font-medium">Page Visibility</label>
+                  <div className="flex gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer border px-4 py-2 rounded hover:bg-gray-50">
+                        <input 
+                        type="checkbox" 
+                        checked={pageForm.showInNav} 
+                        onChange={e => setPageForm({...pageForm, showInNav: e.target.checked})} 
+                        />
+                        <span className="text-sm font-medium">Show in Header Navigation</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer border px-4 py-2 rounded hover:bg-gray-50">
+                        <input 
+                        type="checkbox" 
+                        checked={pageForm.showInFooter} 
+                        onChange={e => setPageForm({...pageForm, showInFooter: e.target.checked})} 
+                        />
+                        <span className="text-sm font-medium">Show in Footer Links</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 bg-gray-50 p-4 rounded border">
+                   <h4 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2"><Palette size={16}/> Text Styling</h4>
+                   <div className="flex flex-wrap items-center gap-6">
+                      
+                      {/* Color */}
+                      <div className="flex flex-col gap-1">
+                         <span className="text-xs font-bold text-gray-500">Color</span>
+                         <div className="flex items-center gap-2">
+                            <input 
+                                type="color" 
+                                value={pageForm.textColor || '#2C251F'}
+                                onChange={e => setPageForm({...pageForm, textColor: e.target.value})}
+                                className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                            />
+                         </div>
+                      </div>
+
+                      {/* Alignment */}
+                      <div className="flex flex-col gap-1">
+                         <span className="text-xs font-bold text-gray-500">Alignment</span>
+                         <div className="flex border rounded overflow-hidden bg-white">
+                            <button type="button" onClick={() => setPageForm({...pageForm, textAlign: 'left'})} className={`p-2 hover:bg-gray-100 ${pageForm.textAlign === 'left' ? 'bg-gray-200' : ''}`} title="Left"><AlignLeft size={16}/></button>
+                            <button type="button" onClick={() => setPageForm({...pageForm, textAlign: 'center'})} className={`p-2 hover:bg-gray-100 ${pageForm.textAlign === 'center' ? 'bg-gray-200' : ''}`} title="Center"><AlignCenter size={16}/></button>
+                            <button type="button" onClick={() => setPageForm({...pageForm, textAlign: 'right'})} className={`p-2 hover:bg-gray-100 ${pageForm.textAlign === 'right' ? 'bg-gray-200' : ''}`} title="Right"><AlignRight size={16}/></button>
+                         </div>
+                      </div>
+
+                      {/* Size */}
+                      <div className="flex flex-col gap-1">
+                         <span className="text-xs font-bold text-gray-500">Size</span>
+                         <div className="flex border rounded overflow-hidden bg-white text-xs font-bold">
+                            <button type="button" onClick={() => setPageForm({...pageForm, fontSize: 'sm'})} className={`px-3 py-2 hover:bg-gray-100 ${pageForm.fontSize === 'sm' ? 'bg-gray-200' : ''}`}>Small</button>
+                            <button type="button" onClick={() => setPageForm({...pageForm, fontSize: 'md'})} className={`px-3 py-2 hover:bg-gray-100 ${pageForm.fontSize === 'md' ? 'bg-gray-200' : ''}`}>Normal</button>
+                            <button type="button" onClick={() => setPageForm({...pageForm, fontSize: 'lg'})} className={`px-3 py-2 hover:bg-gray-100 ${pageForm.fontSize === 'lg' ? 'bg-gray-200' : ''}`}>Large</button>
+                         </div>
+                      </div>
+
+                   </div>
                 </div>
 
                 <div className="md:col-span-2">

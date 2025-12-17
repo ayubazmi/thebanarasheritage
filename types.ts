@@ -91,6 +91,10 @@ export interface Page {
   content: string;
   showInNav: boolean;
   showInFooter: boolean;
+  // Styling
+  textColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  fontSize?: 'sm' | 'md' | 'lg';
 }
 
 export interface SiteConfig {

@@ -205,6 +205,10 @@ const Page = mongoose.model('Page', new mongoose.Schema({
   content: { type: String, required: true },
   showInNav: { type: Boolean, default: false },
   showInFooter: { type: Boolean, default: false },
+  // Styling Overrides
+  textColor: { type: String, default: '#2C251F' },
+  textAlign: { type: String, default: 'left' }, // left, center, right
+  fontSize: { type: String, default: 'md' }, // sm, md, lg
 }, { toJSON: toJSONConfig }));
 
 // 7. Access Log

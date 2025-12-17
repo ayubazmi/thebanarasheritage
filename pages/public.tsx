@@ -232,11 +232,33 @@ export const DynamicPage: React.FC = () => {
     );
   }
 
+  // Determine container width based on font size setting for better readability
+  // and map font size selection to tailwind prose classes
+  const textSizeClass = page.fontSize === 'sm' ? 'prose-sm' : page.fontSize === 'lg' ? 'prose-xl' : 'prose-lg';
+  const alignClass = page.textAlign === 'center' ? 'text-center mx-auto' : page.textAlign === 'right' ? 'text-right ml-auto' : 'text-left mr-auto';
+
+  // We use CSS variables to override prose defaults if a custom color is set
+  const customStyle = page.textColor ? {
+    '--tw-prose-body': page.textColor,
+    '--tw-prose-headings': page.textColor,
+    '--tw-prose-links': page.textColor,
+    '--tw-prose-bold': page.textColor,
+    '--tw-prose-counters': page.textColor,
+    '--tw-prose-bullets': page.textColor,
+    '--tw-prose-hr': page.textColor,
+    '--tw-prose-quotes': page.textColor,
+    '--tw-prose-quote-borders': page.textColor,
+    '--tw-prose-captions': page.textColor,
+    color: page.textColor,
+    textAlign: page.textAlign as any
+  } : { textAlign: page.textAlign as any };
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <SectionHeader title={page.title} center />
+      <SectionHeader title={page.title} center={page.textAlign === 'center'} />
       <div 
-        className="prose prose-lg max-w-none text-gray-600 prose-headings:font-serif prose-headings:text-brand-900 prose-a:text-brand-800"
+        className={`prose ${textSizeClass} max-w-none prose-headings:font-serif prose-headings:text-brand-900 prose-a:text-brand-800 ${alignClass}`}
+        style={customStyle as React.CSSProperties}
         dangerouslySetInnerHTML={{ __html: page.content }} 
       />
     </div>
