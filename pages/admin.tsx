@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { Button, Input, SectionHeader } from '../components/ui';
+import { Button, Input, SectionHeader, Badge } from '../components/ui';
 import { Product, Category, User, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
@@ -323,6 +323,9 @@ export const AdminSettings: React.FC = () => {
               
               <div className="border-t pt-4 mt-4">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-2">Background Media</p>
+                <p className="text-xs text-gray-400 mb-2">
+                  (Used when 'Static Image / Video' mode is selected in Developer Settings)
+                </p>
                 <div className="flex flex-col gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Image Upload</label>
@@ -524,7 +527,8 @@ export const AdminDeveloperSettings: React.FC = () => {
           ...config.theme
         },
         homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
-        heroImages: config.heroImages || []
+        heroImages: config.heroImages || [],
+        heroMode: config.heroMode || 'static'
       });
     }
   }, [config]);
@@ -556,7 +560,8 @@ export const AdminDeveloperSettings: React.FC = () => {
         announcementBgColor: '#000000',
         announcementTextColor: '#FFFFFF',
         // Reset Slideshow
-        heroImages: []
+        heroImages: [],
+        heroMode: 'static'
       }));
     }
   };
@@ -835,35 +840,59 @@ export const AdminDeveloperSettings: React.FC = () => {
 
         {/* Hero Slideshow (New) */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Slideshow</h3>
-          <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-3 rounded">
-            Upload multiple images here to create a slideshow on the homepage hero section. 
-            If images are added here, they will override the single hero image set in 'Content & Settings'.
-          </p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {localConfig.heroImages?.map((img, idx) => (
-              <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
-                <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx + 1}`} />
-                <button 
-                  onClick={() => removeHeroSlide(idx)}
-                  className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove Slide"
-                >
-                  <Trash size={24} />
-                </button>
-                <div className="absolute bottom-0 right-0 bg-black/50 text-white text-xs px-2 py-1 rounded-tl">
-                  {idx + 1}
-                </div>
-              </div>
-            ))}
-            
-            <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video">
-               <Plus className="text-gray-400 mb-2" size={24}/>
-               <span className="text-sm text-gray-500 font-medium">Add Slide</span>
-               <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
-            </label>
+          <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Section Mode</h3>
           </div>
+          
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <label className={`flex-1 p-4 border rounded cursor-pointer transition-all ${localConfig.heroMode === 'static' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'hover:bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                      <input type="radio" name="heroMode" value="static" checked={localConfig.heroMode === 'static' || !localConfig.heroMode} onChange={() => setLocalConfig({...localConfig, heroMode: 'static'})} className="accent-purple-600" />
+                      <span className="font-bold text-brand-900">Static Image / Video</span>
+                  </div>
+                  <p className="text-xs text-gray-500 pl-6">Displays the single hero image or video configured in "Content & Settings".</p>
+              </label>
+
+              <label className={`flex-1 p-4 border rounded cursor-pointer transition-all ${localConfig.heroMode === 'slideshow' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'hover:bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                      <input type="radio" name="heroMode" value="slideshow" checked={localConfig.heroMode === 'slideshow'} onChange={() => setLocalConfig({...localConfig, heroMode: 'slideshow'})} className="accent-purple-600" />
+                      <span className="font-bold text-brand-900">Slideshow Carousel</span>
+                  </div>
+                  <p className="text-xs text-gray-500 pl-6">Cycles through the multiple images uploaded below.</p>
+              </label>
+          </div>
+
+          {localConfig.heroMode === 'slideshow' && (
+            <div className="animate-fade-in-up">
+              <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-3 rounded">
+                Upload multiple images here to create a slideshow on the homepage hero section. 
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {localConfig.heroImages?.map((img, idx) => (
+                  <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
+                    <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx + 1}`} />
+                    <button 
+                      onClick={() => removeHeroSlide(idx)}
+                      className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove Slide"
+                    >
+                      <Trash size={24} />
+                    </button>
+                    <div className="absolute bottom-0 right-0 bg-black/50 text-white text-xs px-2 py-1 rounded-tl">
+                      {idx + 1}
+                    </div>
+                  </div>
+                ))}
+                
+                <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video">
+                   <Plus className="text-gray-400 mb-2" size={24}/>
+                   <span className="text-sm text-gray-500 font-medium">Add Slide</span>
+                   <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Section Reordering */}
