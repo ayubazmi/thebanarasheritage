@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -115,7 +116,13 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   secondarySlideshows: [{
     id: String,
     title: String,
-    images: [String],
+    images: [String], // Legacy support
+    slides: [{
+      image: String,
+      title: String,
+      subtitle: String,
+      textColor: String
+    }],
     textColor: String,
     textAlign: { type: String, default: 'center' },
     fontSize: { type: String, default: 'md' }
@@ -282,6 +289,8 @@ app.get('/api/config', async (req, res) => {
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',
         heroSubtitle: 'Discover our latest arrivals designed for the modern woman.',
+        heroButtonText: 'SHOP NOW',
+        heroButtonLink: '/shop',
         heroTextColor: '#FFFFFF',
         heroTextAlign: 'center',
         heroFontSize: 'md',
