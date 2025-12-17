@@ -60,7 +60,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
             </div>
           )}
           
-          <div className="relative w-full aspect-[2/1] md:aspect-[2.4/1] lg:h-[600px] overflow-hidden rounded-2xl shadow-lg">
+          <div className="relative w-full aspect-[21/9] md:aspect-[3/1] lg:h-[500px] overflow-hidden rounded-2xl shadow-lg">
              {images.map((img, idx) => (
                <div 
                  key={idx}
