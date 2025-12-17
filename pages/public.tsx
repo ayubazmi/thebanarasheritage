@@ -60,7 +60,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
             </div>
           )}
           
-          <div className="relative w-full aspect-[2/1] md:aspect-[2.4/1] lg:h-[600px] overflow-hidden rounded-2xl shadow-lg">
+          <div className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden rounded-2xl shadow-lg">
              {images.map((img, idx) => (
                <div 
                  key={idx}
@@ -125,10 +125,10 @@ export const HomePage: React.FC = () => {
 
   // Section Renders
   const renderHero = () => (
-    <section key="hero" className={`relative h-[92vh] w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-8 md:py-12' : ''}`}>
+    <section key="hero" className={`relative w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-8 md:py-12' : ''}`}>
         
         {/* Container for Slideshow (adds padding) or Full Width for Static */}
-        <div className={`relative w-full h-full ${isSlideshow ? 'px-4 md:px-12 max-w-[1800px] mx-auto' : ''}`}>
+        <div className={`relative w-full ${isSlideshow ? 'h-[60vh] md:h-[80vh] px-4 md:px-12 max-w-[1800px] mx-auto' : 'h-[85vh]'}`}>
             
             {/* Inner Content Wrapper (Rounded corners for slideshow) */}
             <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
