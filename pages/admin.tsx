@@ -269,6 +269,7 @@ export const AdminSettings: React.FC = () => {
                   <Upload size={16}/> Choose Logo
                   <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                 </label>
+                <p className="text-xs text-gray-400 mt-1">Recommended: Height 100px-200px (PNG or SVG)</p>
               </div>
             </div>
           </div>
@@ -332,6 +333,7 @@ export const AdminSettings: React.FC = () => {
                       <Upload size={16}/> Choose Image
                       <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} />
                     </label>
+                    <p className="text-xs text-gray-400 mt-1">Recommended: 1920x1080px (16:9) or 1920x800px</p>
                   </div>
                   
                   <div className="relative">
@@ -424,6 +426,7 @@ export const AdminSettings: React.FC = () => {
                   <Upload size={16}/> Upload Image
                   <input type="file" className="hidden" accept="image/*" onChange={handlePromoUpload} />
                 </label>
+                <p className="text-xs text-gray-400 mt-1">Recommended: 1000x800px (4:3) or 800x600px</p>
               </div>
             </div>
             <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
@@ -1022,9 +1025,10 @@ export const AdminDeveloperSettings: React.FC = () => {
                   </div>
                 ))}
                 
-                <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video">
+                <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video p-2 text-center">
                    <Plus className="text-gray-400 mb-2" size={24}/>
                    <span className="text-sm text-gray-500 font-medium">Add Slide</span>
+                   <span className="text-xs text-gray-400 mt-1">Rec: 1920x1080px</span>
                    <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
                 </label>
               </div>
@@ -1117,6 +1121,7 @@ export const AdminDeveloperSettings: React.FC = () => {
                     <label className="border-2 border-dashed border-gray-300 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-brand-900 transition-colors">
                        <Plus className="text-gray-400 mb-2" size={24}/>
                        <span className="text-sm text-gray-500 font-medium">Add New Slide</span>
+                       <span className="text-xs text-gray-400 mt-1">Rec: 1920x800px or 16:9 ratio</span>
                        <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToSlideshow(slideshow.id, e)} />
                     </label>
                   </div>
@@ -1392,6 +1397,7 @@ export const AdminCategories: React.FC = () => {
                     <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
                   </label>
                 </div>
+                <p className="text-xs text-gray-400 mt-1">Rec: 600x800px (Portrait) or 600x600px (Square)</p>
               </div>
               <div className="flex justify-end gap-2 mt-6">
                 <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)}>Cancel</Button>
@@ -1572,6 +1578,7 @@ export const AdminProducts: React.FC = () => {
                         <Upload size={16} className="mr-2" /> Upload Image
                         <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                       </label>
+                      <p className="text-xs text-gray-400 mt-2">Recommended: 800x1066px (3:4 Portrait)</p>
                     </div>
                   </div>
                 </div>
