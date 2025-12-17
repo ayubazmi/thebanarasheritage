@@ -198,13 +198,13 @@ export const HomePage: React.FC = () => {
 
                 {/* Overlay & Text Content */}
                 <div className="absolute inset-0 bg-black/20" />
-                <div className="absolute inset-0 flex items-center justify-center text-center z-10">
-                  <div className="max-w-2xl px-6">
+                <div className={`absolute inset-0 flex items-center z-10 transition-all duration-500 ${isSlideshow ? 'justify-center md:justify-end md:pr-24' : 'justify-center'}`}>
+                  <div className={`max-w-2xl px-6 ${isSlideshow ? 'text-center md:text-right' : 'text-center'}`}>
                     <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
                       {config.heroTagline || 'New Collection'}
                     </span>
                     <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
-                    <p className="text-white/90 text-lg mb-8 font-light max-w-lg mx-auto drop-shadow-md">{config.heroSubtitle}</p>
+                    <p className={`text-white/90 text-lg mb-8 font-light max-w-lg drop-shadow-md ${isSlideshow ? 'mx-auto md:ml-auto md:mr-0' : 'mx-auto'}`}>{config.heroSubtitle}</p>
                     <Link to="/shop">
                       <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
                         SHOP NOW
