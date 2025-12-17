@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product } from '../types';
+import { Product, SlideshowSection } from '../types';
 
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
@@ -35,12 +35,79 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
   </Link>
 );
 
+const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
+  const [current, setCurrent] = useState(0);
+  const images = data.images || [];
+
+  const next = () => setCurrent(prev => (prev + 1) % images.length);
+  const prev = () => setCurrent(prev => (prev - 1 + images.length) % images.length);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(next, 5000);
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  if (images.length === 0) return null;
+
+  return (
+    <section className="py-8 md:py-12 w-full bg-white group">
+       <div className="px-4 md:px-12 max-w-[1800px] mx-auto">
+          {data.title && (
+            <div className="mb-6 text-center">
+               <h2 className="text-3xl font-serif text-brand-900">{data.title}</h2>
+               <div className="h-0.5 w-16 bg-brand-800/20 mt-2 mx-auto" />
+            </div>
+          )}
+          
+          <div className="relative w-full aspect-[21/9] md:aspect-[3/1] lg:h-[500px] overflow-hidden rounded-2xl shadow-lg">
+             {images.map((img, idx) => (
+               <div 
+                 key={idx}
+                 className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100' : 'opacity-0'}`}
+               >
+                 <img src={img} className="w-full h-full object-cover" alt="" />
+               </div>
+             ))}
+
+             {images.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); prev(); }}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); next(); }}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                    {images.map((_, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setCurrent(idx)}
+                        className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80 w-1.5'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+             )}
+          </div>
+       </div>
+    </section>
+  );
+};
+
 // --- Home Page ---
 export const HomePage: React.FC = () => {
   const { products, categories, config } = useStore();
   const featured = products.filter(p => p.newArrival).slice(0, 4);
   
-  // Slideshow Logic
+  // Slideshow Logic (Hero)
   const [currentSlide, setCurrentSlide] = useState(0);
   const isSlideshow = config.heroMode === 'slideshow';
   const heroImages = config.heroImages || [];
@@ -234,6 +301,11 @@ export const HomePage: React.FC = () => {
     promo: renderPromo,
     trust: renderTrust
   };
+
+  // Add Dynamic Slideshows to Map
+  config.secondarySlideshows?.forEach(slideshow => {
+    sectionMap[slideshow.id] = () => <SecondarySlideshow key={slideshow.id} data={slideshow} />;
+  });
 
   // Default Order if none in config
   const order = config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'];
