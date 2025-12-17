@@ -76,13 +76,6 @@ export interface SlideshowSection {
   textColor?: string;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'md' | 'lg';
-  direction?: 'horizontal' | 'vertical';
-}
-
-export interface VerticalCarouselSection {
-  id: string;
-  title?: string;
-  slides: Slide[];
 }
 
 export interface SiteConfig {
@@ -122,9 +115,6 @@ export interface SiteConfig {
   
   // Secondary Slideshows (New Feature)
   secondarySlideshows?: SlideshowSection[];
-
-  // Vertical Carousels (Isolated New Feature)
-  verticalCarousels?: VerticalCarouselSection[];
 
   // Section Headers
   categoryTitle?: string;
