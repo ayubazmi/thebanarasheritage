@@ -7,7 +7,7 @@ import { Product, Category, User, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -131,7 +131,7 @@ export const AdminLogs: React.FC = () => {
       <div className="bg-white rounded shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 text-gray-700 uppercase">
+            <thead className="bg-gray-5 text-gray-700 uppercase">
                <tr>
                  <th className="px-6 py-4">Time</th>
                  <th className="px-6 py-4">Client</th>
@@ -528,7 +528,8 @@ export const AdminDeveloperSettings: React.FC = () => {
         },
         homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
         heroImages: config.heroImages || [],
-        heroMode: config.heroMode || 'static'
+        heroMode: config.heroMode || 'static',
+        secondarySlideshows: config.secondarySlideshows || []
       });
     }
   }, [config]);
@@ -561,7 +562,8 @@ export const AdminDeveloperSettings: React.FC = () => {
         announcementTextColor: '#FFFFFF',
         // Reset Slideshow
         heroImages: [],
-        heroMode: 'static'
+        heroMode: 'static',
+        secondarySlideshows: []
       }));
     }
   };
@@ -576,7 +578,7 @@ export const AdminDeveloperSettings: React.FC = () => {
     }
   };
 
-  // --- Slideshow Handlers ---
+  // --- Hero Slideshow Handlers ---
   const handleAddHeroSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -598,6 +600,56 @@ export const AdminDeveloperSettings: React.FC = () => {
     }));
   };
 
+  // --- Secondary Slideshow Handlers (New) ---
+  const addSecondarySlideshow = () => {
+     const newId = `slideshow_${Date.now()}`;
+     const newSlideshow = { id: newId, title: `New Slideshow`, images: [] };
+     
+     setLocalConfig(prev => ({
+        ...prev,
+        secondarySlideshows: [...(prev.secondarySlideshows || []), newSlideshow],
+        homepageSections: [...(prev.homepageSections || []), newId]
+     }));
+  };
+
+  const removeSecondarySlideshow = (id: string) => {
+    if(window.confirm("Delete this slideshow section?")) {
+      setLocalConfig(prev => ({
+          ...prev,
+          secondarySlideshows: prev.secondarySlideshows?.filter(s => s.id !== id),
+          homepageSections: prev.homepageSections?.filter(sid => sid !== id)
+      }));
+    }
+  };
+
+  const updateSlideshowTitle = (id: string, title: string) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, title } : s)
+    }));
+  };
+
+  const addImageToSlideshow = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+         setLocalConfig(prev => ({
+            ...prev,
+            secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, images: [...s.images, reader.result as string] } : s)
+         }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImageFromSlideshow = (id: string, imgIndex: number) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, images: s.images.filter((_, i) => i !== imgIndex) } : s)
+    }));
+  };
+
   const fonts = [
     { name: 'Inter (Modern Sans)', value: 'Inter' },
     { name: 'Lato (Friendly Sans)', value: 'Lato' },
@@ -613,6 +665,14 @@ export const AdminDeveloperSettings: React.FC = () => {
     featured: 'Featured Products',
     promo: 'Promotional Banner',
     trust: 'Trust Badges'
+  };
+
+  // Helper to get display name for sections
+  const getSectionName = (id: string) => {
+     if(sectionNames[id]) return sectionNames[id];
+     const slideshow = localConfig.secondarySlideshows?.find(s => s.id === id);
+     if(slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
+     return id; // Fallback
   };
 
   if (!localConfig.theme) return <div>Loading...</div>;
@@ -727,7 +787,7 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Announcement Bar Settings (Reordered) */}
+        {/* Announcement Bar Settings */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-yellow-400">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Megaphone className="mr-2" size={20}/> Announcement Bar</h3>
           
@@ -838,7 +898,7 @@ export const AdminDeveloperSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Hero Slideshow (New) */}
+        {/* Hero Slideshow */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
           <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-lg flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Section Mode</h3>
@@ -895,6 +955,57 @@ export const AdminDeveloperSettings: React.FC = () => {
           )}
         </div>
 
+        {/* Additional Slideshows (New Feature) */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-indigo-500">
+          <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg flex items-center"><MonitorPlay className="mr-2" size={20}/> Additional Slideshow Sections</h3>
+              <Button onClick={addSecondarySlideshow} size="sm"><Plus size={16} className="mr-1"/> Add New Slideshow</Button>
+          </div>
+          <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">
+             You can add multiple standalone slideshow carousels to the homepage. After adding, drag and drop them in the "Homepage Layout" section below to position them.
+          </p>
+          
+          <div className="space-y-8">
+             {localConfig.secondarySlideshows?.map((slideshow, index) => (
+               <div key={slideshow.id} className="border p-6 rounded relative bg-gray-50/50">
+                  <div className="flex justify-between items-start mb-4">
+                     <div className="flex-1 mr-4">
+                        <Input 
+                          label="Slideshow Title (Optional)" 
+                          value={slideshow.title || ''} 
+                          onChange={(e) => updateSlideshowTitle(slideshow.id, e.target.value)} 
+                          placeholder="e.g. Summer Highlights"
+                        />
+                     </div>
+                     <button onClick={() => removeSecondarySlideshow(slideshow.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {slideshow.images.map((img, imgIdx) => (
+                      <div key={imgIdx} className="relative group aspect-video bg-gray-200 rounded overflow-hidden border">
+                        <img src={img} className="w-full h-full object-cover" alt="" />
+                        <button 
+                          onClick={() => removeImageFromSlideshow(slideshow.id, imgIdx)}
+                          className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash size={20} />
+                        </button>
+                      </div>
+                    ))}
+                    <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-brand-900 transition-colors aspect-video">
+                       <Plus className="text-gray-400 mb-1" size={20}/>
+                       <span className="text-xs text-gray-500 font-medium">Add Image</span>
+                       <input type="file" className="hidden" accept="image/*" onChange={(e) => addImageToSlideshow(slideshow.id, e)} />
+                    </label>
+                  </div>
+               </div>
+             ))}
+             {(!localConfig.secondarySlideshows || localConfig.secondarySlideshows.length === 0) && (
+               <p className="text-center text-gray-400 italic">No additional slideshows added yet.</p>
+             )}
+          </div>
+        </div>
+
         {/* Section Reordering */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
           <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
@@ -902,8 +1013,11 @@ export const AdminDeveloperSettings: React.FC = () => {
           
           <div className="space-y-2 max-w-lg">
             {localConfig.homepageSections?.map((sectionId, index) => (
-              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition">
-                <span className="font-medium capitalize">{sectionNames[sectionId] || sectionId}</span>
+              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition group">
+                <span className="font-medium capitalize flex items-center">
+                  <div className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs mr-3 font-bold text-gray-600">{index + 1}</div>
+                  {getSectionName(sectionId)}
+                </span>
                 <div className="flex gap-1">
                   <button 
                     onClick={() => moveSection(index, 'up')}
