@@ -7,7 +7,7 @@ import { Product, Category, User, SiteConfig } from '../types';
 import { 
   Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
   Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
-  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
@@ -529,7 +529,10 @@ export const AdminDeveloperSettings: React.FC = () => {
         homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
         heroImages: config.heroImages || [],
         heroMode: config.heroMode || 'static',
-        secondarySlideshows: config.secondarySlideshows || []
+        secondarySlideshows: config.secondarySlideshows || [],
+        heroTextColor: config.heroTextColor || '#FFFFFF',
+        heroTextAlign: config.heroTextAlign || 'center',
+        heroFontSize: config.heroFontSize || 'md',
       });
     }
   }, [config]);
@@ -563,6 +566,9 @@ export const AdminDeveloperSettings: React.FC = () => {
         // Reset Slideshow
         heroImages: [],
         heroMode: 'static',
+        heroTextColor: '#FFFFFF',
+        heroTextAlign: 'center',
+        heroFontSize: 'md',
         secondarySlideshows: []
       }));
     }
@@ -603,7 +609,14 @@ export const AdminDeveloperSettings: React.FC = () => {
   // --- Secondary Slideshow Handlers (New) ---
   const addSecondarySlideshow = () => {
      const newId = `slideshow_${Date.now()}`;
-     const newSlideshow = { id: newId, title: `New Slideshow`, images: [] };
+     const newSlideshow = { 
+       id: newId, 
+       title: `New Slideshow`, 
+       images: [],
+       textColor: '#2C251F', // Default dark
+       textAlign: 'center' as const,
+       fontSize: 'md' as const
+     };
      
      setLocalConfig(prev => ({
         ...prev,
@@ -626,6 +639,13 @@ export const AdminDeveloperSettings: React.FC = () => {
     setLocalConfig(prev => ({
        ...prev,
        secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, title } : s)
+    }));
+  };
+
+  const updateSlideshowStyle = (id: string, field: string, value: any) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, [field]: value } : s)
     }));
   };
 
@@ -674,6 +694,33 @@ export const AdminDeveloperSettings: React.FC = () => {
      if(slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
      return id; // Fallback
   };
+
+  // Reusable Styling Controls Component
+  const TextStylingControls = ({ 
+    textColor, textAlign, fontSize, 
+    onChangeColor, onChangeAlign, onChangeSize 
+  }: any) => (
+    <div className="flex flex-wrap items-center gap-4 bg-white p-2 rounded border border-gray-200">
+       <div className="flex items-center gap-2">
+         <input 
+           type="color" 
+           value={textColor || '#000000'} 
+           onChange={(e) => onChangeColor(e.target.value)} 
+           className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+         />
+       </div>
+       <div className="flex border rounded overflow-hidden">
+         <button onClick={() => onChangeAlign('left')} className={`p-2 hover:bg-gray-100 ${textAlign === 'left' ? 'bg-gray-200' : 'bg-white'}`} title="Left"><AlignLeft size={16}/></button>
+         <button onClick={() => onChangeAlign('center')} className={`p-2 hover:bg-gray-100 ${textAlign === 'center' ? 'bg-gray-200' : 'bg-white'}`} title="Center"><AlignCenter size={16}/></button>
+         <button onClick={() => onChangeAlign('right')} className={`p-2 hover:bg-gray-100 ${textAlign === 'right' ? 'bg-gray-200' : 'bg-white'}`} title="Right"><AlignRight size={16}/></button>
+       </div>
+       <div className="flex border rounded overflow-hidden text-xs font-bold">
+         <button onClick={() => onChangeSize('sm')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'sm' ? 'bg-gray-200' : 'bg-white'}`}>S</button>
+         <button onClick={() => onChangeSize('md')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'md' ? 'bg-gray-200' : 'bg-white'}`}>M</button>
+         <button onClick={() => onChangeSize('lg')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'lg' ? 'bg-gray-200' : 'bg-white'}`}>L</button>
+       </div>
+    </div>
+  );
 
   if (!localConfig.theme) return <div>Loading...</div>;
 
@@ -922,12 +969,22 @@ export const AdminDeveloperSettings: React.FC = () => {
               </label>
           </div>
 
+          {/* Hero Slideshow Configuration */}
           {localConfig.heroMode === 'slideshow' && (
-            <div className="animate-fade-in-up">
-              <p className="text-sm text-gray-500 mb-4 bg-gray-50 p-3 rounded">
-                Upload multiple images here to create a slideshow on the homepage hero section. 
-              </p>
+            <div className="animate-fade-in-up space-y-6">
               
+              <div className="bg-purple-50 p-4 rounded border border-purple-100">
+                 <h4 className="font-bold text-sm text-purple-900 mb-3">Hero Text Styling</h4>
+                 <TextStylingControls 
+                    textColor={localConfig.heroTextColor}
+                    textAlign={localConfig.heroTextAlign}
+                    fontSize={localConfig.heroFontSize}
+                    onChangeColor={(v: string) => setLocalConfig({...localConfig, heroTextColor: v})}
+                    onChangeAlign={(v: any) => setLocalConfig({...localConfig, heroTextAlign: v})}
+                    onChangeSize={(v: any) => setLocalConfig({...localConfig, heroFontSize: v})}
+                 />
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {localConfig.heroImages?.map((img, idx) => (
                   <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
@@ -968,15 +1025,28 @@ export const AdminDeveloperSettings: React.FC = () => {
           <div className="space-y-8">
              {localConfig.secondarySlideshows?.map((slideshow, index) => (
                <div key={slideshow.id} className="border p-6 rounded relative bg-gray-50/50">
-                  <div className="flex justify-between items-start mb-4">
-                     <div className="flex-1 mr-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                     <div className="flex-1 w-full md:w-auto">
                         <Input 
-                          label="Slideshow Title (Optional)" 
+                          label="Slideshow Title" 
                           value={slideshow.title || ''} 
                           onChange={(e) => updateSlideshowTitle(slideshow.id, e.target.value)} 
                           placeholder="e.g. Summer Highlights"
                         />
                      </div>
+                     
+                     <div className="flex-1 w-full md:w-auto">
+                        <label className="block text-sm font-medium mb-1">Title Style</label>
+                        <TextStylingControls 
+                          textColor={slideshow.textColor}
+                          textAlign={slideshow.textAlign}
+                          fontSize={slideshow.fontSize}
+                          onChangeColor={(v: string) => updateSlideshowStyle(slideshow.id, 'textColor', v)}
+                          onChangeAlign={(v: any) => updateSlideshowStyle(slideshow.id, 'textAlign', v)}
+                          onChangeSize={(v: any) => updateSlideshowStyle(slideshow.id, 'fontSize', v)}
+                        />
+                     </div>
+
                      <button onClick={() => removeSecondarySlideshow(slideshow.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
                   </div>
                   

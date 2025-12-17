@@ -50,13 +50,23 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
 
   if (images.length === 0) return null;
 
+  // Styling Helpers
+  const textAlignClass = data.textAlign === 'left' ? 'text-left' : data.textAlign === 'right' ? 'text-right' : 'text-center';
+  const alignContainerClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
+  const fontSizeClass = data.fontSize === 'lg' ? 'text-4xl md:text-5xl' : data.fontSize === 'sm' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'; // md defaults
+
   return (
     <section className="py-8 md:py-12 w-full bg-white group">
        <div className="px-4 md:px-12 max-w-[1800px] mx-auto">
           {data.title && (
-            <div className="mb-6 text-center">
-               <h2 className="text-3xl font-serif text-brand-900">{data.title}</h2>
-               <div className="h-0.5 w-16 bg-brand-800/20 mt-2 mx-auto" />
+            <div className={`mb-6 flex flex-col ${alignContainerClass} ${textAlignClass}`}>
+               <h2 
+                 className={`${fontSizeClass} font-serif`} 
+                 style={{ color: data.textColor || 'var(--color-primary)' }}
+               >
+                 {data.title}
+               </h2>
+               <div className="h-0.5 w-16 bg-brand-800/20 mt-2" />
             </div>
           )}
           
@@ -124,98 +134,128 @@ export const HomePage: React.FC = () => {
   const promoImage = config.promoImage || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
   // Section Renders
-  const renderHero = () => (
-    <section key="hero" className={`relative w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-8 md:py-12' : ''}`}>
+  const renderHero = () => {
+    // Dynamic Styles for Hero
+    const alignClass = config.heroTextAlign === 'left' 
+      ? 'justify-start md:pl-24 text-left' 
+      : config.heroTextAlign === 'right' 
+        ? 'justify-end md:pr-24 text-right' 
+        : 'justify-center text-center';
         
-        {/* Container for Slideshow (adds padding) or Full Width for Static */}
-        <div className={`relative w-full ${isSlideshow ? 'h-[60vh] md:h-[80vh] px-4 md:px-12 max-w-[1800px] mx-auto' : 'h-[85vh]'}`}>
-            
-            {/* Inner Content Wrapper (Rounded corners for slideshow) */}
-            <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
-                
-                {(!isSlideshow && config.heroVideo) ? (
-                  <video 
-                    src={config.heroVideo} 
-                    className="absolute inset-0 w-full h-full object-cover"
-                    autoPlay 
-                    muted 
-                    loop 
-                    playsInline
-                  />
-                ) : isSlideshow && heroImages.length > 0 ? (
-                  <>
-                    {heroImages.map((img, index) => (
-                      <div 
-                        key={index}
-                        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
-                      >
-                         <img 
-                           src={img} 
-                           className="w-full h-full object-cover"
-                           alt={`Slide ${index + 1}`}
-                         />
-                      </div>
-                    ))}
-                    
-                    {/* Navigation Buttons */}
-                    {heroImages.length > 1 && (
-                       <>
-                         <button 
-                           onClick={(e) => { e.preventDefault(); prevSlide(); }}
-                           className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
-                         >
-                           <ChevronLeft size={32} />
-                         </button>
-                         <button 
-                           onClick={(e) => { e.preventDefault(); nextSlide(); }}
-                           className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
-                         >
-                           <ChevronRight size={32} />
-                         </button>
-                       </>
-                    )}
+    const titleSizeClass = config.heroFontSize === 'sm' 
+      ? 'text-4xl md:text-5xl' 
+      : config.heroFontSize === 'lg' 
+        ? 'text-6xl md:text-8xl' 
+        : 'text-5xl md:text-7xl';
 
-                    {/* Slide Indicators */}
-                    {heroImages.length > 1 && (
-                       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                         {heroImages.map((_, idx) => (
-                           <button 
-                             key={idx}
-                             onClick={() => setCurrentSlide(idx)}
-                             className={`h-2 rounded-full transition-all duration-300 shadow-sm ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
+    const subTitleSizeClass = config.heroFontSize === 'sm' ? 'text-base' : config.heroFontSize === 'lg' ? 'text-xl' : 'text-lg';
+
+    return (
+      <section key="hero" className={`relative w-full bg-brand-50 overflow-hidden group ${isSlideshow ? 'py-8 md:py-12' : ''}`}>
+          
+          {/* Container for Slideshow (adds padding) or Full Width for Static */}
+          <div className={`relative w-full ${isSlideshow ? 'h-[60vh] md:h-[80vh] px-4 md:px-12 max-w-[1800px] mx-auto' : 'h-[85vh]'}`}>
+              
+              {/* Inner Content Wrapper (Rounded corners for slideshow) */}
+              <div className={`relative w-full h-full overflow-hidden ${isSlideshow ? 'rounded-2xl shadow-xl' : ''}`}>
+                  
+                  {(!isSlideshow && config.heroVideo) ? (
+                    <video 
+                      src={config.heroVideo} 
+                      className="absolute inset-0 w-full h-full object-cover"
+                      autoPlay 
+                      muted 
+                      loop 
+                      playsInline
+                    />
+                  ) : isSlideshow && heroImages.length > 0 ? (
+                    <>
+                      {heroImages.map((img, index) => (
+                        <div 
+                          key={index}
+                          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+                        >
+                           <img 
+                             src={img} 
+                             className="w-full h-full object-cover"
+                             alt={`Slide ${index + 1}`}
                            />
-                         ))}
-                       </div>
-                    )}
-                  </>
-                ) : (
-                   <img 
-                     src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'} 
-                     className="w-full h-full object-cover"
-                     alt="Fashion Banner"
-                   />
-                )}
+                        </div>
+                      ))}
+                      
+                      {/* Navigation Buttons */}
+                      {heroImages.length > 1 && (
+                         <>
+                           <button 
+                             onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                             className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                           >
+                             <ChevronLeft size={32} />
+                           </button>
+                           <button 
+                             onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                             className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                           >
+                             <ChevronRight size={32} />
+                           </button>
+                         </>
+                      )}
 
-                {/* Overlay & Text Content */}
-                <div className="absolute inset-0 bg-black/20" />
-                <div className={`absolute inset-0 flex items-center z-10 transition-all duration-500 ${isSlideshow ? 'justify-center md:justify-end md:pr-24' : 'justify-center'}`}>
-                  <div className={`max-w-2xl px-6 ${isSlideshow ? 'text-center md:text-right' : 'text-center'}`}>
-                    <span className="text-white tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up">
-                      {config.heroTagline || 'New Collection'}
-                    </span>
-                    <h1 className="text-5xl md:text-7xl font-serif text-white font-bold mb-6 leading-tight drop-shadow-lg">{config.heroTitle}</h1>
-                    <p className={`text-white/90 text-lg mb-8 font-light max-w-lg drop-shadow-md ${isSlideshow ? 'mx-auto md:ml-auto md:mr-0' : 'mx-auto'}`}>{config.heroSubtitle}</p>
-                    <Link to="/shop">
-                      <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
-                        SHOP NOW
-                      </button>
-                    </Link>
+                      {/* Slide Indicators */}
+                      {heroImages.length > 1 && (
+                         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                           {heroImages.map((_, idx) => (
+                             <button 
+                               key={idx}
+                               onClick={() => setCurrentSlide(idx)}
+                               className={`h-2 rounded-full transition-all duration-300 shadow-sm ${idx === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
+                             />
+                           ))}
+                         </div>
+                      )}
+                    </>
+                  ) : (
+                     <img 
+                       src={config.heroImage || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000'} 
+                       className="w-full h-full object-cover"
+                       alt="Fashion Banner"
+                     />
+                  )}
+
+                  {/* Overlay & Text Content */}
+                  <div className="absolute inset-0 bg-black/20" />
+                  <div className={`absolute inset-0 flex items-center z-10 transition-all duration-500 px-6 ${alignClass}`}>
+                    <div className="max-w-2xl" style={{ color: config.heroTextColor || '#FFFFFF' }}>
+                      <span 
+                        className="tracking-[0.2em] text-sm md:text-base font-semibold uppercase mb-4 block animate-fade-in-up" 
+                        style={{ color: 'inherit', opacity: 0.9 }}
+                      >
+                        {config.heroTagline || 'New Collection'}
+                      </span>
+                      <h1 
+                        className={`${titleSizeClass} font-serif font-bold mb-6 leading-tight drop-shadow-lg`} 
+                        style={{ color: 'inherit' }}
+                      >
+                        {config.heroTitle}
+                      </h1>
+                      <p 
+                        className={`${subTitleSizeClass} mb-8 font-light max-w-lg drop-shadow-md ${config.heroTextAlign === 'center' ? 'mx-auto' : config.heroTextAlign === 'right' ? 'ml-auto mr-0' : 'mr-auto ml-0'}`} 
+                        style={{ color: 'inherit', opacity: 0.9 }}
+                      >
+                        {config.heroSubtitle}
+                      </p>
+                      <Link to="/shop">
+                        <button className="bg-white text-brand-900 px-10 py-4 font-medium tracking-wide hover:bg-brand-50 transition-colors shadow-lg rounded-sm">
+                          SHOP NOW
+                        </button>
+                      </Link>
+                    </div>
                   </div>
-                </div>
-            </div>
-        </div>
-    </section>
-  );
+              </div>
+          </div>
+      </section>
+    );
+  };
 
   const renderCategories = () => (
     <section key="categories" className="py-20 container mx-auto px-4">

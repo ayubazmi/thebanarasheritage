@@ -107,12 +107,18 @@ const Config = mongoose.model('Config', new mongoose.Schema({
   heroTagline: { type: String, default: 'New Collection' }, 
   heroTitle: String,
   heroSubtitle: String,
+  heroTextColor: { type: String, default: '#FFFFFF' },
+  heroTextAlign: { type: String, default: 'center' }, // left, center, right
+  heroFontSize: { type: String, default: 'md' }, // sm, md, lg
   
   // Secondary Slideshows
   secondarySlideshows: [{
     id: String,
     title: String,
-    images: [String]
+    images: [String],
+    textColor: String,
+    textAlign: { type: String, default: 'center' },
+    fontSize: { type: String, default: 'md' }
   }],
 
   // Section Headers
@@ -276,6 +282,9 @@ app.get('/api/config', async (req, res) => {
         heroTagline: 'New Collection',
         heroTitle: 'Elegance in Every Stitch',
         heroSubtitle: 'Discover our latest arrivals designed for the modern woman.',
+        heroTextColor: '#FFFFFF',
+        heroTextAlign: 'center',
+        heroFontSize: 'md',
         categoryTitle: 'Shop by Category',
         featuredTitle: 'New Arrivals',
         featuredSubtitle: 'Fresh styles just added to our collection.',

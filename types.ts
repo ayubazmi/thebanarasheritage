@@ -64,6 +64,9 @@ export interface SlideshowSection {
   id: string;
   title?: string;
   images: string[];
+  textColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  fontSize?: 'sm' | 'md' | 'lg';
 }
 
 export interface SiteConfig {
@@ -95,6 +98,11 @@ export interface SiteConfig {
   heroTagline?: string;
   heroTitle: string;
   heroSubtitle: string;
+  
+  // Hero Styling (New)
+  heroTextColor?: string;
+  heroTextAlign?: 'left' | 'center' | 'right';
+  heroFontSize?: 'sm' | 'md' | 'lg';
   
   // Secondary Slideshows (New Feature)
   secondarySlideshows?: SlideshowSection[];
