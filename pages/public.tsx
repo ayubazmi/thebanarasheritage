@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
 import { Product, SlideshowSection } from '../types';
@@ -37,7 +37,6 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
 
 const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   const [current, setCurrent] = useState(0);
-  const isVertical = data.direction === 'vertical';
   
   // Backwards compatibility: use slides if available, otherwise map images to slides
   const slides = (data.slides && data.slides.length > 0) 
@@ -109,58 +108,28 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
 
              {slides.length > 1 && (
                 <>
-                  {/* Controls based on direction */}
-                  {isVertical ? (
-                    <>
-                      <button 
-                        onClick={(e) => { e.preventDefault(); prev(); }}
-                        className="absolute left-1/2 top-4 transform -translate-x-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
-                      >
-                        <ChevronUp size={24} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.preventDefault(); next(); }}
-                        className="absolute left-1/2 bottom-4 transform -translate-x-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
-                      >
-                        <ChevronDown size={24} />
-                      </button>
-                      
-                      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex flex-col space-y-2 z-30">
-                        {slides.map((_, idx) => (
-                          <button 
-                            key={idx}
-                            onClick={() => setCurrent(idx)}
-                            className={`w-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white h-8' : 'bg-white/50 hover:bg-white/80 h-2'}`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <button 
-                        onClick={(e) => { e.preventDefault(); prev(); }}
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
-                      >
-                        <ChevronLeft size={24} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.preventDefault(); next(); }}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
-                      >
-                        <ChevronRight size={24} />
-                      </button>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); prev(); }}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); next(); }}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
 
-                      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
-                        {slides.map((_, idx) => (
-                          <button 
-                            key={idx}
-                            onClick={() => setCurrent(idx)}
-                            className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
+                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
+                    {slides.map((_, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => setCurrent(idx)}
+                        className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
+                      />
+                    ))}
+                  </div>
                 </>
              )}
           </div>

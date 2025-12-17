@@ -536,8 +536,7 @@ export const AdminDeveloperSettings: React.FC = () => {
           ...s,
           slides: (s.slides && s.slides.length > 0) 
             ? s.slides 
-            : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' })),
-          direction: s.direction || 'horizontal'
+            : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }))
         })),
         heroTextColor: config.heroTextColor || '#FFFFFF',
         heroTextAlign: config.heroTextAlign || 'center',
@@ -625,8 +624,7 @@ export const AdminDeveloperSettings: React.FC = () => {
        slides: [], // Initialize empty slides array
        textColor: '#2C251F', // Default dark
        textAlign: 'center' as const,
-       fontSize: 'md' as const,
-       direction: 'horizontal' as const
+       fontSize: 'md' as const
      };
      
      setLocalConfig(prev => ({
@@ -1052,25 +1050,13 @@ export const AdminDeveloperSettings: React.FC = () => {
              {localConfig.secondarySlideshows?.map((slideshow, index) => (
                <div key={slideshow.id} className="border p-6 rounded relative bg-gray-50/50">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                     <div className="flex-1 w-full md:w-auto space-y-4">
+                     <div className="flex-1 w-full md:w-auto">
                         <Input 
                           label="Slideshow Title" 
                           value={slideshow.title || ''} 
                           onChange={(e) => updateSlideshowTitle(slideshow.id, e.target.value)} 
                           placeholder="e.g. Summer Highlights"
                         />
-                        
-                        <div>
-                           <label className="block text-sm font-medium mb-1">Transition Direction</label>
-                           <select 
-                              className="w-full border p-2 rounded text-sm"
-                              value={slideshow.direction || 'horizontal'}
-                              onChange={(e) => updateSlideshowStyle(slideshow.id, 'direction', e.target.value)}
-                           >
-                              <option value="horizontal">Horizontal (Default)</option>
-                              <option value="vertical">Vertical (Slide Up/Down)</option>
-                           </select>
-                        </div>
                      </div>
                      
                      <div className="flex-1 w-full md:w-auto">
