@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, Heart, SlidersHorizontal, Trash2, Check, Truck, ShieldCheck, BadgeCheck, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, SlideshowSection } from '../types';
+import { Product, SlideshowSection, VerticalCarouselSection } from '../types';
 
 // --- Components Helpers ---
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
@@ -132,6 +132,84 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                   </div>
                 </>
              )}
+          </div>
+       </div>
+    </section>
+  );
+};
+
+// --- New Feature: Vertical Carousel ---
+const VerticalCarousel: React.FC<{ data: VerticalCarouselSection }> = ({ data }) => {
+  const [current, setCurrent] = useState(0);
+  const slides = data.slides || [];
+
+  const next = () => setCurrent(prev => (prev + 1) % slides.length);
+  const prev = () => setCurrent(prev => (prev - 1 + slides.length) % slides.length);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(next, 6000);
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  if (slides.length === 0) return null;
+
+  return (
+    <section className="py-12 w-full bg-white group">
+       <div className="container mx-auto px-4">
+          {data.title && (
+            <div className="mb-8 flex flex-col items-center text-center">
+               <h2 className="text-3xl font-serif text-brand-900 tracking-wide">{data.title}</h2>
+               <div className="h-0.5 w-12 bg-brand-900 mt-2" />
+            </div>
+          )}
+          
+          <div className="relative w-full h-[70vh] md:h-[85vh] overflow-hidden rounded-sm shadow-2xl flex flex-col md:flex-row bg-gray-900">
+             
+             {/* Text Content (Left Side - Overlay on mobile, Side on desktop) */}
+             <div className="absolute inset-0 md:static md:w-1/3 z-20 flex flex-col justify-center p-8 md:p-12 bg-black/40 md:bg-brand-900 text-white pointer-events-none md:pointer-events-auto">
+                <div key={current} className="animate-fade-in-up">
+                   <h3 
+                     className="text-4xl md:text-5xl font-serif font-bold mb-4 leading-tight drop-shadow-md"
+                     style={{ color: slides[current].textColor || '#FFFFFF' }}
+                   >
+                     {slides[current].title}
+                   </h3>
+                   <p 
+                     className="text-lg md:text-xl font-light opacity-90 drop-shadow-sm"
+                     style={{ color: slides[current].textColor || '#FFFFFF' }}
+                   >
+                     {slides[current].subtitle}
+                   </p>
+                </div>
+                
+                {/* Navigation Controls (Desktop) */}
+                <div className="hidden md:flex gap-4 mt-12 pointer-events-auto">
+                   <button onClick={prev} className="p-3 border border-white/30 rounded-full hover:bg-white hover:text-brand-900 transition"><ChevronUp size={24}/></button>
+                   <button onClick={next} className="p-3 border border-white/30 rounded-full hover:bg-white hover:text-brand-900 transition"><ChevronDown size={24}/></button>
+                </div>
+             </div>
+
+             {/* Image Slider (Vertical) */}
+             <div className="relative w-full md:w-2/3 h-full overflow-hidden">
+                <div 
+                  className="absolute inset-0 w-full h-full flex flex-col transition-transform duration-700 ease-in-out"
+                  style={{ transform: `translateY(-${current * 100}%)` }}
+                >
+                   {slides.map((slide, idx) => (
+                     <div key={idx} className="w-full h-full flex-shrink-0 relative">
+                        <img src={slide.image} className="w-full h-full object-cover" alt="" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
+                     </div>
+                   ))}
+                </div>
+
+                {/* Mobile Navigation Controls */}
+                <div className="absolute right-4 bottom-4 flex flex-col gap-2 md:hidden z-30">
+                   <button onClick={prev} className="p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white/40"><ChevronUp size={20}/></button>
+                   <button onClick={next} className="p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white/40"><ChevronDown size={20}/></button>
+                </div>
+             </div>
           </div>
        </div>
     </section>
@@ -368,9 +446,14 @@ export const HomePage: React.FC = () => {
     trust: renderTrust
   };
 
-  // Add Dynamic Slideshows to Map
+  // Add Dynamic Horizontal Slideshows to Map
   config.secondarySlideshows?.forEach(slideshow => {
     sectionMap[slideshow.id] = () => <SecondarySlideshow key={slideshow.id} data={slideshow} />;
+  });
+
+  // Add Dynamic Vertical Carousels to Map
+  config.verticalCarousels?.forEach(carousel => {
+    sectionMap[carousel.id] = () => <VerticalCarousel key={carousel.id} data={carousel} />;
   });
 
   // Default Order if none in config

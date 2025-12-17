@@ -76,6 +76,13 @@ export interface SlideshowSection {
   textColor?: string;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'md' | 'lg';
+  direction?: 'horizontal' | 'vertical';
+}
+
+export interface VerticalCarouselSection {
+  id: string;
+  title?: string;
+  slides: Slide[];
 }
 
 export interface SiteConfig {
@@ -85,7 +92,7 @@ export interface SiteConfig {
 
   // Developer Settings (Theme & Layout)
   theme?: ThemeConfig;
-  homepageSections?: string[]; // Array of IDs: ['hero', 'categories', 'featured', 'promo', 'trust', 'slideshow_123']
+  homepageSections?: string[]; // Array of IDs
 
   // Announcement Bar
   announcementEnabled?: boolean;
@@ -115,6 +122,9 @@ export interface SiteConfig {
   
   // Secondary Slideshows (New Feature)
   secondarySlideshows?: SlideshowSection[];
+
+  // Vertical Carousels (Isolated New Feature)
+  verticalCarousels?: VerticalCarouselSection[];
 
   // Section Headers
   categoryTitle?: string;
