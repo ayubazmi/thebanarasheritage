@@ -608,10 +608,21 @@ export const ProductDetailPage: React.FC = () => {
 
   const isWishlisted = wishlist.includes(product.id);
   const [selectedImage, setSelectedImage] = useState<string>(product.images[0]);
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
+  const [isZoomed, setIsZoomed] = useState(false);
 
   useEffect(() => {
     setSelectedImage(product.images[0]);
   }, [product.id]);
+
+  const handleMouseEnter = () => setIsZoomed(true);
+  const handleMouseLeave = () => setIsZoomed(false);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomPos({ x, y });
+  };
 
   const handleAdd = () => {
     // If product has sizes, require selection. If product has colors, require selection.
@@ -663,8 +674,21 @@ export const ProductDetailPage: React.FC = () => {
           {/* Main Image (Right on Desktop, Top on Mobile) */}
           <div className="flex-1 order-1 md:order-2">
             <div className="aspect-[3/4] p-2 bg-white rounded-xl lg:rounded-3xl shadow-sm relative group overflow-hidden">
-              <div className="w-full h-full rounded-lg lg:rounded-2xl overflow-hidden bg-gray-100">
-                <img src={selectedImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div
+                className="w-full h-full rounded-lg lg:rounded-2xl overflow-hidden bg-gray-100 relative cursor-crosshair"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseMove={handleMouseMove}
+              >
+                <img
+                  src={selectedImage}
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-transform duration-100 ease-out"
+                  style={{
+                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                    transform: isZoomed ? 'scale(2)' : 'scale(1)'
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -741,7 +765,11 @@ export const ProductDetailPage: React.FC = () => {
 // --- Cart Page ---
 export const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity, cartTotal, config } = useStore();
+
   const navigate = useNavigate();
+
+  const originalTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const discountTotal = cart.reduce((sum, item) => sum + ((item.price - (item.discountPrice || item.price)) * item.quantity), 0);
 
   if (cart.length === 0) {
     return (
@@ -784,7 +812,8 @@ export const CartPage: React.FC = () => {
           <div className="bg-brand-50 p-6 rounded-sm">
             <h3 className="font-serif text-xl mb-4">Order Summary</h3>
             <div className="space-y-3 mb-6 border-b pb-6 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>{config.currency || '₹'}{cartTotal}</span></div>
+              <div className="flex justify-between"><span>Price ({cart.length} items)</span><span>{config.currency || '₹'}{originalTotal}</span></div>
+              <div className="flex justify-between text-green-600"><span>Discount</span><span>-{config.currency || '₹'}{discountTotal}</span></div>
               <div className="flex justify-between"><span>Shipping</span><span>Free</span></div>
             </div>
             <div className="flex justify-between font-bold text-lg mb-6"><span>Total</span><span>{config.currency || '₹'}{cartTotal}</span></div>

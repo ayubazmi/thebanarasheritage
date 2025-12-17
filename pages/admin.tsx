@@ -57,7 +57,7 @@ export const AdminLogin: React.FC = () => {
 
 // --- Dashboard Overview ---
 export const AdminDashboard: React.FC = () => {
-  const { products, orders } = useStore();
+  const { products, orders, config } = useStore();
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
 
   const StatCard = ({ title, value, icon: Icon, color }: any) => (
@@ -74,7 +74,7 @@ export const AdminDashboard: React.FC = () => {
     <div>
       <h1 className="text-2xl font-serif font-bold mb-8">Dashboard Overview</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Revenue" value={`$${totalRevenue}`} icon={DollarSign} color="bg-emerald-500" />
+        <StatCard title="Total Revenue" value={`${config.currency || '$'}${totalRevenue}`} icon={DollarSign} color="bg-emerald-500" />
         <StatCard title="Total Orders" value={orders.length} icon={ShoppingCart} color="bg-blue-500" />
         <StatCard title="Products" value={products.length} icon={Package} color="bg-indigo-500" />
       </div>
@@ -101,7 +101,7 @@ export const AdminDashboard: React.FC = () => {
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">${order.total}</td>
+                  <td className="px-6 py-4">{config.currency || '$'}{order.total}</td>
                 </tr>
               ))}
             </tbody>
@@ -1805,7 +1805,7 @@ export const AdminCategories: React.FC = () => {
 
 // --- Products Manager ---
 export const AdminProducts: React.FC = () => {
-  const { products, categories, deleteProduct, addProduct, updateProduct } = useStore();
+  const { products, categories, deleteProduct, addProduct, updateProduct, config } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -1945,8 +1945,8 @@ export const AdminProducts: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div className="flex flex-col">
                   <div>
-                    <span className="font-bold text-brand-900">${p.discountPrice || p.price}</span>
-                    {p.discountPrice && <span className="ml-2 text-xs text-gray-400 line-through">${p.price}</span>}
+                    <span className="font-bold text-brand-900">{config.currency || '$'}{p.discountPrice || p.price}</span>
+                    {p.discountPrice && <span className="ml-2 text-xs text-gray-400 line-through">{config.currency || '$'}{p.price}</span>}
                   </div>
                   {/* Likes Counter for Admin */}
                   <div className="flex items-center text-xs text-rose-500 mt-1 font-medium">
@@ -2015,7 +2015,7 @@ export const AdminProducts: React.FC = () => {
 
                 <Input label="Product Name" required value={newProd.name} onChange={e => setNewProd({ ...newProd, name: e.target.value })} className="md:col-span-2" />
 
-                <Input label="Original Price ($)" type="number" required value={newProd.price} onChange={e => setNewProd({ ...newProd, price: +e.target.value })} />
+                <Input label={`Original Price (${config.currency || '$'})`} type="number" required value={newProd.price} onChange={e => setNewProd({ ...newProd, price: +e.target.value })} />
 
                 <div className="w-full">
                   <Input
@@ -2114,7 +2114,7 @@ export const AdminProducts: React.FC = () => {
 
 // --- Orders Manager ---
 export const AdminOrders: React.FC = () => {
-  const { orders, updateOrderStatus } = useStore();
+  const { orders, updateOrderStatus, config } = useStore();
   return (
     <div>
       <h1 className="text-2xl font-serif font-bold mb-8">Manage Orders</h1>
@@ -2129,7 +2129,7 @@ export const AdminOrders: React.FC = () => {
                 <td className="px-6 py-4 font-medium">{order.id}</td>
                 <td className="px-6 py-4"><div>{order.customerName}</div><div className="text-xs text-gray-500">{order.email}</div></td>
                 <td className="px-6 py-4">{order.date}</td>
-                <td className="px-6 py-4">${order.total}</td>
+                <td className="px-6 py-4">{config.currency || '$'}{order.total}</td>
                 <td className="px-6 py-4"><span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.status}</span></td>
                 <td className="px-6 py-4"><select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value as any)} className="border text-xs p-1 rounded bg-white"><option>Pending</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></td>
               </tr>
