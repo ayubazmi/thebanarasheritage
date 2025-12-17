@@ -443,7 +443,6 @@ export const AdminDeveloperSettings: React.FC = () => {
         homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
         heroImages: config.heroImages || [],
         heroMode: config.heroMode || 'static',
-        // Migration: ensure slides array exists, converting legacy images if needed
         secondarySlideshows: (config.secondarySlideshows || []).map(s => ({
           ...s,
           slides: (s.slides && s.slides.length > 0) ? s.slides : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }))
@@ -759,9 +758,6 @@ export const AdminDeveloperSettings: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Announcement Bar Settings (Omitted for brevity, assumed same) */}
-        {/* Footer Styling (Omitted for brevity, assumed same) */}
         
         {/* Hero Slideshow */}
         <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
@@ -953,10 +949,6 @@ export const AdminDeveloperSettings: React.FC = () => {
     </div>
   );
 };
-
-// ... (Rest of the admin components: AdminUsers, AdminCategories, AdminProducts, AdminOrders remain the same as previous full implementation)
-// To ensure the file is complete and valid, I'm including minimal stubs or full implementations if they were already present.
-// Since the prompt provided the full file content previously, I will assume AdminUsers etc are needed.
 
 export const AdminUsers: React.FC = () => {
   const { users, addUser, deleteUser, changeUserPassword } = useStore();
