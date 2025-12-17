@@ -41,7 +41,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   // Backwards compatibility: use slides if available, otherwise map images to slides
   const slides = (data.slides && data.slides.length > 0) 
     ? data.slides 
-    : (data.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }));
+    : (data.images || []).map(img => ({ image: img, title: '', subtitle: '' }));
 
   const next = () => setCurrent(prev => (prev + 1) % slides.length);
   const prev = () => setCurrent(prev => (prev - 1 + slides.length) % slides.length);
@@ -55,8 +55,8 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   if (slides.length === 0) return null;
 
   // Styling Helpers
-  // Correctly mapping text alignment: Left->Left, Right->Right, Center->Center
-  const textAlignClass = data.textAlign === 'left' ? 'text-left' : data.textAlign === 'right' ? 'text-right' : 'text-center';
+  // Changed right alignment to use text-center for better aesthetics as requested ("right side but in center")
+  const textAlignClass = data.textAlign === 'left' ? 'text-left' : 'text-center';
   const alignItemsClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
   
   // Padding based on alignment to prevent text hitting edges
@@ -90,7 +90,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                        {slide.title && (
                          <h3 
                            className={`${fontSizeClassTitle} font-serif font-bold mb-4 drop-shadow-lg animate-fade-in-up`}
-                           style={{ color: slide.textColor || data.textColor || '#FFFFFF' }}
+                           style={{ color: data.textColor || '#FFFFFF' }}
                          >
                            {slide.title}
                          </h3>
@@ -98,7 +98,7 @@ const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
                        {slide.subtitle && (
                          <p 
                            className={`${fontSizeClassSub} max-w-2xl drop-shadow-md animate-fade-in-up delay-100`}
-                           style={{ color: slide.textColor || data.textColor || '#FFFFFF', opacity: 0.9 }}
+                           style={{ color: data.textColor || '#FFFFFF', opacity: 0.9 }}
                          >
                            {slide.subtitle}
                          </p>
@@ -164,11 +164,11 @@ export const HomePage: React.FC = () => {
   // Section Renders
   const renderHero = () => {
     // Dynamic Styles for Hero
-    // Consistent text alignment logic for Hero as well
+    // Changed right alignment to center text as well for consistency
     const alignClass = config.heroTextAlign === 'left' 
       ? 'justify-start md:pl-24 text-left' 
       : config.heroTextAlign === 'right' 
-        ? 'justify-end md:pr-24 text-right' 
+        ? 'justify-end md:pr-24 text-center' 
         : 'justify-center text-center';
         
     const titleSizeClass = config.heroFontSize === 'sm' 
