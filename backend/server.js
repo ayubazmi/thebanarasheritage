@@ -127,6 +127,18 @@ const Config = mongoose.model('Config', new mongoose.Schema({
     fontSize: { type: String, default: 'md' }
   }],
 
+  // Vertical Carousels (New Isolated Feature)
+  verticalCarousels: [{
+    id: String,
+    title: String,
+    slides: [{
+      image: String,
+      title: String,
+      subtitle: String,
+      textColor: String
+    }]
+  }],
+
   // Section Headers
   categoryTitle: { type: String, default: 'Shop by Category' },
   featuredTitle: { type: String, default: 'New Arrivals' },
@@ -308,7 +320,8 @@ app.get('/api/config', async (req, res) => {
         footerBgColor: '#2C251F',
         footerTextColor: '#F3F4F6',
         heroImages: [],
-        secondarySlideshows: []
+        secondarySlideshows: [],
+        verticalCarousels: []
       });
       await config.save();
     }

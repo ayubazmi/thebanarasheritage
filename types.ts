@@ -78,6 +78,12 @@ export interface SlideshowSection {
   fontSize?: 'sm' | 'md' | 'lg';
 }
 
+export interface VerticalCarouselSection {
+  id: string;
+  title?: string;
+  slides: Slide[];
+}
+
 export interface SiteConfig {
   // Brand
   siteName?: string;
@@ -115,6 +121,9 @@ export interface SiteConfig {
   
   // Secondary Slideshows (New Feature)
   secondarySlideshows?: SlideshowSection[];
+
+  // Vertical Carousels (Isolated New Feature)
+  verticalCarousels?: VerticalCarouselSection[];
 
   // Section Headers
   categoryTitle?: string;
