@@ -780,7 +780,9 @@ export const AdminSettings: React.FC = () => {
         </div>
 
         <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end gap-4">
-          <Button onClick={handleReset} variant="secondary" className="bg-white border text-rose-600 hover:bg-rose-50 border-rose-200">Reset Defaults</Button>
+          <Button onClick={handleReset} variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+            <RotateCcw size={16} className="mr-2" /> Reset Defaults
+          </Button>
           <Button onClick={handleSave} size="lg">Save All Changes</Button>
         </div>
       </div>
