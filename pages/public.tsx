@@ -37,70 +37,98 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
 
 const SecondarySlideshow: React.FC<{ data: SlideshowSection }> = ({ data }) => {
   const [current, setCurrent] = useState(0);
-  const images = data.images || [];
+  
+  // Backwards compatibility: use slides if available, otherwise map images to slides
+  const slides = (data.slides && data.slides.length > 0) 
+    ? data.slides 
+    : (data.images || []).map(img => ({ image: img, title: '', subtitle: '' }));
 
-  const next = () => setCurrent(prev => (prev + 1) % images.length);
-  const prev = () => setCurrent(prev => (prev - 1 + images.length) % images.length);
+  const next = () => setCurrent(prev => (prev + 1) % slides.length);
+  const prev = () => setCurrent(prev => (prev - 1 + slides.length) % slides.length);
 
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (slides.length <= 1) return;
     const interval = setInterval(next, 5000);
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, [slides.length]);
 
-  if (images.length === 0) return null;
+  if (slides.length === 0) return null;
 
   // Styling Helpers
-  const textAlignClass = data.textAlign === 'left' ? 'text-left' : data.textAlign === 'right' ? 'text-right' : 'text-center';
-  const alignContainerClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
-  const fontSizeClass = data.fontSize === 'lg' ? 'text-4xl md:text-5xl' : data.fontSize === 'sm' ? 'text-2xl md:text-3xl' : 'text-3xl md:text-4xl'; // md defaults
+  // Changed right alignment to use text-center for better aesthetics as requested ("right side but in center")
+  const textAlignClass = data.textAlign === 'left' ? 'text-left' : 'text-center';
+  const alignItemsClass = data.textAlign === 'left' ? 'items-start' : data.textAlign === 'right' ? 'items-end' : 'items-center';
+  
+  // Padding based on alignment to prevent text hitting edges
+  const paddingClass = data.textAlign === 'left' ? 'pl-10 md:pl-20 pr-10' : data.textAlign === 'right' ? 'pr-10 md:pr-20 pl-10' : 'px-4';
+
+  const fontSizeClassTitle = data.fontSize === 'lg' ? 'text-4xl md:text-6xl' : data.fontSize === 'sm' ? 'text-2xl md:text-4xl' : 'text-3xl md:text-5xl';
+  const fontSizeClassSub = data.fontSize === 'lg' ? 'text-xl md:text-2xl' : data.fontSize === 'sm' ? 'text-base md:text-lg' : 'text-lg md:text-xl';
 
   return (
     <section className="py-8 md:py-12 w-full bg-white group">
        <div className="px-4 md:px-12 max-w-[1800px] mx-auto">
           {data.title && (
-            <div className={`mb-6 flex flex-col ${alignContainerClass} ${textAlignClass}`}>
-               <h2 
-                 className={`${fontSizeClass} font-serif`} 
-                 style={{ color: data.textColor || 'var(--color-primary)' }}
-               >
-                 {data.title}
-               </h2>
+            <div className={`mb-6 flex flex-col items-center text-center`}>
+               <h2 className="text-3xl font-serif text-brand-900">{data.title}</h2>
                <div className="h-0.5 w-16 bg-brand-800/20 mt-2" />
             </div>
           )}
           
           <div className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden rounded-2xl shadow-lg">
-             {images.map((img, idx) => (
+             {slides.map((slide, idx) => (
                <div 
                  key={idx}
-                 className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100' : 'opacity-0'}`}
+                 className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
                >
-                 <img src={img} className="w-full h-full object-cover" alt="" />
+                 <img src={slide.image} className="w-full h-full object-cover" alt={slide.title || ""} />
+                 <div className="absolute inset-0 bg-black/20" /> {/* Slight overlay for readability */}
+                 
+                 {/* Text Overlay */}
+                 {(slide.title || slide.subtitle) && (
+                    <div className={`absolute inset-0 flex flex-col justify-center ${alignItemsClass} ${textAlignClass} ${paddingClass}`}>
+                       {slide.title && (
+                         <h3 
+                           className={`${fontSizeClassTitle} font-serif font-bold mb-4 drop-shadow-lg animate-fade-in-up`}
+                           style={{ color: data.textColor || '#FFFFFF' }}
+                         >
+                           {slide.title}
+                         </h3>
+                       )}
+                       {slide.subtitle && (
+                         <p 
+                           className={`${fontSizeClassSub} max-w-2xl drop-shadow-md animate-fade-in-up delay-100`}
+                           style={{ color: data.textColor || '#FFFFFF', opacity: 0.9 }}
+                         >
+                           {slide.subtitle}
+                         </p>
+                       )}
+                    </div>
+                 )}
                </div>
              ))}
 
-             {images.length > 1 && (
+             {slides.length > 1 && (
                 <>
                   <button 
                     onClick={(e) => { e.preventDefault(); prev(); }}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
                   >
                     <ChevronLeft size={24} />
                   </button>
                   <button 
                     onClick={(e) => { e.preventDefault(); next(); }}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-md text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 z-30"
                   >
                     <ChevronRight size={24} />
                   </button>
 
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-                    {images.map((_, idx) => (
+                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
+                    {slides.map((_, idx) => (
                       <button 
                         key={idx}
                         onClick={() => setCurrent(idx)}
-                        className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80 w-1.5'}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === current ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80 w-2'}`}
                       />
                     ))}
                   </div>
@@ -136,10 +164,11 @@ export const HomePage: React.FC = () => {
   // Section Renders
   const renderHero = () => {
     // Dynamic Styles for Hero
+    // Changed right alignment to center text as well for consistency
     const alignClass = config.heroTextAlign === 'left' 
       ? 'justify-start md:pl-24 text-left' 
       : config.heroTextAlign === 'right' 
-        ? 'justify-end md:pr-24 text-right' 
+        ? 'justify-end md:pr-24 text-center' 
         : 'justify-center text-center';
         
     const titleSizeClass = config.heroFontSize === 'sm' 
