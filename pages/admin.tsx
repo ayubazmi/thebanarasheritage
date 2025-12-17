@@ -1,586 +1,713 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, Package, ShoppingCart, List, Settings, Users, FileText, 
-  Code2, LogOut, Plus, Trash2, Edit2, Save, X, Check, Upload, 
-  Type as TypeIcon, Megaphone, Image as ImageIcon, Layout, ArrowLeft
-} from 'lucide-react';
 import { useStore } from '../store';
 import { Button, Input, SectionHeader, Badge } from '../components/ui';
-import { Product, Category, Order, User, SiteConfig, SlideshowSection } from '../types';
+import { Product, Category, User, SiteConfig } from '../types';
+import { 
+  Plus, Trash, Edit, Package, ShoppingCart, DollarSign, TrendingUp, 
+  Upload, Image as ImageIcon, X, Settings, List, Layout, User as UserIcon, Lock, Megaphone, Video, Hexagon, Type, ShieldCheck, Share2, Heart,
+  FileText, Footprints, Palette, Code2, ArrowUp, ArrowDown, Move, RotateCcw, MonitorPlay, AlignLeft, AlignCenter, AlignRight
+} from 'lucide-react';
+
+const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000';
+const DEFAULT_PROMO_IMAGE = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1000';
 
 // --- Login ---
 export const AdminLogin: React.FC = () => {
   const { login, user } = useStore();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [creds, setCreds] = useState({ user: '', pass: '' });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) navigate('/admin');
-  }, [user, navigate]);
+  if(user) {
+     navigate('/admin');
+     return null;
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     try {
-      await login(username, password);
-    } catch (err) {
-      alert("Login failed");
+      await login(creds.user, creds.pass);
+      navigate('/admin');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-50">
-      <div className="bg-white p-8 rounded shadow-md w-96">
-        <h2 className="text-2xl font-serif font-bold mb-6 text-center">Admin Login</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Username" value={username} onChange={e => setUsername(e.target.value)} />
-          <Input label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-          <Button className="w-full">Login</Button>
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-serif font-bold text-center mb-6">Admin Portal</h2>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <Input label="Username" value={creds.user} onChange={e => setCreds({...creds, user: e.target.value})} />
+          <Input type="password" label="Password" value={creds.pass} onChange={e => setCreds({...creds, pass: e.target.value})} />
+          {error && <p className="text-rose-500 text-sm">{error}</p>}
+          <Button type="submit" className="w-full" isLoading={isLoading}>Login</Button>
         </form>
+        <p className="text-xs text-center text-gray-400 mt-4">Demo: admin / admin</p>
       </div>
     </div>
   );
 };
 
-// --- Dashboard ---
+// --- Dashboard Overview ---
 export const AdminDashboard: React.FC = () => {
-  const { products, orders, users } = useStore();
-  
-  const stats = [
-    { label: 'Total Sales', value: `$${orders.reduce((sum, o) => sum + o.total, 0)}`, icon: ShoppingCart, color: 'bg-green-100 text-green-600' },
-    { label: 'Orders', value: orders.length, icon: Package, color: 'bg-blue-100 text-blue-600' },
-    { label: 'Products', value: products.length, icon: Layout, color: 'bg-purple-100 text-purple-600' },
-    { label: 'Users', value: users.length, icon: Users, color: 'bg-orange-100 text-orange-600' },
-  ];
+  const { products, orders } = useStore();
+  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+
+  const StatCard = ({ title, value, icon: Icon, color }: any) => (
+    <div className="bg-white p-6 rounded shadow-sm flex items-center space-x-4">
+      <div className={`p-3 rounded-full ${color} text-white`}><Icon size={24} /></div>
+      <div>
+        <p className="text-sm text-gray-500 font-medium">{title}</p>
+        <p className="text-2xl font-bold text-brand-900">{value}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div>
-      <SectionHeader title="Dashboard" subtitle="Overview of your store performance" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((s, i) => (
-          <div key={i} className="bg-white p-6 rounded shadow-sm flex items-center">
-            <div className={`p-4 rounded-full mr-4 ${s.color}`}>
-              <s.icon size={24} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 font-medium">{s.label}</p>
-              <h3 className="text-2xl font-bold">{s.value}</h3>
-            </div>
-          </div>
-        ))}
+      <h1 className="text-2xl font-serif font-bold mb-8">Dashboard Overview</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <StatCard title="Total Revenue" value={`$${totalRevenue}`} icon={DollarSign} color="bg-emerald-500" />
+        <StatCard title="Total Orders" value={orders.length} icon={ShoppingCart} color="bg-blue-500" />
+        <StatCard title="Products" value={products.length} icon={Package} color="bg-indigo-500" />
       </div>
-      
-      <div className="bg-white p-6 rounded shadow-sm">
+
+      <div className="bg-white rounded shadow-sm p-6">
         <h3 className="font-bold text-lg mb-4">Recent Orders</h3>
-        {orders.length === 0 ? <p className="text-gray-500">No orders yet.</p> : (
-           <table className="w-full text-left">
-             <thead>
-               <tr className="border-b text-sm text-gray-500">
-                 <th className="py-2">Order ID</th>
-                 <th className="py-2">Customer</th>
-                 <th className="py-2">Date</th>
-                 <th className="py-2">Total</th>
-                 <th className="py-2">Status</th>
-               </tr>
-             </thead>
-             <tbody>
-               {orders.slice(0, 5).map(order => (
-                 <tr key={order.id} className="border-b last:border-0">
-                   <td className="py-3 text-sm font-mono">{order.id.substring(0, 8)}...</td>
-                   <td className="py-3">{order.customerName}</td>
-                   <td className="py-3">{order.date}</td>
-                   <td className="py-3 font-medium">${order.total}</td>
-                   <td className="py-3"><Badge>{order.status}</Badge></td>
-                 </tr>
-               ))}
-             </tbody>
-           </table>
-        )}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th className="px-6 py-3">Order ID</th>
+                <th className="px-6 py-3">Customer</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.slice(0, 5).map(order => (
+                <tr key={order.id} className="bg-white border-b">
+                  <td className="px-6 py-4 font-medium">{order.id}</td>
+                  <td className="px-6 py-4">{order.customerName}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded-full text-xs ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">${order.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {orders.length === 0 && <p className="text-center py-4 text-gray-500">No orders yet.</p>}
+        </div>
       </div>
     </div>
   );
 };
 
-// --- Products ---
-export const AdminProducts: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, categories } = useStore();
-  const [editing, setEditing] = useState<Product | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const initialProduct: Product = {
-    id: '', name: '', description: '', price: 0, category: '', 
-    images: [''], sizes: [], colors: [], newArrival: false, bestSeller: false, stock: 0
-  };
-  const [formData, setFormData] = useState<Product>(initialProduct);
-
-  const handleEdit = (p: Product) => {
-    setFormData(p);
-    setEditing(p);
-    setIsFormOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if(confirm('Are you sure?')) await deleteProduct(id);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Filter empty strings from arrays
-    const cleanData = {
-        ...formData,
-        images: formData.images.filter(i => i.trim() !== ''),
-        sizes: formData.sizes.filter(s => s.trim() !== ''),
-        colors: formData.colors.filter(c => c.trim() !== '')
-    };
-    
-    if (editing) {
-      await updateProduct(cleanData);
-    } else {
-      await addProduct(cleanData);
-    }
-    setIsFormOpen(false);
-    setFormData(initialProduct);
-    setEditing(null);
-  };
-
-  const updateArray = (field: 'images' | 'sizes' | 'colors', index: number, value: string) => {
-      const arr = [...formData[field]];
-      arr[index] = value;
-      setFormData({ ...formData, [field]: arr });
-  };
+// --- Logs Component ---
+export const AdminLogs: React.FC = () => {
+  const { logs, fetchLogs } = useStore();
   
-  const addArrayItem = (field: 'images' | 'sizes' | 'colors') => {
-      setFormData({ ...formData, [field]: [...formData[field], ''] });
-  };
-  
-  const removeArrayItem = (field: 'images' | 'sizes' | 'colors', index: number) => {
-      setFormData({ ...formData, [field]: formData[field].filter((_, i) => i !== index) });
-  };
-
-  if (isFormOpen) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <button onClick={() => setIsFormOpen(false)} className="mb-4 flex items-center text-sm text-gray-500 hover:text-black"><ArrowLeft size={16} className="mr-1"/> Back</button>
-        <div className="bg-white p-8 rounded shadow-sm">
-          <h2 className="text-2xl font-bold mb-6">{editing ? 'Edit Product' : 'Add New Product'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-               <Input label="Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-               <div className="flex flex-col">
-                 <label className="text-sm font-medium mb-1">Category</label>
-                 <select 
-                    className="border border-gray-200 p-2 rounded text-sm"
-                    value={formData.category} 
-                    onChange={e => setFormData({...formData, category: e.target.value})}
-                    required
-                 >
-                   <option value="">Select Category</option>
-                   {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                 </select>
-               </div>
-               <Input label="Price" type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} required />
-               <Input label="Discount Price (Optional)" type="number" value={formData.discountPrice || ''} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} />
-               <Input label="Stock" type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} required />
-            </div>
-            
-            <div>
-               <label className="text-sm font-medium mb-1">Description</label>
-               <textarea className="w-full border border-gray-200 p-2 text-sm rounded h-24" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-            </div>
-
-            {/* Checkboxes */}
-            <div className="flex space-x-6">
-               <label className="flex items-center space-x-2">
-                 <input type="checkbox" checked={formData.newArrival} onChange={e => setFormData({...formData, newArrival: e.target.checked})} />
-                 <span className="text-sm font-medium">New Arrival</span>
-               </label>
-               <label className="flex items-center space-x-2">
-                 <input type="checkbox" checked={formData.bestSeller} onChange={e => setFormData({...formData, bestSeller: e.target.checked})} />
-                 <span className="text-sm font-medium">Best Seller</span>
-               </label>
-            </div>
-
-            {/* Array Fields */}
-            {['images', 'sizes', 'colors'].map(field => (
-                <div key={field}>
-                    <label className="text-sm font-medium mb-2 block capitalize">{field}</label>
-                    {(formData[field as keyof Product] as string[]).map((item, idx) => (
-                        <div key={idx} className="flex gap-2 mb-2">
-                            <Input value={item} onChange={e => updateArray(field as any, idx, e.target.value)} placeholder={field === 'images' ? 'Image URL' : field === 'sizes' ? 'e.g., S, M, L' : 'e.g., Red, Blue'} />
-                            <button type="button" onClick={() => removeArrayItem(field as any, idx)} className="text-rose-500"><Trash2 size={16}/></button>
-                        </div>
-                    ))}
-                    <Button type="button" size="sm" variant="secondary" onClick={() => addArrayItem(field as any)}><Plus size={14} className="mr-1"/> Add {field}</Button>
-                </div>
-            ))}
-
-            <div className="flex justify-end gap-3 border-t pt-6">
-              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-              <Button type="submit">Save Product</Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  // Fetch logs on mount
+  useEffect(() => { fetchLogs(); }, []);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <SectionHeader title="Products" />
-        <Button onClick={() => { setEditing(null); setFormData(initialProduct); setIsFormOpen(true); }}><Plus size={20} className="mr-2"/> Add Product</Button>
+        <h1 className="text-2xl font-serif font-bold">Visitor Logs</h1>
+        <Button onClick={fetchLogs}><FileText size={16} className="mr-2" /> Refresh Logs</Button>
       </div>
-      <div className="bg-white rounded shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4 font-medium text-gray-500">Image</th>
-              <th className="p-4 font-medium text-gray-500">Name</th>
-              <th className="p-4 font-medium text-gray-500">Category</th>
-              <th className="p-4 font-medium text-gray-500">Price</th>
-              <th className="p-4 font-medium text-gray-500">Stock</th>
-              <th className="p-4 font-medium text-gray-500">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p.id} className="border-b last:border-0 hover:bg-gray-50">
-                <td className="p-4"><img src={p.images[0]} className="w-10 h-10 object-cover rounded" alt="" /></td>
-                <td className="p-4 font-medium">{p.name}</td>
-                <td className="p-4 text-sm">{p.category}</td>
-                <td className="p-4 text-sm">${p.price}</td>
-                <td className="p-4 text-sm">{p.stock}</td>
-                <td className="p-4 flex gap-2">
-                  <button onClick={() => handleEdit(p)} className="p-2 text-blue-600 hover:bg-blue-50 rounded"><Edit2 size={16} /></button>
-                  <button onClick={() => handleDelete(p.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded"><Trash2 size={16} /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
 
-// --- Orders ---
-export const AdminOrders: React.FC = () => {
-  const { orders, updateOrderStatus } = useStore();
-  
-  return (
-    <div>
-      <SectionHeader title="Orders" />
       <div className="bg-white rounded shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4 font-medium text-gray-500">ID</th>
-              <th className="p-4 font-medium text-gray-500">Customer</th>
-              <th className="p-4 font-medium text-gray-500">Items</th>
-              <th className="p-4 font-medium text-gray-500">Total</th>
-              <th className="p-4 font-medium text-gray-500">Date</th>
-              <th className="p-4 font-medium text-gray-500">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(o => (
-               <tr key={o.id} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="p-4 font-mono text-xs">{o.id.substring(0,8)}</td>
-                  <td className="p-4">
-                    <div className="font-medium">{o.customerName}</div>
-                    <div className="text-xs text-gray-500">{o.email}</div>
-                  </td>
-                  <td className="p-4 text-sm text-gray-500">{o.items.length} items</td>
-                  <td className="p-4 font-medium">${o.total}</td>
-                  <td className="p-4 text-sm text-gray-500">{o.date}</td>
-                  <td className="p-4">
-                    <select 
-                      value={o.status} 
-                      onChange={e => updateOrderStatus(o.id, e.target.value as any)}
-                      className="text-xs border border-gray-200 rounded p-1 bg-white"
-                    >
-                      {['Pending', 'Shipped', 'Delivered', 'Cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-5 text-gray-700 uppercase">
+               <tr>
+                 <th className="px-6 py-4">Time</th>
+                 <th className="px-6 py-4">Client</th>
+                 <th className="px-6 py-4">Host / Subnet</th>
+                 <th className="px-6 py-4">Device Details</th>
                </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {logs.map(log => (
+                <tr key={log.id} className="hover:bg-gray-50">
+                   <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                     {new Date(log.timestamp).toLocaleString()}
+                   </td>
+                   <td className="px-6 py-4 font-mono font-medium text-brand-900">
+                     <div>{log.ip}</div>
+                     <div className="text-xs text-gray-400">Port: {log.port || 'N/A'}</div>
+                   </td>
+                   <td className="px-6 py-4 font-mono text-xs text-gray-600">
+                     {log.hostname || 'N/A'}
+                   </td>
+                   <td className="px-6 py-4 text-gray-500 truncate max-w-xs text-xs" title={log.userAgent}>
+                     {log.userAgent}
+                   </td>
+                </tr>
+              ))}
+              {logs.length === 0 && (
+                <tr><td colSpan={4} className="text-center py-8 text-gray-500">No logs found</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
 
-// --- Categories ---
-export const AdminCategories: React.FC = () => {
-  const { categories, addCategory, deleteCategory } = useStore();
-  const [newCat, setNewCat] = useState({ name: '', image: '' });
-
-  const handleAdd = async (e: React.FormEvent) => {
-      e.preventDefault();
-      await addCategory({ id: '', ...newCat });
-      setNewCat({ name: '', image: '' });
-  };
-
-  return (
-    <div>
-      <SectionHeader title="Categories" />
-      <div className="grid md:grid-cols-3 gap-8">
-         <div className="bg-white p-6 rounded shadow-sm h-fit">
-            <h3 className="font-bold mb-4">Add Category</h3>
-            <form onSubmit={handleAdd} className="space-y-4">
-              <Input label="Name" value={newCat.name} onChange={e => setNewCat({...newCat, name: e.target.value})} required />
-              <Input label="Image URL" value={newCat.image} onChange={e => setNewCat({...newCat, image: e.target.value})} required />
-              <Button className="w-full">Create</Button>
-            </form>
-         </div>
-         <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {categories.map(c => (
-              <div key={c.id} className="relative group overflow-hidden rounded shadow-sm aspect-video">
-                 <img src={c.image} className="w-full h-full object-cover" alt={c.name} />
-                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <h3 className="text-white font-bold text-xl">{c.name}</h3>
-                 </div>
-                 <button onClick={() => deleteCategory(c.id)} className="absolute top-2 right-2 bg-white text-rose-500 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition">
-                   <Trash2 size={16} />
-                 </button>
-              </div>
-            ))}
-         </div>
-      </div>
-    </div>
-  );
-};
-
-// --- Users ---
-export const AdminUsers: React.FC = () => {
-    const { users, addUser, deleteUser } = useStore();
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
-
-    const handleAdd = async (e: React.FormEvent) => {
-        e.preventDefault();
-        await addUser({ ...newUser, permissions: [] });
-        setIsFormOpen(false);
-        setNewUser({ username: '', password: '', role: 'staff' });
-    };
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-8">
-                <SectionHeader title="User Management" />
-                <Button onClick={() => setIsFormOpen(true)}><Plus size={20} className="mr-2"/> Add User</Button>
-            </div>
-            
-            {isFormOpen && (
-                <div className="bg-white p-6 rounded shadow-sm mb-8 max-w-xl animate-fade-in-up">
-                    <h3 className="font-bold mb-4">New User</h3>
-                    <form onSubmit={handleAdd} className="space-y-4">
-                        <Input label="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} required />
-                        <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required />
-                        <div>
-                            <label className="text-sm font-medium mb-1 block">Role</label>
-                            <select className="w-full border p-2 rounded" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                                <option value="staff">Staff</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                             <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>Cancel</Button>
-                             <Button type="submit">Create User</Button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            <div className="bg-white rounded shadow-sm overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b">
-                        <tr>
-                            <th className="p-4 text-gray-500">Username</th>
-                            <th className="p-4 text-gray-500">Role</th>
-                            <th className="p-4 text-gray-500">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map(u => (
-                            <tr key={u.id} className="border-b last:border-0">
-                                <td className="p-4 font-medium">{u.username}</td>
-                                <td className="p-4"><Badge color={u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}>{u.role}</Badge></td>
-                                <td className="p-4">
-                                    {u.role !== 'admin' && (
-                                        <button onClick={() => deleteUser(u.id)} className="text-rose-500 hover:bg-rose-50 p-2 rounded"><Trash2 size={16}/></button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-// --- Logs ---
-export const AdminLogs: React.FC = () => {
-    const { logs, fetchLogs } = useStore();
-    useEffect(() => { fetchLogs(); }, []);
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-               <SectionHeader title="Access Logs" />
-               <Button variant="outline" onClick={() => fetchLogs()} size="sm">Refresh</Button>
-            </div>
-            <div className="bg-white rounded shadow-sm overflow-hidden border border-gray-200">
-                <div className="max-h-[80vh] overflow-y-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 sticky top-0">
-                            <tr>
-                                <th className="p-3 font-medium text-gray-600">Time</th>
-                                <th className="p-3 font-medium text-gray-600">IP Address</th>
-                                <th className="p-3 font-medium text-gray-600">Hostname</th>
-                                <th className="p-3 font-medium text-gray-600">User Agent</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {logs.map((log) => (
-                                <tr key={log.id} className="hover:bg-gray-50">
-                                    <td className="p-3 whitespace-nowrap text-gray-500">{new Date(log.timestamp).toLocaleString()}</td>
-                                    <td className="p-3 font-mono text-xs">{log.ip}</td>
-                                    <td className="p-3 text-gray-600">{log.hostname || '-'}</td>
-                                    <td className="p-3 text-gray-500 truncate max-w-xs" title={log.userAgent}>{log.userAgent}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// --- Settings ---
+// --- Settings Manager (Content & Basic Settings) ---
 export const AdminSettings: React.FC = () => {
-    const { config, updateConfig } = useStore();
-    const [local, setLocal] = useState<SiteConfig>({} as SiteConfig);
-
-    useEffect(() => { if(config) setLocal(config); }, [config]);
-
-    const handleSave = async () => {
-        await updateConfig(local);
-        alert("Settings Saved!");
-    };
-
-    if (!local.siteName) return <div>Loading...</div>;
-
-    return (
-        <div className="max-w-4xl mx-auto pb-20">
-            <div className="flex justify-between items-center mb-8">
-                <SectionHeader title="Content & Settings" />
-                <Button onClick={handleSave}><Save size={18} className="mr-2"/> Save Changes</Button>
-            </div>
-
-            <div className="space-y-8">
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4">Brand Identity</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <Input label="Site Name" value={local.siteName} onChange={e => setLocal({...local, siteName: e.target.value})} />
-                        <Input label="Currency Symbol" value={local.currency} onChange={e => setLocal({...local, currency: e.target.value})} />
-                        <Input label="Logo URL" value={local.logo || ''} onChange={e => setLocal({...local, logo: e.target.value})} className="md:col-span-2" />
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4">Contact Information</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <Input label="Email" value={local.contactEmail} onChange={e => setLocal({...local, contactEmail: e.target.value})} />
-                        <Input label="Phone" value={local.contactPhone} onChange={e => setLocal({...local, contactPhone: e.target.value})} />
-                        <Input label="Address" value={local.contactAddress} onChange={e => setLocal({...local, contactAddress: e.target.value})} className="md:col-span-2" />
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded shadow-sm">
-                    <h3 className="font-bold text-lg mb-4">About Page Content</h3>
-                    <Input label="Title" value={local.aboutTitle} onChange={e => setLocal({...local, aboutTitle: e.target.value})} className="mb-4" />
-                    <label className="text-sm font-medium mb-1 block">Content</label>
-                    <textarea className="w-full border p-3 rounded h-40" value={local.aboutContent} onChange={e => setLocal({...local, aboutContent: e.target.value})} />
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// --- Developer Settings ---
-export const AdminDeveloperSettings: React.FC = () => {
   const { config, updateConfig } = useStore();
-  const [localConfig, setLocalConfig] = useState<SiteConfig>(config || {} as SiteConfig);
+  const [localConfig, setLocalConfig] = useState(config);
   
-  // Sync state when config loads
   useEffect(() => {
     if (config && Object.keys(config).length > 0) {
-        setLocalConfig(JSON.parse(JSON.stringify(config))); // Deep copy
+      setLocalConfig(prev => ({...config, ...prev})); 
+      setLocalConfig(config);
     }
   }, [config]);
 
-  const handleSave = async () => {
-    try {
-        await updateConfig(localConfig);
-        alert("Configuration saved successfully!");
-    } catch (e) {
-        alert("Failed to save configuration.");
+  const handleSave = () => {
+    updateConfig(localConfig);
+    alert('Settings saved successfully!');
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, logo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const fonts = [
-    { name: 'Inter (Sans)', value: 'Inter' },
-    { name: 'Roboto (Sans)', value: 'Roboto' },
-    { name: 'Open Sans (Sans)', value: 'Open Sans' },
-    { name: 'Lato (Sans)', value: 'Lato' },
-    { name: 'Montserrat (Sans)', value: 'Montserrat' },
-    { name: 'Playfair Display (Serif)', value: 'Playfair Display' },
-    { name: 'Cormorant Garamond (Serif)', value: 'Cormorant Garamond' },
-    { name: 'Merriweather (Serif)', value: 'Merriweather' },
-  ];
+  const handleHeroUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, heroImage: reader.result as string, heroVideo: undefined })); 
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-  if (!localConfig.theme) return <div className="p-8">Loading configuration...</div>;
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert("Video too large! Max 10MB for direct upload. Use a URL for larger videos.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, heroVideo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePromoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ ...prev, promoImage: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
-    <div className="max-w-5xl mx-auto pb-20">
-      <div className="flex justify-between items-center mb-8 sticky top-0 bg-brand-50 z-10 py-4">
-        <div>
-           <h1 className="text-3xl font-serif text-brand-900">Developer Settings</h1>
-           <p className="text-gray-500">Customize theme, layout, and components.</p>
+    <div className="max-w-4xl pb-20">
+      <div className="mb-8">
+        <h1 className="text-2xl font-serif font-bold">Content & Settings</h1>
+      </div>
+      
+      <div className="space-y-8">
+        {/* Brand Identity */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Hexagon className="mr-2" size={20}/> Brand Identity</h3>
+          <div className="flex flex-col gap-6">
+            <Input label="Website Name" value={localConfig.siteName || ''} placeholder="LUMIÈRE" onChange={e => setLocalConfig({...localConfig, siteName: e.target.value})} />
+            
+            <div className="flex items-center gap-8">
+              <div className="w-24 h-24 bg-gray-100 border rounded flex items-center justify-center overflow-hidden relative group">
+                 {localConfig.logo ? (
+                   <>
+                     <img src={localConfig.logo} alt="Logo" className="w-full h-full object-contain p-2" />
+                     <button 
+                       onClick={() => setLocalConfig({...localConfig, logo: ''})}
+                       className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                       title="Delete Logo"
+                     >
+                       <Trash size={16} />
+                     </button>
+                   </>
+                 ) : (
+                   <span className="text-xs text-gray-400">No Logo</span>
+                 )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Upload Website Logo</label>
+                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                  <Upload size={16}/> Choose Logo
+                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
-        <Button onClick={handleSave} size="lg"><Save size={18} className="mr-2"/> Save Changes</Button>
+
+        {/* Hero Section */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Layout className="mr-2" size={20}/> Homepage Hero Banner (Static Mode)</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <Input label="Hero Tagline (Top Text)" value={localConfig.heroTagline || ''} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} placeholder="e.g. New Collection" />
+              <Input label="Hero Title (Main)" value={localConfig.heroTitle} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
+              <Input label="Hero Subtitle" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
+              
+              <div className="border-t pt-4 mt-4">
+                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Background Media</p>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Image Upload</label>
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                      <Upload size={16}/> Choose Image
+                      <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} />
+                    </label>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">OR USE VIDEO</span></div>
+                  </div>
+
+                  <Input 
+                    label="Video URL (YouTube/MP4 Link)" 
+                    placeholder="https://..." 
+                    value={localConfig.heroVideo && !localConfig.heroVideo.startsWith('data:') ? localConfig.heroVideo : ''} 
+                    onChange={e => setLocalConfig({...localConfig, heroVideo: e.target.value})} 
+                  />
+                  
+                   <div>
+                    <label className="block text-sm font-medium mb-1">Video Upload (Max 10MB)</label>
+                    <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                      <Video size={16}/> Upload Short Video
+                      <input type="file" className="hidden" accept="video/*" onChange={handleVideoUpload} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
+               {localConfig.heroVideo ? (
+                 <>
+                   <video src={localConfig.heroVideo} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                   <button 
+                     onClick={() => setLocalConfig({...localConfig, heroVideo: ''})}
+                     className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                     title="Remove Video"
+                   >
+                     <Trash size={32} />
+                   </button>
+                 </>
+               ) : (
+                 <>
+                   <img 
+                     src={localConfig.heroImage || DEFAULT_HERO_IMAGE} 
+                     className="w-full h-full object-cover" 
+                     alt="Hero Preview" 
+                   />
+                   {localConfig.heroImage && (
+                     <button 
+                       onClick={() => setLocalConfig({...localConfig, heroImage: ''})}
+                       className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                       title="Delete Image"
+                     >
+                       <Trash size={32} />
+                     </button>
+                   )}
+                 </>
+               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Section Titles */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Type className="mr-2" size={20}/> Homepage Section Titles</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input label="Category Section Title" value={localConfig.categoryTitle || ''} placeholder="Shop by Category" onChange={e => setLocalConfig({...localConfig, categoryTitle: e.target.value})} />
+            <Input label="Featured Section Title" value={localConfig.featuredTitle || ''} placeholder="New Arrivals" onChange={e => setLocalConfig({...localConfig, featuredTitle: e.target.value})} />
+            <Input label="Featured Section Subtitle" className="md:col-span-2" value={localConfig.featuredSubtitle || ''} placeholder="Fresh styles just added to our collection." onChange={e => setLocalConfig({...localConfig, featuredSubtitle: e.target.value})} />
+          </div>
+        </div>
+
+        {/* Sale / Promo Section */}
+        <div className="bg-white p-8 rounded shadow-sm border-l-4 border-brand-900">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><Megaphone className="mr-2" size={20}/> Sale Section</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <Input label="Banner Title" value={localConfig.promoTitle || ''} placeholder="Summer Sale is Live" onChange={e => setLocalConfig({...localConfig, promoTitle: e.target.value})} />
+              <div className="col-span-1">
+                <label className="block text-sm font-medium mb-1">Banner Description</label>
+                <textarea className="w-full border p-2 text-sm h-24" value={localConfig.promoText || ''} placeholder="Get up to 50% off..." onChange={e => setLocalConfig({...localConfig, promoText: e.target.value})}></textarea>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <Input label="Button Label" value={localConfig.promoButtonText || ''} placeholder="Explore Sale" onChange={e => setLocalConfig({...localConfig, promoButtonText: e.target.value})} />
+                 <Input label="Button Link" value={localConfig.promoButtonLink || ''} placeholder="/shop" onChange={e => setLocalConfig({...localConfig, promoButtonLink: e.target.value})} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Banner Image</label>
+                <label className="flex items-center gap-2 cursor-pointer bg-gray-50 border border-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-100 w-fit">
+                  <Upload size={16}/> Upload Image
+                  <input type="file" className="hidden" accept="image/*" onChange={handlePromoUpload} />
+                </label>
+              </div>
+            </div>
+            <div className="aspect-video bg-gray-100 rounded overflow-hidden relative border group">
+               <img 
+                 src={localConfig.promoImage || DEFAULT_PROMO_IMAGE} 
+                 className="w-full h-full object-cover" 
+                 alt="Promo Preview" 
+               />
+            </div>
+          </div>
+        </div>
+
+        {/* Trust Badges */}
+        <div className="bg-white p-8 rounded shadow-sm">
+          <h3 className="font-bold text-lg mb-4 flex items-center"><ShieldCheck className="mr-2" size={20}/> Trust Badges</h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="space-y-2 p-4 bg-gray-50 rounded">
+              <Input label="Badge 1 Title" value={localConfig.trustBadge1Title || ''} onChange={e => setLocalConfig({...localConfig, trustBadge1Title: e.target.value})} />
+              <Input label="Badge 1 Text" value={localConfig.trustBadge1Text || ''} onChange={e => setLocalConfig({...localConfig, trustBadge1Text: e.target.value})} />
+            </div>
+            <div className="space-y-2 p-4 bg-gray-50 rounded">
+              <Input label="Badge 2 Title" value={localConfig.trustBadge2Title || ''} onChange={e => setLocalConfig({...localConfig, trustBadge2Title: e.target.value})} />
+              <Input label="Badge 2 Text" value={localConfig.trustBadge2Text || ''} onChange={e => setLocalConfig({...localConfig, trustBadge2Text: e.target.value})} />
+            </div>
+            <div className="space-y-2 p-4 bg-gray-50 rounded">
+              <Input label="Badge 3 Title" value={localConfig.trustBadge3Title || ''} onChange={e => setLocalConfig({...localConfig, trustBadge3Title: e.target.value})} />
+              <Input label="Badge 3 Text" value={localConfig.trustBadge3Text || ''} onChange={e => setLocalConfig({...localConfig, trustBadge3Text: e.target.value})} />
+            </div>
+          </div>
+        </div>
+        
+        <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end">
+           <Button onClick={handleSave} size="lg">Save All Changes</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Developer Settings (New Feature) ---
+export const AdminDeveloperSettings: React.FC = () => {
+  const { config, updateConfig } = useStore();
+  const [localConfig, setLocalConfig] = useState(config);
+  
+  // Sync logic
+  useEffect(() => {
+    if (config && Object.keys(config).length > 0) {
+      setLocalConfig({
+        ...config,
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px',
+          ...config.theme
+        },
+        homepageSections: config.homepageSections || ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroImages: config.heroImages || [],
+        heroMode: config.heroMode || 'static',
+        secondarySlideshows: (config.secondarySlideshows || []).map(s => ({
+          ...s,
+          slides: (s.slides && s.slides.length > 0) ? s.slides : (s.images || []).map(img => ({ image: img, title: '', subtitle: '', textColor: '' }))
+        })),
+        heroTextColor: config.heroTextColor || '#FFFFFF',
+        heroTextAlign: config.heroTextAlign || 'center',
+        heroFontSize: config.heroFontSize || 'md',
+      });
+    }
+  }, [config]);
+
+  const handleSave = () => {
+    updateConfig(localConfig);
+    alert('Developer settings updated successfully!');
+  };
+
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to reset all developer settings to default?")) {
+      setLocalConfig(prev => ({
+        ...prev,
+        theme: {
+          primaryColor: '#2C251F',
+          secondaryColor: '#D5CDC0',
+          backgroundColor: '#F9F8F6',
+          fontFamilySans: 'Inter',
+          fontFamilySerif: 'Cormorant Garamond',
+          borderRadius: '0px'
+        },
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
+        heroImages: [],
+        heroMode: 'static',
+        heroTextColor: '#FFFFFF',
+        heroTextAlign: 'center',
+        heroFontSize: 'md',
+        secondarySlideshows: []
+      }));
+    }
+  };
+
+  const moveSection = (index: number, direction: 'up' | 'down') => {
+    const newSections = [...(localConfig.homepageSections || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newSections.length) {
+      [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
+      setLocalConfig({ ...localConfig, homepageSections: newSections });
+    }
+  };
+
+  // --- Hero Slideshow Handlers ---
+  const handleAddHeroSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalConfig(prev => ({ 
+           ...prev, 
+           heroImages: [...(prev.heroImages || []), reader.result as string] 
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeHeroSlide = (index: number) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       heroImages: prev.heroImages?.filter((_, i) => i !== index)
+    }));
+  };
+
+  // --- Secondary Slideshow Handlers (New) ---
+  const addSecondarySlideshow = () => {
+     const newId = `slideshow_${Date.now()}`;
+     const newSlideshow = { 
+       id: newId, 
+       title: `New Slideshow`, 
+       slides: [],
+       images: [],
+       textColor: '#2C251F', // Default dark
+       textAlign: 'center' as const,
+       fontSize: 'md' as const
+     };
+     
+     setLocalConfig(prev => ({
+        ...prev,
+        secondarySlideshows: [...(prev.secondarySlideshows || []), newSlideshow],
+        homepageSections: [...(prev.homepageSections || []), newId]
+     }));
+  };
+
+  const removeSecondarySlideshow = (id: string) => {
+    if(window.confirm("Delete this slideshow section?")) {
+      setLocalConfig(prev => ({
+          ...prev,
+          secondarySlideshows: prev.secondarySlideshows?.filter(s => s.id !== id),
+          homepageSections: prev.homepageSections?.filter(sid => sid !== id)
+      }));
+    }
+  };
+
+  const updateSlideshowTitle = (id: string, title: string) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, title } : s)
+    }));
+  };
+
+  const updateSlideshowStyle = (id: string, field: string, value: any) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { ...s, [field]: value } : s)
+    }));
+  };
+
+  const addSlideToSlideshow = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+         setLocalConfig(prev => ({
+            ...prev,
+            secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
+                ...s, 
+                slides: [...s.slides, { image: reader.result as string, title: '', subtitle: '', textColor: '' }] 
+            } : s)
+         }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeSlideFromSlideshow = (id: string, idx: number) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
+          ...s, 
+          slides: s.slides.filter((_, i) => i !== idx) 
+       } : s)
+    }));
+  };
+
+  const updateSlideField = (id: string, idx: number, field: 'title' | 'subtitle' | 'textColor', value: string) => {
+    setLocalConfig(prev => ({
+       ...prev,
+       secondarySlideshows: prev.secondarySlideshows?.map(s => s.id === id ? { 
+          ...s, 
+          slides: s.slides.map((slide, i) => i === idx ? { ...slide, [field]: value } : slide)
+       } : s)
+    }));
+  };
+
+  const fonts = [
+    { name: 'Inter (Modern Sans)', value: 'Inter' },
+    { name: 'Lato (Friendly Sans)', value: 'Lato' },
+    { name: 'Montserrat (Geometric Sans)', value: 'Montserrat' },
+    { name: 'Open Sans (Neutral Sans)', value: 'Open Sans' },
+    { name: 'Cormorant Garamond (Elegant Serif)', value: 'Cormorant Garamond' },
+    { name: 'Playfair Display (Display Serif)', value: 'Playfair Display' },
+  ];
+
+  const sectionNames: Record<string, string> = {
+    hero: 'Hero Banner',
+    categories: 'Categories Grid',
+    featured: 'Featured Products',
+    promo: 'Promotional Banner',
+    trust: 'Trust Badges'
+  };
+
+  // Helper to get display name for sections
+  const getSectionName = (id: string) => {
+     if(sectionNames[id]) return sectionNames[id];
+     const slideshow = localConfig.secondarySlideshows?.find(s => s.id === id);
+     if(slideshow) return `Slideshow: ${slideshow.title || 'Untitled'}`;
+     return id; // Fallback
+  };
+
+  // Reusable Styling Controls Component
+  const TextStylingControls = ({ 
+    textColor, textAlign, fontSize, 
+    onChangeColor, onChangeAlign, onChangeSize 
+  }: any) => (
+    <div className="flex flex-wrap items-center gap-4 bg-white p-2 rounded border border-gray-200">
+       <div className="flex items-center gap-2">
+         <input 
+           type="color" 
+           value={textColor || '#000000'} 
+           onChange={(e) => onChangeColor(e.target.value)} 
+           className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+         />
+       </div>
+       <div className="flex border rounded overflow-hidden">
+         <button onClick={() => onChangeAlign('left')} className={`p-2 hover:bg-gray-100 ${textAlign === 'left' ? 'bg-gray-200' : 'bg-white'}`} title="Left"><AlignLeft size={16}/></button>
+         <button onClick={() => onChangeAlign('center')} className={`p-2 hover:bg-gray-100 ${textAlign === 'center' ? 'bg-gray-200' : 'bg-white'}`} title="Center"><AlignCenter size={16}/></button>
+         <button onClick={() => onChangeAlign('right')} className={`p-2 hover:bg-gray-100 ${textAlign === 'right' ? 'bg-gray-200' : 'bg-white'}`} title="Right"><AlignRight size={16}/></button>
+       </div>
+       <div className="flex border rounded overflow-hidden text-xs font-bold">
+         <button onClick={() => onChangeSize('sm')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'sm' ? 'bg-gray-200' : 'bg-white'}`}>S</button>
+         <button onClick={() => onChangeSize('md')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'md' ? 'bg-gray-200' : 'bg-white'}`}>M</button>
+         <button onClick={() => onChangeSize('lg')} className={`px-3 py-2 hover:bg-gray-100 ${fontSize === 'lg' ? 'bg-gray-200' : 'bg-white'}`}>L</button>
+       </div>
+    </div>
+  );
+
+  if (!localConfig.theme) return <div>Loading...</div>;
+
+  return (
+    <div className="max-w-4xl pb-20">
+      <div className="mb-8">
+        <h1 className="text-2xl font-serif font-bold">Developer Settings</h1>
+        <p className="text-gray-500">Advanced customization for theme and layout.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-8">
         
-        {/* Colors */}
+        {/* Color Palette */}
         <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><Code2 className="mr-2" size={20}/> Color Palette</h3>
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Palette className="mr-2" size={20}/> Color Palette</h3>
+          
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-1">Primary (Brand 900)</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={localConfig.theme.primaryColor} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})} className="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
-                <Input value={localConfig.theme.primaryColor} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})} />
+              <label className="block text-sm font-medium mb-1">Primary Color (Text & Dark BG)</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.primaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.primaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, primaryColor: e.target.value}})} 
+                />
               </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium mb-1">Secondary (Accent)</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={localConfig.theme.secondaryColor} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})} className="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
-                <Input value={localConfig.theme.secondaryColor} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})} />
+              <label className="block text-sm font-medium mb-1">Secondary / Accent Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.secondaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.secondaryColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, secondaryColor: e.target.value}})} 
+                />
               </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium mb-1">Background (Page)</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={localConfig.theme.backgroundColor} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})} className="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
-                <Input value={localConfig.theme.backgroundColor} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})} />
+              <label className="block text-sm font-medium mb-1">Page Background Color</label>
+              <div className="flex gap-2">
+                <input 
+                  type="color" 
+                  value={localConfig.theme.backgroundColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})}
+                  className="w-10 h-10 rounded cursor-pointer border-0"
+                />
+                <Input 
+                  value={localConfig.theme.backgroundColor} 
+                  onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, backgroundColor: e.target.value}})} 
+                />
               </div>
             </div>
           </div>
@@ -588,163 +715,757 @@ export const AdminDeveloperSettings: React.FC = () => {
 
         {/* Typography & Style */}
         <div className="bg-white p-8 rounded shadow-sm">
-          <h3 className="font-bold text-lg mb-6 flex items-center"><TypeIcon className="mr-2" size={20}/> Typography & Style</h3>
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Type className="mr-2" size={20}/> Typography & Style</h3>
+          
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-1">Heading Font (Serif)</label>
-              <select className="w-full border p-2 rounded" value={localConfig.theme.fontFamilySerif} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySerif: e.target.value}})}>
+              <select 
+                className="w-full border p-2 rounded"
+                value={localConfig.theme.fontFamilySerif}
+                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySerif: e.target.value}})}
+              >
                 {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
               </select>
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Body Font (Sans)</label>
-              <select className="w-full border p-2 rounded" value={localConfig.theme.fontFamilySans} onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySans: e.target.value}})}>
+              <select 
+                className="w-full border p-2 rounded"
+                value={localConfig.theme.fontFamilySans}
+                onChange={e => setLocalConfig({...localConfig, theme: {...localConfig.theme!, fontFamilySans: e.target.value}})}
+              >
                 {fonts.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
               </select>
             </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">Border Radius Style</label>
               <div className="grid grid-cols-4 gap-2">
                 {['0px', '4px', '8px', '99px'].map(r => (
-                  <button key={r} type="button" onClick={() => setLocalConfig({...localConfig, theme: {...localConfig.theme!, borderRadius: r}})} className={`border p-2 text-center text-xs ${localConfig.theme?.borderRadius === r ? 'bg-brand-900 text-white' : 'bg-white hover:bg-gray-50'}`} style={{ borderRadius: r }}>{r === '0px' ? 'Square' : r === '99px' ? 'Round' : r}</button>
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setLocalConfig({...localConfig, theme: {...localConfig.theme!, borderRadius: r}})}
+                    className={`border p-2 text-center text-xs ${localConfig.theme?.borderRadius === r ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}`}
+                    style={{ borderRadius: r }}
+                  >
+                    {r === '0px' ? 'Square' : r === '99px' ? 'Round' : r}
+                  </button>
                 ))}
               </div>
             </div>
           </div>
         </div>
-
-        {/* Announcement Bar Settings */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-blue-500">
-          <div className="flex justify-between items-center mb-6">
-             <h3 className="font-bold text-lg flex items-center"><Megaphone className="mr-2" size={20}/> Top Announcement Bar</h3>
-             <label className="flex items-center cursor-pointer">
-                <span className="mr-3 text-sm font-medium text-gray-700">{localConfig.announcementEnabled ? 'Enabled' : 'Disabled'}</span>
-                <div className="relative">
-                  <input type="checkbox" className="sr-only" checked={localConfig.announcementEnabled || false} onChange={e => setLocalConfig({...localConfig, announcementEnabled: e.target.checked})} />
-                  <div className={`block w-10 h-6 rounded-full transition-colors ${localConfig.announcementEnabled ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-                  <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${localConfig.announcementEnabled ? 'translate-x-4' : ''}`}></div>
-                </div>
-             </label>
-          </div>
-
-          {localConfig.announcementEnabled && (
-            <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up">
-               <div className="space-y-4">
-                  <Input label="Announcement Text" value={localConfig.announcementText || ''} onChange={e => setLocalConfig({...localConfig, announcementText: e.target.value})} placeholder="Free Shipping on orders over $100!" />
-                  <Input label="Link URL (Optional)" value={localConfig.announcementLink || ''} onChange={e => setLocalConfig({...localConfig, announcementLink: e.target.value})} placeholder="/shop" />
-                  
-                  <div className="flex items-center gap-2 pt-2">
-                    <input type="checkbox" checked={localConfig.announcementBlink || false} onChange={e => setLocalConfig({...localConfig, announcementBlink: e.target.checked})} id="blink-toggle" className="rounded text-brand-900 focus:ring-brand-900" />
-                    <label htmlFor="blink-toggle" className="text-sm font-medium cursor-pointer">Enable Blinking Animation</label>
+        
+        {/* Hero Slideshow */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-purple-500">
+           {/* ... Hero Content ... */}
+           {/* For brevity, assume existing Hero logic is here */}
+           <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Section Mode</h3>
+           </div>
+           
+           <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <label className={`flex-1 p-4 border rounded cursor-pointer transition-all ${localConfig.heroMode === 'static' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'hover:bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                      <input type="radio" name="heroMode" value="static" checked={localConfig.heroMode === 'static' || !localConfig.heroMode} onChange={() => setLocalConfig({...localConfig, heroMode: 'static'})} className="accent-purple-600" />
+                      <span className="font-bold text-brand-900">Static Image / Video</span>
                   </div>
-               </div>
+              </label>
 
-               <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Background Color</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={localConfig.announcementBgColor || '#000000'} 
-                        onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})}
-                        className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-                      />
-                      <Input 
-                        value={localConfig.announcementBgColor || '#000000'} 
-                        onChange={e => setLocalConfig({...localConfig, announcementBgColor: e.target.value})} 
-                      />
-                    </div>
+              <label className={`flex-1 p-4 border rounded cursor-pointer transition-all ${localConfig.heroMode === 'slideshow' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'hover:bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                      <input type="radio" name="heroMode" value="slideshow" checked={localConfig.heroMode === 'slideshow'} onChange={() => setLocalConfig({...localConfig, heroMode: 'slideshow'})} className="accent-purple-600" />
+                      <span className="font-bold text-brand-900">Slideshow Carousel</span>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Text Color</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={localConfig.announcementTextColor || '#FFFFFF'} 
-                        onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})}
-                        className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-                      />
-                      <Input 
-                        value={localConfig.announcementTextColor || '#FFFFFF'} 
-                        onChange={e => setLocalConfig({...localConfig, announcementTextColor: e.target.value})} 
-                      />
-                    </div>
+              </label>
+           </div>
+           
+           {localConfig.heroMode === 'slideshow' && (
+            <div className="animate-fade-in-up space-y-6">
+              <div className="bg-purple-50 p-4 rounded border border-purple-100">
+                 <h4 className="font-bold text-sm text-purple-900 mb-3">Hero Text Styling</h4>
+                 <TextStylingControls 
+                    textColor={localConfig.heroTextColor}
+                    textAlign={localConfig.heroTextAlign}
+                    fontSize={localConfig.heroFontSize}
+                    onChangeColor={(v: string) => setLocalConfig({...localConfig, heroTextColor: v})}
+                    onChangeAlign={(v: any) => setLocalConfig({...localConfig, heroTextAlign: v})}
+                    onChangeSize={(v: any) => setLocalConfig({...localConfig, heroFontSize: v})}
+                 />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {localConfig.heroImages?.map((img, idx) => (
+                  <div key={idx} className="relative group aspect-video bg-gray-100 rounded overflow-hidden border">
+                    <img src={img} className="w-full h-full object-cover" alt={`Slide ${idx + 1}`} />
+                    <button onClick={() => removeHeroSlide(idx)} className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash size={24} /></button>
                   </div>
-               </div>
+                ))}
+                <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-brand-900 transition-colors aspect-video">
+                   <Plus className="text-gray-400 mb-2" size={24}/>
+                   <span className="text-sm text-gray-500 font-medium">Add Slide</span>
+                   <input type="file" className="hidden" accept="image/*" onChange={handleAddHeroSlide} />
+                </label>
+              </div>
             </div>
           )}
         </div>
-        
-        {/* Hero Configuration */}
-        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
-            <h3 className="font-bold text-lg mb-6 flex items-center"><ImageIcon className="mr-2" size={20}/> Hero Section</h3>
-            
-            <div className="mb-6 flex gap-6">
-                <label className="flex items-center space-x-2">
-                    <input type="radio" name="heroMode" checked={localConfig.heroMode === 'static'} onChange={() => setLocalConfig({...localConfig, heroMode: 'static'})} />
-                    <span>Static Image/Video</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                    <input type="radio" name="heroMode" checked={localConfig.heroMode === 'slideshow'} onChange={() => setLocalConfig({...localConfig, heroMode: 'slideshow'})} />
-                    <span>Slideshow</span>
-                </label>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <Input label="Title" value={localConfig.heroTitle} onChange={e => setLocalConfig({...localConfig, heroTitle: e.target.value})} />
-                    <Input label="Subtitle" value={localConfig.heroSubtitle} onChange={e => setLocalConfig({...localConfig, heroSubtitle: e.target.value})} />
-                    <Input label="Tagline" value={localConfig.heroTagline} onChange={e => setLocalConfig({...localConfig, heroTagline: e.target.value})} />
-                </div>
-                
-                <div className="space-y-4">
-                    {localConfig.heroMode === 'static' ? (
-                        <>
-                           <Input label="Hero Image URL" value={localConfig.heroImage} onChange={e => setLocalConfig({...localConfig, heroImage: e.target.value})} />
-                           <Input label="Hero Video URL (Optional)" value={localConfig.heroVideo || ''} onChange={e => setLocalConfig({...localConfig, heroVideo: e.target.value})} placeholder="mp4 url" />
-                        </>
-                    ) : (
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Slideshow Images (One URL per line)</label>
-                            <textarea 
-                                className="w-full border p-2 rounded h-32" 
-                                value={localConfig.heroImages?.join('\n') || ''} 
-                                onChange={e => setLocalConfig({...localConfig, heroImages: e.target.value.split('\n')})}
-                                placeholder="https://example.com/image1.jpg"
-                            />
-                        </div>
-                    )}
-                </div>
+        {/* Additional Slideshows (New Feature Updated) */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2 border-l-4 border-indigo-500">
+          <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg flex items-center"><MonitorPlay className="mr-2" size={20}/> Additional Slideshow Sections</h3>
+              <Button onClick={addSecondarySlideshow} size="sm"><Plus size={16} className="mr-1"/> Add New Slideshow</Button>
+          </div>
+          <p className="text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded">
+             You can add multiple standalone slideshow carousels to the homepage. Each slide can have its own text and color.
+          </p>
+          
+          <div className="space-y-8">
+             {localConfig.secondarySlideshows?.map((slideshow, index) => (
+               <div key={slideshow.id} className="border p-6 rounded relative bg-gray-50/50">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                     <div className="flex-1 w-full md:w-auto">
+                        <Input 
+                          label="Section Title (Optional)" 
+                          value={slideshow.title || ''} 
+                          onChange={(e) => updateSlideshowTitle(slideshow.id, e.target.value)} 
+                          placeholder="e.g. Summer Highlights"
+                        />
+                     </div>
+                     
+                     <div className="flex-1 w-full md:w-auto">
+                        <label className="block text-sm font-medium mb-1">Section Default Style</label>
+                        <TextStylingControls 
+                          textColor={slideshow.textColor}
+                          textAlign={slideshow.textAlign}
+                          fontSize={slideshow.fontSize}
+                          onChangeColor={(v: string) => updateSlideshowStyle(slideshow.id, 'textColor', v)}
+                          onChangeAlign={(v: any) => updateSlideshowStyle(slideshow.id, 'textAlign', v)}
+                          onChangeSize={(v: any) => updateSlideshowStyle(slideshow.id, 'fontSize', v)}
+                        />
+                     </div>
 
-                <div className="md:col-span-2 grid md:grid-cols-3 gap-6 pt-4 border-t mt-2">
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Text Alignment</label>
-                        <select className="w-full border p-2 rounded" value={localConfig.heroTextAlign || 'center'} onChange={e => setLocalConfig({...localConfig, heroTextAlign: e.target.value as any})}>
-                            <option value="left">Left</option>
-                            <option value="center">Center</option>
-                            <option value="right">Right</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Font Size</label>
-                        <select className="w-full border p-2 rounded" value={localConfig.heroFontSize || 'md'} onChange={e => setLocalConfig({...localConfig, heroFontSize: e.target.value as any})}>
-                            <option value="sm">Small</option>
-                            <option value="md">Medium</option>
-                            <option value="lg">Large</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Text Color</label>
-                        <div className="flex gap-2">
-                            <input type="color" value={localConfig.heroTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, heroTextColor: e.target.value})} className="h-10 w-10 border-0 p-0 rounded cursor-pointer" />
-                            <Input value={localConfig.heroTextColor || '#FFFFFF'} onChange={e => setLocalConfig({...localConfig, heroTextColor: e.target.value})} />
+                     <button onClick={() => removeSecondarySlideshow(slideshow.id)} className="text-rose-500 hover:text-rose-700 p-2"><Trash size={20}/></button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {slideshow.slides.map((slide, slideIdx) => (
+                      <div key={slideIdx} className="relative group bg-white rounded border overflow-hidden p-3 flex gap-4 items-start shadow-sm">
+                        <div className="w-24 aspect-square bg-gray-200 rounded overflow-hidden relative flex-shrink-0">
+                           <img src={slide.image} className="w-full h-full object-cover" alt="" />
+                           <button 
+                              onClick={() => removeSlideFromSlideshow(slideshow.id, slideIdx)}
+                              className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash size={20} />
+                            </button>
                         </div>
-                    </div>
-                </div>
-            </div>
+                        <div className="flex-1 space-y-2">
+                           <div className="flex justify-between items-center">
+                              <p className="text-xs font-bold text-gray-500 uppercase">Slide #{slideIdx + 1}</p>
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-400">Text Color:</label>
+                                <input 
+                                  type="color" 
+                                  value={slide.textColor || slideshow.textColor || '#000000'} 
+                                  onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'textColor', e.target.value)}
+                                  className="w-6 h-6 rounded cursor-pointer border-0 p-0"
+                                  title="Slide Text Color Override"
+                                />
+                              </div>
+                           </div>
+                           <Input 
+                             placeholder="Title Overlay" 
+                             value={slide.title || ''} 
+                             onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'title', e.target.value)} 
+                           />
+                           <Input 
+                             placeholder="Subtitle Overlay" 
+                             value={slide.subtitle || ''} 
+                             onChange={(e) => updateSlideField(slideshow.id, slideIdx, 'subtitle', e.target.value)} 
+                           />
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <label className="border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-brand-900 transition-colors min-h-[150px]">
+                       <Plus className="text-gray-400 mb-1" size={20}/>
+                       <span className="text-xs text-gray-500 font-medium">Add Slide</span>
+                       <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToSlideshow(slideshow.id, e)} />
+                    </label>
+                  </div>
+               </div>
+             ))}
+             {(!localConfig.secondarySlideshows || localConfig.secondarySlideshows.length === 0) && (
+               <p className="text-center text-gray-400 italic">No additional slideshows added yet.</p>
+             )}
+          </div>
         </div>
 
+        {/* Section Reordering */}
+        <div className="bg-white p-8 rounded shadow-sm md:col-span-2">
+          <h3 className="font-bold text-lg mb-6 flex items-center"><Move className="mr-2" size={20}/> Homepage Layout (Drag & Drop)</h3>
+          <p className="text-sm text-gray-500 mb-4">Reorder the sections as they appear on the homepage.</p>
+          
+          <div className="space-y-2 max-w-lg">
+            {localConfig.homepageSections?.map((sectionId, index) => (
+              <div key={sectionId} className="flex items-center justify-between p-3 bg-gray-50 border rounded hover:bg-white hover:shadow-sm transition group">
+                <span className="font-medium capitalize flex items-center">
+                  <div className="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs mr-3 font-bold text-gray-600">{index + 1}</div>
+                  {getSectionName(sectionId)}
+                </span>
+                <div className="flex gap-1">
+                  <button 
+                    onClick={() => moveSection(index, 'up')}
+                    disabled={index === 0}
+                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                  >
+                    <ArrowUp size={16}/>
+                  </button>
+                  <button 
+                    onClick={() => moveSection(index, 'down')}
+                    disabled={index === (localConfig.homepageSections?.length || 0) - 1}
+                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                  >
+                    <ArrowDown size={16}/>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      <div className="mt-8 pt-4 border-t flex justify-end gap-4">
+         <Button onClick={handleReset} variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+            <RotateCcw size={16} className="mr-2" /> Reset Defaults
+         </Button>
+         <Button onClick={handleSave} size="lg">Save Configuration</Button>
+      </div>
+    </div>
+  );
+};
+
+export const AdminUsers: React.FC = () => {
+  const { users, addUser, deleteUser, changeUserPassword } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState<{
+    username: string; 
+    password: string; 
+    role: 'admin' | 'staff'; 
+    permissions: string[];
+  }>({ username: '', password: '', role: 'staff', permissions: [] });
+  
+  const [passModalId, setPassModalId] = useState<string | null>(null);
+  const [newPass, setNewPass] = useState('');
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addUser(newUser);
+    setIsModalOpen(false);
+    setNewUser({ username: '', password: '', role: 'staff', permissions: [] });
+  };
+
+  const handlePassUpdate = async () => {
+    if(passModalId && newPass) {
+      await changeUserPassword(passModalId, newPass);
+      setPassModalId(null);
+      setNewPass('');
+      alert("Password updated");
+    }
+  };
+
+  const togglePerm = (p: string) => {
+    setNewUser(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(p) ? prev.permissions.filter(x => x !== p) : [...prev.permissions, p]
+    }));
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">User Management</h1>
+        <Button onClick={() => setIsModalOpen(true)}><Plus size={16} className="mr-2" /> Add User</Button>
+      </div>
+
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-700 uppercase">
+             <tr>
+               <th className="px-6 py-4">Username</th>
+               <th className="px-6 py-4">Role</th>
+               <th className="px-6 py-4">Permissions</th>
+               <th className="px-6 py-4 text-right">Actions</th>
+             </tr>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id} className="border-b">
+                <td className="px-6 py-4 font-medium flex items-center gap-2"><UserIcon size={16}/> {u.username}</td>
+                <td className="px-6 py-4"><span className="bg-gray-100 px-2 py-1 rounded-full text-xs">{u.role}</span></td>
+                <td className="px-6 py-4 text-gray-500 text-xs">
+                  {u.role === 'admin' ? 'All Access' : u.permissions.join(', ')}
+                </td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  <button onClick={() => setPassModalId(u.id)} className="text-blue-600 hover:text-blue-800 text-xs underline">Change Password</button>
+                  {u.username !== 'admin' && (
+                    <button onClick={() => deleteUser(u.id)} className="text-rose-600 hover:text-rose-800 text-xs underline">Delete</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h3 className="font-bold text-lg mb-4">Add New User</h3>
+            <form onSubmit={handleAdd} className="space-y-4">
+              <Input label="Username" required value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+              <Input label="Password" type="password" required value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select 
+                  className="w-full border p-2 text-sm" 
+                  value={newUser.role} 
+                  onChange={e => setNewUser({...newUser, role: e.target.value as 'admin' | 'staff'})}
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {newUser.role === 'staff' && (
+                <div>
+                   <label className="block text-sm font-medium mb-2">Permissions</label>
+                   <div className="space-y-2">
+                     {['products', 'orders', 'categories', 'settings', 'users'].map(p => (
+                       <label key={p} className="flex items-center text-sm gap-2">
+                         <input type="checkbox" checked={newUser.permissions.includes(p)} onChange={() => togglePerm(p)} />
+                         <span className="capitalize">{p}</span>
+                       </label>
+                     ))}
+                   </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit">Create</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {passModalId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h3 className="font-bold text-lg mb-4">Reset Password</h3>
+            <Input label="New Password" type="password" value={newPass} onChange={e => setNewPass(e.target.value)} />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button type="button" variant="secondary" onClick={() => { setPassModalId(null); setNewPass(''); }}>Cancel</Button>
+              <Button onClick={handlePassUpdate}>Update</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const AdminCategories: React.FC = () => {
+  const { categories, addCategory, deleteCategory, updateCategory } = useStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: '', image: '' });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleEdit = (cat: Category) => {
+    setEditingId(cat.id);
+    setForm({ name: cat.name, image: cat.image });
+    setIsFormOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingId(null);
+    setForm({ name: '', image: '' });
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const catData: Category = {
+      id: editingId || Date.now().toString(),
+      name: form.name,
+      image: form.image || 'https://via.placeholder.com/400x600?text=No+Image'
+    };
+    
+    if (editingId) updateCategory(catData);
+    else addCategory(catData);
+    
+    setIsFormOpen(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Manage Categories</h1>
+        <Button onClick={handleAddNew}><Plus size={16} className="mr-2" /> Add Category</Button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {categories.map(cat => (
+          <div key={cat.id} className="bg-white rounded shadow-sm overflow-hidden group relative">
+            <div className="aspect-square relative">
+              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                 <button onClick={() => handleEdit(cat)} className="bg-white p-2 rounded-full hover:bg-gray-200"><Edit size={16}/></button>
+                 <button onClick={() => deleteCategory(cat.id)} className="bg-white p-2 rounded-full hover:bg-rose-100 text-rose-500"><Trash size={16}/></button>
+              </div>
+            </div>
+            <div className="p-3 font-medium text-center border-t">{cat.name}</div>
+          </div>
+        ))}
+      </div>
+
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">{editingId ? 'Edit' : 'Add'} Category</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input label="Name" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+              <div>
+                <label className="block text-sm font-medium mb-1">Image</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+                    {form.image && <img src={form.image} className="w-full h-full object-cover" />}
+                  </div>
+                  <label className="cursor-pointer text-sm text-blue-600 hover:underline">
+                    Upload Image
+                    <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
+                  </label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                <Button type="submit">Save</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const AdminProducts: React.FC = () => {
+  const { products, categories, deleteProduct, addProduct, updateProduct } = useStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const defaultCat = categories.length > 0 ? categories[0].name : '';
+
+  const [newProd, setNewProd] = useState<Partial<Product>>({
+    name: '', price: 0, discountPrice: undefined, category: defaultCat, description: '', images: [], sizes: ['S', 'M', 'L'], colors: [], stock: 10
+  });
+
+  const [sizeInput, setSizeInput] = useState("");
+  const [colorInput, setColorInput] = useState("");
+
+  const openAddModal = () => {
+    setEditingId(null);
+    setNewProd({
+      name: '', price: 0, discountPrice: undefined, category: categories.length > 0 ? categories[0].name : '', description: '', images: [], sizes: ['S', 'M', 'L'], colors: [], stock: 10
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (product: Product) => {
+    setEditingId(product.id);
+    setNewProd({ ...product });
+    setIsModalOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProd(prev => ({ ...prev, images: [reader.result as string] }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setNewProd(prev => ({ ...prev, images: [] }));
+  };
+
+  const addSize = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(sizeInput && !newProd.sizes?.includes(sizeInput)) {
+      setNewProd(prev => ({...prev, sizes: [...(prev.sizes || []), sizeInput]}));
+      setSizeInput("");
+    }
+  };
+
+  const removeSize = (s: string) => {
+    setNewProd(prev => ({...prev, sizes: prev.sizes?.filter(x => x !== s)}));
+  };
+
+  const addColor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if(colorInput && !newProd.colors?.includes(colorInput)) {
+      setNewProd(prev => ({...prev, colors: [...(prev.colors || []), colorInput]}));
+      setColorInput("");
+    }
+  };
+
+  const removeColor = (c: string) => {
+    setNewProd(prev => ({...prev, colors: prev.colors?.filter(x => x !== c)}));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingId) {
+      updateProduct({ ...newProd, id: editingId } as Product);
+    } else {
+      const product: Product = {
+        id: Date.now().toString(),
+        name: newProd.name!,
+        description: newProd.description || '',
+        price: Number(newProd.price),
+        discountPrice: newProd.discountPrice ? Number(newProd.discountPrice) : undefined,
+        category: newProd.category || 'Uncategorized',
+        images: newProd.images?.length ? newProd.images : ['https://via.placeholder.com/400x600'],
+        sizes: newProd.sizes || ['S', 'M', 'L'],
+        colors: newProd.colors || ['Black', 'White'],
+        newArrival: true,
+        bestSeller: false,
+        stock: Number(newProd.stock)
+      };
+      addProduct(product);
+    }
+    setIsModalOpen(false);
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold">Products</h1>
+        <Button onClick={openAddModal}><Plus size={16} className="mr-2" /> Add Product</Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map(p => (
+          <div key={p.id} className="bg-white rounded shadow-sm overflow-hidden flex flex-col group">
+            <div className="h-48 bg-gray-100 relative overflow-hidden">
+               <img src={p.images[0]} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="" />
+               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+                  <button onClick={() => openEditModal(p)} className="bg-white p-2 rounded-full hover:bg-gray-100 text-brand-900 transition"><Edit size={16}/></button>
+                  <button onClick={() => deleteProduct(p.id)} className="bg-white p-2 rounded-full hover:bg-rose-50 text-rose-500 transition"><Trash size={16}/></button>
+               </div>
+               {p.discountPrice && (
+                 <div className="absolute top-2 right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded">
+                   SALE
+                 </div>
+               )}
+            </div>
+            <div className="p-4 flex-1">
+              <h3 className="font-bold text-lg mb-1">{p.name}</h3>
+              <p className="text-sm text-gray-500 mb-3">{p.category}</p>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                   <div>
+                     <span className="font-bold text-brand-900">${p.discountPrice || p.price}</span>
+                     {p.discountPrice && <span className="ml-2 text-xs text-gray-400 line-through">${p.price}</span>}
+                   </div>
+                   <div className="flex items-center text-xs text-rose-500 mt-1 font-medium">
+                      <Heart size={12} className="mr-1 fill-current" /> {p.likes || 0} Likes
+                   </div>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded ${p.stock < 5 ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-green-600'}`}>
+                  {p.stock} in stock
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold font-serif">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
+              <button onClick={() => setIsModalOpen(false)}><X className="text-gray-400 hover:text-black" /></button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-2">Product Image</label>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-32 h-40 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center overflow-hidden relative">
+                      {newProd.images?.[0] ? (
+                        <>
+                          <img src={newProd.images[0]} alt="Preview" className="w-full h-full object-cover" />
+                          <button type="button" onClick={removeImage} className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 text-white"><Trash size={20} /></button>
+                        </>
+                      ) : (
+                        <div className="text-gray-400 flex flex-col items-center p-4 text-center"><ImageIcon size={24} className="mb-2" /><span className="text-xs">No image</span></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <label className="cursor-pointer bg-white border border-gray-300 text-brand-900 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 inline-flex items-center transition">
+                        <Upload size={16} className="mr-2" /> Upload Image
+                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <Input label="Product Name" required value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} className="md:col-span-2" />
+                
+                <Input label="Original Price ($)" type="number" required value={newProd.price} onChange={e => setNewProd({...newProd, price: +e.target.value})} />
+                
+                <div className="w-full">
+                  <Input 
+                    label="Discounted Price (Optional)" 
+                    type="number" 
+                    value={newProd.discountPrice || ''} 
+                    onChange={e => setNewProd({...newProd, discountPrice: e.target.value ? +e.target.value : undefined})} 
+                  />
+                  {newProd.discountPrice && newProd.price && newProd.discountPrice < newProd.price && (
+                    <p className="text-xs text-green-600 mt-1">
+                      {Math.round(((newProd.price - newProd.discountPrice) / newProd.price) * 100)}% Off
+                    </p>
+                  )}
+                </div>
+
+                <Input label="Stock Quantity" type="number" required value={newProd.stock} onChange={e => setNewProd({...newProd, stock: +e.target.value})} />
+                
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <select 
+                    className="w-full border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-800" 
+                    value={newProd.category}
+                    onChange={e => setNewProd({...newProd, category: e.target.value})}
+                  >
+                    <option value="" disabled>Select Category</option>
+                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
+                
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">Available Sizes</label>
+                  <div className="flex gap-2 mb-2">
+                    <input 
+                      className="flex-1 border border-gray-200 px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-800"
+                      placeholder="e.g. XL, 38, Free Size"
+                      value={sizeInput}
+                      onChange={e => setSizeInput(e.target.value)}
+                    />
+                    <button onClick={addSize} className="bg-brand-100 text-brand-900 px-3 py-1 text-xs font-bold hover:bg-brand-200">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {newProd.sizes?.map(s => (
+                      <span key={s} className="bg-gray-100 text-xs px-2 py-1 rounded flex items-center gap-1">
+                        {s} <button type="button" onClick={() => removeSize(s)} className="text-gray-400 hover:text-red-500"><X size={12}/></button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-sm font-medium mb-1">Available Colors</label>
+                  <div className="flex gap-2 mb-2">
+                    <input 
+                      className="flex-1 border border-gray-200 px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-800"
+                      placeholder="e.g. Red, Navy Blue"
+                      value={colorInput}
+                      onChange={e => setColorInput(e.target.value)}
+                    />
+                    <button onClick={addColor} className="bg-brand-100 text-brand-900 px-3 py-1 text-xs font-bold hover:bg-brand-200">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {newProd.colors?.map(c => (
+                      <span key={c} className="bg-gray-100 text-xs px-2 py-1 rounded flex items-center gap-1">
+                        {c} <button type="button" onClick={() => removeColor(c)} className="text-gray-400 hover:text-red-500"><X size={12}/></button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-full">
+                   <label className="block text-sm font-medium mb-1">Status</label>
+                   <div className="flex gap-4 mt-2">
+                     <label className="flex items-center text-sm cursor-pointer"><input type="checkbox" className="mr-2" checked={newProd.newArrival} onChange={e => setNewProd({...newProd, newArrival: e.target.checked})} />New Arrival</label>
+                     <label className="flex items-center text-sm cursor-pointer"><input type="checkbox" className="mr-2" checked={newProd.bestSeller} onChange={e => setNewProd({...newProd, bestSeller: e.target.checked})} />Best Seller</label>
+                   </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea className="w-full border border-gray-200 p-3 text-sm min-h-[100px]" value={newProd.description} onChange={e => setNewProd({...newProd, description: e.target.value})}></textarea>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit">{editingId ? 'Update Product' : 'Create Product'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const AdminOrders: React.FC = () => {
+  const { orders, updateOrderStatus } = useStore();
+  return (
+    <div>
+      <h1 className="text-2xl font-serif font-bold mb-8">Manage Orders</h1>
+      <div className="bg-white rounded shadow-sm overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50 text-gray-700 uppercase">
+            <tr><th className="px-6 py-4">ID</th><th className="px-6 py-4">Customer</th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Total</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Action</th></tr>
+          </thead>
+          <tbody>
+            {orders.map(order => (
+              <tr key={order.id} className="border-b hover:bg-gray-50">
+                <td className="px-6 py-4 font-medium">{order.id}</td>
+                <td className="px-6 py-4"><div>{order.customerName}</div><div className="text-xs text-gray-500">{order.email}</div></td>
+                <td className="px-6 py-4">{order.date}</td>
+                <td className="px-6 py-4">${order.total}</td>
+                <td className="px-6 py-4"><span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' : order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{order.status}</span></td>
+                <td className="px-6 py-4"><select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value as any)} className="border text-xs p-1 rounded bg-white"><option>Pending</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
