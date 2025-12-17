@@ -160,8 +160,6 @@ export interface SiteConfig {
   footerLink3Url?: string;
   footerLink4Label?: string;
   footerLink4Url?: string;
-  footerLink4Label?: string;
-  footerLink4Url?: string;
   footerNewsletterTitle?: string;
   footerNewsletterPlaceholder?: string;
   footerNewsletterButtonText?: string;
