@@ -1508,7 +1508,7 @@ export const AdminDeveloperSettings: React.FC = () => {
                     <label className="border-2 border-dashed border-orange-200 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-white hover:border-orange-500 transition-colors">
                        <Plus className="text-orange-400 mb-2" size={24}/>
                        <span className="text-sm text-orange-500 font-medium">Add Vertical Slide</span>
-                       <span className="text-xs text-gray-400 mt-1">Rec: Portrait Images</span>
+                       <span className="text-xs text-gray-400 mt-1 text-center">Rec: 508x702px<br/>Ratio: 254:351</span>
                        <input type="file" className="hidden" accept="image/*" onChange={(e) => addSlideToVerticalCarousel(carousel.id, e)} />
                     </label>
                   </div>
