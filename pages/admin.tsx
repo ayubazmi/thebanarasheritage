@@ -460,6 +460,57 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to reset all content settings to defaults? This cannot be undone.")) {
+      setLocalConfig(prev => ({
+        ...prev,
+        // Hero Defaults
+        heroTagline: 'New Collection',
+        heroTitle: undefined,
+        heroSubtitle: undefined,
+        heroImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000',
+        heroVideo: '',
+
+        // Section Titles Defaults
+        categoryTitle: 'Shop by Category',
+        featuredTitle: 'New Arrivals',
+        featuredSubtitle: 'Fresh styles just added to our collection.',
+
+        // Promo Defaults
+        promoTitle: '',
+        promoText: '',
+        promoButtonText: '',
+        promoButtonLink: '',
+        promoImage: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1000',
+
+        // Trust Badges Defaults
+        trustBadge1Title: '', trustBadge1Text: '',
+        trustBadge2Title: '', trustBadge2Text: '',
+        trustBadge3Title: '', trustBadge3Text: '',
+
+        // Content Defaults
+        aboutTitle: '',
+        aboutContent: '',
+
+        // Contact Defaults
+        contactEmail: '',
+        contactPhone: '',
+        contactAddress: '',
+        socialInstagram: '',
+        socialFacebook: '',
+        socialWhatsapp: '',
+
+        // Footer Defaults
+        footerShopTitle: 'SHOP',
+        footerLink1Label: '', footerLink1Url: '',
+        footerLink2Label: '', footerLink2Url: '',
+        footerLink3Label: '', footerLink3Url: '',
+        footerLink4Label: '', footerLink4Url: '',
+        footerNewsletterTitle: '', footerNewsletterPlaceholder: '', footerNewsletterButtonText: ''
+      }));
+    }
+  };
+
   return (
     <div className="max-w-4xl pb-20">
       <div className="mb-8">
@@ -728,7 +779,8 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end">
+        <div className="pt-4 border-t sticky bottom-0 bg-brand-50 p-4 shadow-inner flex justify-end gap-4">
+          <Button onClick={handleReset} variant="secondary" className="bg-white border text-rose-600 hover:bg-rose-50 border-rose-200">Reset Defaults</Button>
           <Button onClick={handleSave} size="lg">Save All Changes</Button>
         </div>
       </div>
