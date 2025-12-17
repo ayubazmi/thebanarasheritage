@@ -544,7 +544,15 @@ export const AdminDeveloperSettings: React.FC = () => {
           fontFamilySerif: 'Cormorant Garamond',
           borderRadius: '0px'
         },
-        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust']
+        homepageSections: ['hero', 'categories', 'featured', 'promo', 'trust'],
+        // Reset Footer Styling
+        footerBgColor: '#2C251F',
+        footerTextColor: '#F3F4F6',
+        // Reset Announcement Bar
+        announcementEnabled: false,
+        announcementBlink: false,
+        announcementBgColor: '#000000',
+        announcementTextColor: '#FFFFFF'
       }));
     }
   };
